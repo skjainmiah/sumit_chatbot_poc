@@ -139,17 +139,22 @@ async def send_message(request: ChatRequest, token: str = None):
 
     # Run SQL pipeline
     try:
+        logger.info(f"V2 request: conv={conv_id} query=\"{masked_query[:120]}\"")
         pipeline = get_sql_pipeline()
         result = pipeline.run(masked_query, context)
+        logger.info(f"V2 result: success={result.get('success')} intent={result.get('intent')} "
+                     f"time={result.get('processing_time_ms')}ms error={result.get('error')}")
     except Exception as e:
-        logger.error(f"V2 pipeline error for query '{masked_query}': {e}", exc_info=True)
+        elapsed = int((time.time() - start_time) * 1000)
+        logger.error(f"V2 pipeline EXCEPTION for query '{masked_query}' after {elapsed}ms: "
+                     f"{type(e).__name__}: {e}", exc_info=True)
         return ChatResponse(
             success=False,
             response="I'm having trouble processing your request right now. Could you try rephrasing your question?",
             intent="error",
             conversation_id=conv_id,
             error=str(e),
-            processing_time_ms=int((time.time() - start_time) * 1000)
+            processing_time_ms=elapsed
         )
 
     # Build response based on intent

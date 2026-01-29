@@ -13,6 +13,7 @@ Key improvements over v1:
 import re
 import json
 import time
+import logging
 from typing import Dict, List, Optional, Tuple, Any
 from enum import Enum
 
@@ -21,6 +22,8 @@ from backend.llm.client import get_llm_client
 from backend.llm.prompts import SQL_CORRECTION_PROMPT, SQL_RESULT_SUMMARY_PROMPT
 from backend.schema.loader import get_schema_loader
 from backend.db.session import get_multi_db_connection
+
+logger = logging.getLogger("chatbot.sql.pipeline_v2")
 
 
 class QueryIntent(Enum):
@@ -332,17 +335,29 @@ class SQLPipelineV2:
             context=f"Conversation context: {context}" if context else ""
         )
 
-        response = self.llm.chat_completion(
-            messages=[
-                {"role": "system", "content": self._system_prompt},
-                {"role": "user", "content": user_prompt}
-            ],
-            temperature=0.0,
-            max_tokens=2000,
-            json_mode=True
-        )
+        logger.info(f"[generate_sql] Sending schema ({len(self._system_prompt)} chars) + question to LLM")
+        step_start = time.time()
+        try:
+            response = self.llm.chat_completion(
+                messages=[
+                    {"role": "system", "content": self._system_prompt},
+                    {"role": "user", "content": user_prompt}
+                ],
+                temperature=0.0,
+                max_tokens=2000,
+                json_mode=True
+            )
+        except Exception as e:
+            step_ms = int((time.time() - step_start) * 1000)
+            logger.error(f"[generate_sql] LLM chat_completion FAILED after {step_ms}ms: {type(e).__name__}: {e}", exc_info=True)
+            raise
 
-        return self._parse_llm_response(response)
+        step_ms = int((time.time() - step_start) * 1000)
+        logger.info(f"[generate_sql] LLM responded in {step_ms}ms | response_preview=\"{response[:200]}\"")
+
+        parsed = self._parse_llm_response(response)
+        logger.info(f"[generate_sql] Parsed intent={parsed.get('intent')} | has_sql={bool(parsed.get('response', {}).get('sql'))}")
+        return parsed
 
     def _clean_sql_for_sqlite(self, sql: str) -> str:
         """Remove schema qualifiers (e.g. .public.) from SQL for SQLite compatibility."""
@@ -355,6 +370,8 @@ class SQLPipelineV2:
     def _execute_sql(self, sql: str) -> Tuple[bool, Any, str]:
         """Execute SQL query using SQLite multi-db connection."""
         conn = None
+        step_start = time.time()
+        logger.info(f"[execute_sql] Executing: {sql[:200]}")
         try:
             # Clean SQL for SQLite compatibility
             sql = self._clean_sql_for_sqlite(sql)
@@ -372,8 +389,12 @@ class SQLPipelineV2:
                 "rows": [dict(row) for row in rows],
                 "row_count": len(rows)
             }
+            step_ms = int((time.time() - step_start) * 1000)
+            logger.info(f"[execute_sql] OK {step_ms}ms | {len(rows)} rows, {len(columns)} columns")
             return True, results, ""
         except Exception as e:
+            step_ms = int((time.time() - step_start) * 1000)
+            logger.error(f"[execute_sql] FAILED {step_ms}ms | error={e}")
             return False, None, str(e)
         finally:
             if conn:
@@ -381,6 +402,7 @@ class SQLPipelineV2:
 
     def _correct_sql(self, question: str, failed_sql: str, error: str) -> str:
         """Attempt to correct failed SQL using detailed correction prompt."""
+        logger.info(f"[correct_sql] Correcting failed SQL | error={error[:150]}")
         correction_prompt = SQL_CORRECTION_PROMPT.format(
             query=question,
             failed_sql=failed_sql,
@@ -388,20 +410,30 @@ class SQLPipelineV2:
             schemas=self.schema_loader.get_schema_text()
         )
 
-        response = self.llm.chat_completion(
-            messages=[
-                {"role": "system", "content": self._system_prompt},
-                {"role": "user", "content": correction_prompt}
-            ],
-            temperature=0.0,
-            max_tokens=1000
-        )
+        step_start = time.time()
+        try:
+            response = self.llm.chat_completion(
+                messages=[
+                    {"role": "system", "content": self._system_prompt},
+                    {"role": "user", "content": correction_prompt}
+                ],
+                temperature=0.0,
+                max_tokens=1000
+            )
+        except Exception as e:
+            step_ms = int((time.time() - step_start) * 1000)
+            logger.error(f"[correct_sql] LLM correction FAILED after {step_ms}ms: {type(e).__name__}: {e}", exc_info=True)
+            raise
 
-        return self._clean_sql(response)
+        step_ms = int((time.time() - step_start) * 1000)
+        corrected = self._clean_sql(response)
+        logger.info(f"[correct_sql] LLM corrected in {step_ms}ms | new_sql=\"{corrected[:150]}\"")
+        return corrected
 
     def _summarize_results(self, question: str, sql: str, results: Dict) -> str:
         """Generate natural language summary of results."""
         rows_for_summary = results["rows"][:50]
+        logger.info(f"[summarize] Summarizing {results['row_count']} rows for question")
 
         summary_prompt = SQL_RESULT_SUMMARY_PROMPT.format(
             query=question,
@@ -410,12 +442,20 @@ class SQLPipelineV2:
             row_count=results["row_count"]
         )
 
-        response = self.llm.chat_completion(
-            messages=[{"role": "user", "content": summary_prompt}],
-            temperature=0.3,
-            max_tokens=1500
-        )
+        step_start = time.time()
+        try:
+            response = self.llm.chat_completion(
+                messages=[{"role": "user", "content": summary_prompt}],
+                temperature=0.3,
+                max_tokens=1500
+            )
+        except Exception as e:
+            step_ms = int((time.time() - step_start) * 1000)
+            logger.error(f"[summarize] LLM summarization FAILED after {step_ms}ms: {type(e).__name__}: {e}", exc_info=True)
+            raise
 
+        step_ms = int((time.time() - step_start) * 1000)
+        logger.info(f"[summarize] OK {step_ms}ms | summary_chars={len(response)}")
         return response.strip()
 
     def refresh_schema(self, reload_loader: bool = True):
@@ -435,86 +475,110 @@ class SQLPipelineV2:
     def run(self, question: str, context: str = "") -> Dict:
         """Run the full SQL pipeline."""
         start_time = time.time()
+        logger.info(f"[pipeline] START question=\"{question[:120]}\" context_len={len(context)}")
 
         # Step 1: Check for meta-questions (no LLM needed)
         if self._detect_meta_question(question):
+            logger.info("[pipeline] Detected meta-question, answering directly (no LLM)")
             result = self._answer_meta_question(question)
             result["processing_time_ms"] = int((time.time() - start_time) * 1000)
+            logger.info(f"[pipeline] DONE meta | {result['processing_time_ms']}ms")
             return result
 
         # Step 2: Generate SQL using LLM
         try:
             llm_response = self._generate_sql(question, context)
         except Exception as e:
+            elapsed = int((time.time() - start_time) * 1000)
+            logger.error(f"[pipeline] FAILED at generate_sql step after {elapsed}ms: {type(e).__name__}: {e}", exc_info=True)
             return {
                 "success": False,
                 "error": f"Failed to understand question: {str(e)}",
                 "intent": "error",
                 "sql": None,
                 "results": None,
-                "processing_time_ms": int((time.time() - start_time) * 1000)
+                "processing_time_ms": elapsed
             }
 
         intent = llm_response.get("intent", "data")
         response_data = llm_response.get("response", {})
+        logger.info(f"[pipeline] LLM returned intent={intent}")
 
         # Handle ambiguous intent
         if intent == "ambiguous":
+            elapsed = int((time.time() - start_time) * 1000)
+            logger.info(f"[pipeline] DONE ambiguous | {elapsed}ms")
             return {
                 "success": True,
                 "intent": "ambiguous",
                 "clarification": response_data.get("clarification", "Could you please provide more details?"),
                 "sql": None,
                 "results": None,
-                "processing_time_ms": int((time.time() - start_time) * 1000)
+                "processing_time_ms": elapsed
             }
 
         # Handle meta intent from LLM
         if intent == "meta":
+            elapsed = int((time.time() - start_time) * 1000)
+            logger.info(f"[pipeline] DONE meta (from LLM) | {elapsed}ms")
             return {
                 "success": True,
                 "intent": "meta",
                 "answer": response_data.get("answer", ""),
                 "sql": None,
                 "results": None,
-                "processing_time_ms": int((time.time() - start_time) * 1000)
+                "processing_time_ms": elapsed
             }
 
         # Handle data intent - execute SQL
         sql = response_data.get("sql", "")
         if not sql:
+            elapsed = int((time.time() - start_time) * 1000)
+            logger.warning(f"[pipeline] No SQL in LLM response | {elapsed}ms")
             return {
                 "success": False,
                 "error": "No SQL generated",
                 "intent": "data",
                 "sql": None,
                 "results": None,
-                "processing_time_ms": int((time.time() - start_time) * 1000)
+                "processing_time_ms": elapsed
             }
 
         sql = self._clean_sql(sql)
+        logger.info(f"[pipeline] Generated SQL: {sql[:200]}")
 
         # Validate SQL
         is_valid, validation_msg = self._validate_sql(sql)
         if not is_valid:
+            elapsed = int((time.time() - start_time) * 1000)
+            logger.warning(f"[pipeline] SQL validation failed: {validation_msg} | {elapsed}ms")
             return {
                 "success": False,
                 "error": f"Invalid SQL: {validation_msg}",
                 "intent": "data",
                 "sql": sql,
                 "results": None,
-                "processing_time_ms": int((time.time() - start_time) * 1000)
+                "processing_time_ms": elapsed
             }
 
         # Execute with retry loop
         last_error = ""
         for attempt in range(self.max_retries + 1):
+            logger.info(f"[pipeline] Execute attempt {attempt + 1}/{self.max_retries + 1}")
             success, results, error = self._execute_sql(sql)
 
             if success:
                 # Generate summary
-                summary = self._summarize_results(question, sql, results)
+                logger.info(f"[pipeline] SQL executed OK, generating summary...")
+                try:
+                    summary = self._summarize_results(question, sql, results)
+                except Exception as e:
+                    elapsed = int((time.time() - start_time) * 1000)
+                    logger.error(f"[pipeline] Summarization failed after {elapsed}ms: {e}", exc_info=True)
+                    summary = f"Query returned {results['row_count']} rows."
 
+                elapsed = int((time.time() - start_time) * 1000)
+                logger.info(f"[pipeline] DONE data success | attempts={attempt + 1} | {elapsed}ms")
                 return {
                     "success": True,
                     "intent": "data",
@@ -523,17 +587,25 @@ class SQLPipelineV2:
                     "summary": summary,
                     "explanation": response_data.get("explanation", ""),
                     "attempts": attempt + 1,
-                    "processing_time_ms": int((time.time() - start_time) * 1000)
+                    "processing_time_ms": elapsed
                 }
 
             # Attempt correction
             last_error = error
             if attempt < self.max_retries:
-                sql = self._correct_sql(question, sql, error)
+                logger.info(f"[pipeline] SQL failed, attempting correction (attempt {attempt + 1})")
+                try:
+                    sql = self._correct_sql(question, sql, error)
+                except Exception as e:
+                    logger.error(f"[pipeline] SQL correction LLM call failed: {e}", exc_info=True)
+                    break
                 is_valid, validation_msg = self._validate_sql(sql)
                 if not is_valid:
+                    logger.warning(f"[pipeline] Corrected SQL still invalid: {validation_msg}")
                     last_error = validation_msg
 
+        elapsed = int((time.time() - start_time) * 1000)
+        logger.error(f"[pipeline] FAILED after {self.max_retries + 1} attempts | last_error={last_error} | {elapsed}ms")
         return {
             "success": False,
             "error": f"Query failed after {self.max_retries + 1} attempts. Last error: {last_error}",
@@ -542,7 +614,7 @@ class SQLPipelineV2:
             "intent": "data",
             "sql": sql,
             "results": None,
-            "processing_time_ms": int((time.time() - start_time) * 1000)
+            "processing_time_ms": elapsed
         }
 
 

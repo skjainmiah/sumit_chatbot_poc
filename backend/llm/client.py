@@ -1,8 +1,12 @@
 """LLM client - uses company API (Coforge/Quasar) only via REST calls."""
+import time
+import logging
 import requests
 import urllib3
 from typing import Optional, List
 from backend.config import settings
+
+logger = logging.getLogger("chatbot.llm.client")
 
 # Disable SSL warnings for corporate environments
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
@@ -48,9 +52,12 @@ class LLMClient:
             "X-API-KEY": self.api_key
         }
 
-    def _request_with_fallback(self, primary_url: str, fallback_url: str, payload: dict) -> dict:
+    def _request_with_fallback(self, primary_url: str, fallback_url: str, payload: dict, call_type: str = "unknown") -> dict:
         """Make REST request with v2→v3 fallback."""
+        start = time.time()
+        model_used = payload.get("model", "N/A")
         try:
+            logger.info(f"[{call_type}] POST {primary_url} | model={model_used}")
             response = requests.post(
                 primary_url,
                 headers=self._headers(),
@@ -59,12 +66,20 @@ class LLMClient:
                 verify=self.verify_ssl,
                 proxies=self.proxies
             )
+            elapsed_ms = int((time.time() - start) * 1000)
+            logger.info(f"[{call_type}] Response status={response.status_code} | {elapsed_ms}ms")
+            if response.status_code >= 400:
+                logger.error(f"[{call_type}] HTTP {response.status_code} from {primary_url} | body={response.text[:500]}")
             response.raise_for_status()
             return response.json()
         except (requests.exceptions.RequestException, requests.exceptions.HTTPError) as e:
+            elapsed_ms = int((time.time() - start) * 1000)
+            logger.warning(f"[{call_type}] Primary request failed after {elapsed_ms}ms: {e}")
             if not fallback_url:
+                logger.error(f"[{call_type}] No fallback URL configured, raising error")
                 raise
-            print(f"  v2 request failed ({e}), falling back to v3: {fallback_url}")
+            logger.info(f"[{call_type}] Falling back to v3: {fallback_url}")
+            fallback_start = time.time()
             response = requests.post(
                 fallback_url,
                 headers=self._headers(),
@@ -73,6 +88,10 @@ class LLMClient:
                 verify=self.verify_ssl,
                 proxies=self.proxies
             )
+            fallback_ms = int((time.time() - fallback_start) * 1000)
+            logger.info(f"[{call_type}] Fallback response status={response.status_code} | {fallback_ms}ms")
+            if response.status_code >= 400:
+                logger.error(f"[{call_type}] Fallback HTTP {response.status_code} | body={response.text[:500]}")
             response.raise_for_status()
             return response.json()
 
@@ -86,8 +105,9 @@ class LLMClient:
         top_p: float = 0.9
     ) -> str:
         """Generate chat completion via REST API."""
+        model_name = self.fast_model if use_fast_model else self.model
         payload = {
-            "model": self.fast_model if use_fast_model else self.model,
+            "model": model_name,
             "messages": messages,
             "temperature": temperature,
             "top_p": top_p,
@@ -97,16 +117,36 @@ class LLMClient:
         if json_mode:
             payload["response_format"] = {"type": "json_object"}
 
-        data = self._request_with_fallback(self.chat_url, self.chat_url_v3, payload)
+        # Log the system prompt size and user message preview
+        sys_msg = next((m for m in messages if m.get("role") == "system"), None)
+        user_msg = next((m for m in reversed(messages) if m.get("role") == "user"), None)
+        sys_len = len(sys_msg["content"]) if sys_msg else 0
+        user_preview = (user_msg["content"][:120] + "...") if user_msg and len(user_msg["content"]) > 120 else (user_msg["content"] if user_msg else "N/A")
+        logger.info(f"[chat_completion] model={model_name} json_mode={json_mode} sys_prompt_chars={sys_len} user_preview=\"{user_preview}\"")
+
+        start = time.time()
+        try:
+            data = self._request_with_fallback(self.chat_url, self.chat_url_v3, payload, call_type="chat_completion")
+        except Exception as e:
+            elapsed_ms = int((time.time() - start) * 1000)
+            logger.error(f"[chat_completion] FAILED after {elapsed_ms}ms: {type(e).__name__}: {e}")
+            raise
+
+        elapsed_ms = int((time.time() - start) * 1000)
 
         # Handle response formats
         if "choices" in data and len(data["choices"]) > 0:
-            return data["choices"][0]["message"]["content"]
+            content = data["choices"][0]["message"]["content"]
+            logger.info(f"[chat_completion] OK {elapsed_ms}ms | response_chars={len(content)}")
+            return content
         elif "response" in data:
+            logger.info(f"[chat_completion] OK {elapsed_ms}ms | response_chars={len(data['response'])}")
             return data["response"]
         elif "content" in data:
+            logger.info(f"[chat_completion] OK {elapsed_ms}ms | response_chars={len(data['content'])}")
             return data["content"]
         else:
+            logger.error(f"[chat_completion] Unexpected response format after {elapsed_ms}ms: {str(data)[:300]}")
             raise ValueError(f"Unexpected response format: {data}")
 
     def chat_completion_with_usage(
@@ -123,24 +163,38 @@ class LLMClient:
 
     def generate_embedding(self, text: str) -> List[float]:
         """Generate embedding for single text via REST API."""
+        logger.info(f"[embedding] Single text, chars={len(text)}")
         return self.generate_embeddings_batch([text])[0]
 
     def generate_embeddings_batch(self, texts: List[str]) -> List[List[float]]:
         """Generate embeddings for multiple texts via REST API."""
+        logger.info(f"[embedding_batch] {len(texts)} texts, total_chars={sum(len(t) for t in texts)}")
         payload = {
             "model": self.embedding_model,
             "texts": texts,
             "dimensions": self.embedding_dimensions
         }
 
-        data = self._request_with_fallback(self.embedding_url, self.embedding_url_v3, payload)
+        start = time.time()
+        try:
+            data = self._request_with_fallback(self.embedding_url, self.embedding_url_v3, payload, call_type="embedding")
+        except Exception as e:
+            elapsed_ms = int((time.time() - start) * 1000)
+            logger.error(f"[embedding] FAILED after {elapsed_ms}ms: {type(e).__name__}: {e}")
+            raise
+
+        elapsed_ms = int((time.time() - start) * 1000)
 
         # Handle response formats
         if "data" in data:
-            return [item["embedding"] for item in data["data"]]
+            result = [item["embedding"] for item in data["data"]]
+            logger.info(f"[embedding] OK {elapsed_ms}ms | {len(result)} embeddings, dims={len(result[0]) if result else 0}")
+            return result
         elif isinstance(data, list):
+            logger.info(f"[embedding] OK {elapsed_ms}ms | {len(data)} embeddings")
             return data
         else:
+            logger.error(f"[embedding] Unexpected response format after {elapsed_ms}ms: {str(data)[:300]}")
             raise ValueError(f"Unexpected embedding response format: {data}")
 
 

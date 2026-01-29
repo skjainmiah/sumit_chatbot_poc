@@ -133,13 +133,18 @@ def render_chat_v2():
                 context
             )
 
-        if result.get("error"):
+        # Distinguish HTTP/connection errors (error=True) from application-level errors
+        # HTTP errors have {"error": True, "detail": "..."} - no response to display
+        # Application errors have {"error": "some string", "response": "...", "processing_time_ms": ...}
+        is_http_error = result.get("error") is True
+
+        if is_http_error:
             st.error(f"Error: {result.get('detail', 'Unknown error')}")
         else:
             # Update conversation ID
             st.session_state.conversation_id_v2 = result.get("conversation_id")
 
-            # Create assistant message
+            # Create assistant message (works for both success and application-level errors)
             assistant_msg = {
                 "role": "assistant",
                 "content": result.get("response", ""),
