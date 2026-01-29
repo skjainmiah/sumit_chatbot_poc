@@ -166,36 +166,78 @@ class LLMClient:
         logger.info(f"[embedding] Single text, chars={len(text)}")
         return self.generate_embeddings_batch([text])[0]
 
+    def _parse_embedding_response(self, data: dict) -> List[List[float]]:
+        """Parse embedding response from various API formats."""
+        if "data" in data:
+            # OpenAI-style: {"data": [{"embedding": [...]}]}
+            return [item["embedding"] for item in data["data"]]
+        elif "embeddings" in data:
+            # Coforge/Quasar style: {"embeddings": [...]}
+            emb = data["embeddings"]
+            if emb and isinstance(emb[0], list):
+                return emb  # Batch: list of lists
+            else:
+                return [emb]  # Single: flat list of floats
+        elif isinstance(data, list):
+            return data
+        else:
+            raise ValueError(f"Unexpected embedding response format: {str(data)[:300]}")
+
     def generate_embeddings_batch(self, texts: List[str]) -> List[List[float]]:
-        """Generate embeddings for multiple texts via REST API."""
+        """Generate embeddings for multiple texts via REST API.
+
+        First tries batch request. If the API returns only one embedding
+        for multiple texts, falls back to sending one text at a time.
+        """
         logger.info(f"[embedding_batch] {len(texts)} texts, total_chars={sum(len(t) for t in texts)}")
+
+        start = time.time()
+
+        # Try batch request first
         payload = {
             "model": self.embedding_model,
             "texts": texts,
             "dimensions": self.embedding_dimensions
         }
 
-        start = time.time()
         try:
             data = self._request_with_fallback(self.embedding_url, self.embedding_url_v3, payload, call_type="embedding")
+            result = self._parse_embedding_response(data)
+
+            # Check if API returned all embeddings or just one
+            if len(result) == len(texts):
+                elapsed_ms = int((time.time() - start) * 1000)
+                logger.info(f"[embedding] OK {elapsed_ms}ms | {len(result)} embeddings, dims={len(result[0]) if result else 0}")
+                return result
+
+            # API returned fewer embeddings than texts — fall back to one-at-a-time
+            if len(texts) > 1:
+                logger.warning(f"[embedding] Batch returned {len(result)} embeddings for {len(texts)} texts, falling back to sequential")
+                all_embeddings = []
+                for i, text in enumerate(texts):
+                    single_payload = {
+                        "model": self.embedding_model,
+                        "texts": [text],
+                        "dimensions": self.embedding_dimensions
+                    }
+                    single_data = self._request_with_fallback(
+                        self.embedding_url, self.embedding_url_v3, single_payload, call_type="embedding"
+                    )
+                    single_result = self._parse_embedding_response(single_data)
+                    all_embeddings.append(single_result[0])
+
+                elapsed_ms = int((time.time() - start) * 1000)
+                logger.info(f"[embedding] OK {elapsed_ms}ms | {len(all_embeddings)} embeddings (sequential), dims={len(all_embeddings[0])}")
+                return all_embeddings
+
+            elapsed_ms = int((time.time() - start) * 1000)
+            logger.info(f"[embedding] OK {elapsed_ms}ms | {len(result)} embeddings, dims={len(result[0]) if result else 0}")
+            return result
+
         except Exception as e:
             elapsed_ms = int((time.time() - start) * 1000)
             logger.error(f"[embedding] FAILED after {elapsed_ms}ms: {type(e).__name__}: {e}")
             raise
-
-        elapsed_ms = int((time.time() - start) * 1000)
-
-        # Handle response formats
-        if "data" in data:
-            result = [item["embedding"] for item in data["data"]]
-            logger.info(f"[embedding] OK {elapsed_ms}ms | {len(result)} embeddings, dims={len(result[0]) if result else 0}")
-            return result
-        elif isinstance(data, list):
-            logger.info(f"[embedding] OK {elapsed_ms}ms | {len(data)} embeddings")
-            return data
-        else:
-            logger.error(f"[embedding] Unexpected response format after {elapsed_ms}ms: {str(data)[:300]}")
-            raise ValueError(f"Unexpected embedding response format: {data}")
 
 
 # Singleton
