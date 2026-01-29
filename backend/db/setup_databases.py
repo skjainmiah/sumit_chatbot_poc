@@ -1132,7 +1132,11 @@ def setup_app_db():
 
 
 def seed_database_registry():
-    """Seed the database_registry table with existing mock databases."""
+    """Seed the database_registry table with existing mock databases.
+
+    Always recomputes absolute paths from the current machine's DB_DIR
+    so that the registry stays correct after cloning/deploying to a new machine.
+    """
     db_path = get_db_path("app.db")
     conn = sqlite3.connect(db_path)
     c = conn.cursor()
@@ -1189,9 +1193,19 @@ def seed_database_registry():
         """, (db["db_name"], db["db_path"], db["display_name"], db["description"],
               db["source_type"], db["is_visible"], db["is_system"], db["table_count"]))
 
+    # Also fix paths for any uploaded databases whose paths have stale absolute paths
+    c.execute("SELECT db_name, db_path FROM database_registry WHERE source_type != 'mock'")
+    for row in c.fetchall():
+        old_path = row[0] if isinstance(row, tuple) else row["db_path"]
+        db_name = row[0] if isinstance(row, tuple) else row["db_name"]
+        filename = os.path.basename(old_path if isinstance(row, tuple) else row[1])
+        new_path = str(DB_DIR / filename)
+        if old_path != new_path and os.path.exists(new_path):
+            c.execute("UPDATE database_registry SET db_path = ? WHERE db_name = ?", (new_path, db_name))
+
     conn.commit()
     conn.close()
-    print("[OK] database_registry seeded with mock databases")
+    print(f"[OK] database_registry seeded with mock databases (DB_DIR={DB_DIR})")
 
 
 def setup_all():

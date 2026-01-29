@@ -53,6 +53,14 @@ async def lifespan(app: FastAPI):
         logger.info("Mode: SQLite (v1 API)")
         logger.info(f"Database Dir: {settings.DATABASE_DIR}")
 
+    # Fix registry paths on startup (handles git clone / deploy to different machine)
+    try:
+        from backend.db.setup_databases import seed_database_registry
+        seed_database_registry()
+        logger.info("Database registry paths verified")
+    except Exception as e:
+        logger.warning(f"Could not refresh database registry: {e}")
+
     yield
     # Shutdown
     logger.info("Shutting down...")
