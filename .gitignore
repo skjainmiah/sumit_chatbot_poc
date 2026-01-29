@@ -6,9 +6,6 @@ __pycache__/
 .venv/
 venv/
 ENV/
-*.db
-data/databases/
-data/faiss_indexes/
 .idea/
 .vscode/
 *.egg-info/
