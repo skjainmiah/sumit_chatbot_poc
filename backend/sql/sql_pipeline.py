@@ -41,8 +41,8 @@ class SQLPipeline:
         """
         top_k = top_k or settings.SCHEMA_TOP_K
 
-        # Get visible databases
-        all_dbs = _get_visible_db_names()
+        # Get all databases
+        all_dbs = _get_all_db_names()
 
         # --- Stage 1: Keyword-based retrieval (fast, no API calls) ---
         keyword_schemas = get_schemas_by_keywords(query, max_tables=top_k + 4)
