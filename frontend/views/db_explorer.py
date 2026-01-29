@@ -5,6 +5,11 @@ import streamlit as st
 import pandas as pd
 from backend.config import settings
 
+# Force clear any cached data on module load
+if 'db_explorer_loaded' not in st.session_state:
+    st.session_state.db_explorer_loaded = True
+    st.cache_data.clear()
+
 
 def get_databases_from_registry():
     """Get databases from registry, with fallback to static config."""
@@ -127,6 +132,13 @@ def render_db_explorer():
 
     # Get databases
     DATABASES = get_databases_from_registry()
+
+    # Debug info (can be removed later)
+    with st.expander("🔧 Debug Info", expanded=False):
+        st.write(f"Databases found: {len(DATABASES)}")
+        for name, info in DATABASES.items():
+            exists = os.path.exists(info['path'])
+            st.write(f"- {name}: {info['path']} ({'EXISTS' if exists else 'MISSING'})")
 
     if not DATABASES:
         st.error("No databases found!")
