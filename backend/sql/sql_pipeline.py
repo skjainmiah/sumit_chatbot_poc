@@ -12,12 +12,12 @@ from backend.sql.schema_cache import get_schemas_by_keywords
 from backend.db.session import get_multi_db_connection
 
 
-def _get_visible_db_names() -> Set[str]:
-    """Get set of visible database names from registry."""
+def _get_all_db_names() -> Set[str]:
+    """Get set of all database names from registry."""
     try:
         from backend.db.registry import get_database_registry
         registry = get_database_registry()
-        return set(registry.get_visible_databases().keys())
+        return set(registry.get_all_db_mapping().keys())
     except Exception:
         return set()
 
@@ -42,14 +42,14 @@ class SQLPipeline:
         top_k = top_k or settings.SCHEMA_TOP_K
 
         # Get visible databases
-        visible_dbs = _get_visible_db_names()
+        all_dbs = _get_visible_db_names()
 
         # --- Stage 1: Keyword-based retrieval (fast, no API calls) ---
         keyword_schemas = get_schemas_by_keywords(query, max_tables=top_k + 4)
 
         # Filter by visibility
-        if visible_dbs:
-            keyword_schemas = [s for s in keyword_schemas if s.get("db_name") in visible_dbs]
+        if all_dbs:
+            keyword_schemas = [s for s in keyword_schemas if s.get("db_name") in all_dbs]
 
         # Track which tables we already have (by db_name.table_name)
         seen_tables = set()
@@ -75,7 +75,7 @@ class SQLPipeline:
                 # Skip duplicates and invisible databases
                 if table_key in seen_tables:
                     continue
-                if visible_dbs and db_name not in visible_dbs:
+                if all_dbs and db_name not in all_dbs:
                     continue
 
                 seen_tables.add(table_key)

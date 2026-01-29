@@ -19,7 +19,7 @@ def _get_db_mapping():
     try:
         from backend.db.registry import get_database_registry
         registry = get_database_registry()
-        mapping = registry.get_visible_databases()
+        mapping = registry.get_all_db_mapping()
         if mapping:
             return mapping
     except Exception as e:

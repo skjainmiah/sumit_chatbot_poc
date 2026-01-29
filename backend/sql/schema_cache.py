@@ -3,7 +3,6 @@ import sqlite3
 import re
 from typing import Dict, List, Optional
 from backend.config import settings
-from backend.db.registry import get_database_registry
 
 
 # Keyword to table mapping for instant schema retrieval
@@ -130,36 +129,21 @@ _schema_cache: Optional[Dict[str, Dict]] = None
 
 
 def _load_schema_cache() -> Dict[str, Dict]:
-    """Load schema metadata from app.db into memory, filtered by visible databases."""
+    """Load all schema metadata from app.db into memory."""
     global _schema_cache
     if _schema_cache is not None:
         return _schema_cache
 
     _schema_cache = {}
     try:
-        # Get visible database names from registry
-        try:
-            registry = get_database_registry()
-            visible_db_names = list(registry.get_visible_databases().keys())
-        except Exception:
-            visible_db_names = []
-
         conn = sqlite3.connect(settings.app_db_path)
         conn.row_factory = sqlite3.Row
         cursor = conn.cursor()
 
-        if visible_db_names:
-            placeholders = ",".join("?" * len(visible_db_names))
-            cursor.execute(f"""
-                SELECT db_name, table_name, column_details, row_count, ddl_statement, llm_description
-                FROM schema_metadata
-                WHERE db_name IN ({placeholders})
-            """, visible_db_names)
-        else:
-            cursor.execute("""
-                SELECT db_name, table_name, column_details, row_count, ddl_statement, llm_description
-                FROM schema_metadata
-            """)
+        cursor.execute("""
+            SELECT db_name, table_name, column_details, row_count, ddl_statement, llm_description
+            FROM schema_metadata
+        """)
 
         for row in cursor.fetchall():
             full_name = f"{row['db_name']}.{row['table_name']}"
@@ -172,7 +156,7 @@ def _load_schema_cache() -> Dict[str, Dict]:
                 "row_count": row['row_count']
             }
         conn.close()
-        print(f"Schema cache loaded: {len(_schema_cache)} tables (visible only)")
+        print(f"Schema cache loaded: {len(_schema_cache)} tables")
     except Exception as e:
         print(f"Error loading schema cache: {e}")
         _schema_cache = {}
@@ -181,7 +165,7 @@ def _load_schema_cache() -> Dict[str, Dict]:
 
 
 def reload_cache():
-    """Clear and reload the schema cache. Call when visibility changes."""
+    """Clear and reload the schema cache."""
     global _schema_cache
     _schema_cache = None
     _load_schema_cache()

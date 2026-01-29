@@ -15,14 +15,14 @@ class SchemaStats:
     estimated_tokens: int
 
 
-def _get_visible_db_names() -> Set[str]:
-    """Get set of visible database names from registry."""
+def _get_all_db_names() -> Set[str]:
+    """Get set of all database names from registry."""
     try:
         from backend.db.registry import get_database_registry
         registry = get_database_registry()
-        return set(registry.get_visible_databases().keys())
+        return set(registry.get_all_db_mapping().keys())
     except Exception:
-        # Fallback - all databases visible
+        # Fallback - empty set means use all
         return set()
 
 
@@ -182,18 +182,18 @@ class SchemaLoader:
         except Exception as e:
             print(f"Warning: Could not merge uploaded schemas: {e}")
 
-    def _generate_prompt_schema(self, visible_dbs: Set[str] = None) -> str:
+    def _generate_prompt_schema(self, all_dbs: Set[str] = None) -> str:
         """Generate optimized schema text for LLM prompts.
 
         Args:
-            visible_dbs: Set of visible database names to include. If None, include all.
+            all_dbs: Set of visible database names to include. If None, include all.
         """
         lines = []
 
         # Filter databases if visibility set provided
         databases = self._schema_data["databases"]
-        if visible_dbs:
-            databases = [db for db in databases if db["name"] in visible_dbs]
+        if all_dbs:
+            databases = [db for db in databases if db["name"] in all_dbs]
 
         if not databases:
             return "No databases available."
@@ -272,12 +272,12 @@ class SchemaLoader:
             return self._schema_text
 
         # Generate filtered schema text based on visibility
-        visible_dbs = _get_visible_db_names()
-        if not visible_dbs:
+        all_dbs = _get_all_db_names()
+        if not all_dbs:
             # No registry or all visible
             return self._schema_text
 
-        return self._generate_prompt_schema(visible_dbs)
+        return self._generate_prompt_schema(all_dbs)
 
     def get_schema_data(self) -> Dict:
         """Get raw schema data."""
@@ -303,11 +303,11 @@ class SchemaLoader:
         if not visible_only:
             return all_names
 
-        visible_dbs = _get_visible_db_names()
-        if not visible_dbs:
+        all_dbs = _get_all_db_names()
+        if not all_dbs:
             return all_names
 
-        return [name for name in all_names if name in visible_dbs]
+        return [name for name in all_names if name in all_dbs]
 
     def get_table_names(self, database: str = None, visible_only: bool = True) -> List[str]:
         """Get list of table names, optionally filtered by database.
@@ -316,13 +316,13 @@ class SchemaLoader:
             database: Filter to specific database name.
             visible_only: If True, only include tables from visible databases.
         """
-        visible_dbs = _get_visible_db_names() if visible_only else set()
+        all_dbs = _get_all_db_names() if visible_only else set()
 
         tables = []
         for db in self._schema_data["databases"]:
             if database and db["name"] != database:
                 continue
-            if visible_only and visible_dbs and db["name"] not in visible_dbs:
+            if visible_only and all_dbs and db["name"] not in all_dbs:
                 continue
             for table in db["tables"]:
                 table_name = table.get("name", table.get("full_name", ""))

@@ -5,66 +5,31 @@ import streamlit as st
 import pandas as pd
 from backend.config import settings
 
-# Force clear any cached data on module load
-if 'db_explorer_loaded' not in st.session_state:
-    st.session_state.db_explorer_loaded = True
-    st.cache_data.clear()
 
-
-def get_databases_from_registry():
-    """Get databases from registry, with fallback to static config."""
-    try:
-        from backend.db.registry import get_database_registry
-        registry = get_database_registry()
-        all_dbs = registry.get_all_databases()
-
-        if all_dbs:
-            databases = {}
-            for db_name, info in all_dbs.items():
-                if db_name == "app":
-                    continue  # Skip app database
-                databases[db_name] = {
-                    "path": info["db_path"],
-                    "description": info.get("description", ""),
-                    "source_type": info.get("source_type", "unknown"),
-                    "is_visible": info.get("is_visible", True),
-                    "display_name": info.get("display_name", db_name)
-                }
-            if databases:
-                return databases
-    except Exception as e:
-        st.warning(f"Registry error: {e}")
-
-    # Fallback to static config
-    return get_static_databases()
-
-
-def get_static_databases():
-    """Get static database configuration."""
-    databases = {}
-
-    # Check each database file exists
-    db_configs = [
-        ("crew_management", settings.crew_db_path, "Crew Management",
-         "Crew members, qualifications, assignments, rest records, documents, contacts"),
-        ("flight_operations", settings.flight_db_path, "Flight Operations",
-         "Airports, aircraft, flights, pairings, disruptions, hotels"),
-        ("hr_payroll", settings.hr_db_path, "HR Payroll",
-         "Pay grades, payroll records, leave, benefits, performance reviews, expenses"),
-        ("compliance_training", settings.compliance_db_path, "Compliance Training",
-         "Training courses/records, schedules, compliance checks, safety incidents, audit logs"),
-    ]
-
-    for db_name, db_path, display_name, description in db_configs:
-        if os.path.exists(db_path):
-            databases[db_name] = {
-                "path": db_path,
-                "description": description,
-                "source_type": "mock",
-                "is_visible": True,
-                "display_name": display_name
-            }
-
+def get_databases():
+    """Get all databases directly from config paths."""
+    databases = {
+        "crew_management": {
+            "path": settings.crew_db_path,
+            "display_name": "Crew Management",
+            "description": "Crew members, qualifications, assignments, rest records, documents, contacts"
+        },
+        "flight_operations": {
+            "path": settings.flight_db_path,
+            "display_name": "Flight Operations",
+            "description": "Airports, aircraft, flights, pairings, disruptions, hotels"
+        },
+        "hr_payroll": {
+            "path": settings.hr_db_path,
+            "display_name": "HR Payroll",
+            "description": "Pay grades, payroll records, leave, benefits, performance reviews, expenses"
+        },
+        "compliance_training": {
+            "path": settings.compliance_db_path,
+            "display_name": "Compliance Training",
+            "description": "Training courses/records, schedules, compliance checks, safety incidents, audit logs"
+        },
+    }
     return databases
 
 
@@ -130,21 +95,8 @@ def render_db_explorer():
     st.title("🗄️ Database Explorer")
     st.caption("Browse all databases, tables, schemas, and data")
 
-    # Get databases
-    DATABASES = get_databases_from_registry()
-
-    # Debug info (can be removed later)
-    with st.expander("🔧 Debug Info", expanded=False):
-        st.write(f"Databases found: {len(DATABASES)}")
-        for name, info in DATABASES.items():
-            exists = os.path.exists(info['path'])
-            st.write(f"- {name}: {info['path']} ({'EXISTS' if exists else 'MISSING'})")
-
-    if not DATABASES:
-        st.error("No databases found!")
-        st.info("Run the setup script to create mock databases:")
-        st.code("python scripts/run_all_setup.py", language="bash")
-        return
+    # Get databases directly from config
+    DATABASES = get_databases()
 
     # --- Overview Tab and Detail Tab ---
     tab_overview, tab_detail, tab_schema_meta = st.tabs(["📊 Overview", "🔍 Browse Tables", "📋 Schema Metadata"])
@@ -154,12 +106,9 @@ def render_db_explorer():
         st.subheader("Available Databases")
 
         for db_name, info in DATABASES.items():
-            # Show visibility status
-            visibility_icon = "👁️" if info.get("is_visible", True) else "🚫"
-            source_badge = "📦" if info.get("source_type") == "mock" else "⬆️" if info.get("source_type") == "uploaded" else ""
             display_name = info.get("display_name", db_name)
 
-            with st.expander(f"{visibility_icon} **{display_name}** {source_badge} - {info['description']}", expanded=False):
+            with st.expander(f"📦 **{display_name}** - {info['description']}", expanded=False):
                 if os.path.exists(info["path"]):
                     tables = get_table_list(info["path"])
                     if tables:
@@ -193,10 +142,6 @@ def render_db_explorer():
 
     # ===== BROWSE TABLES TAB =====
     with tab_detail:
-        if not DATABASES:
-            st.warning("No databases available")
-            return
-
         col1, col2 = st.columns([1, 2])
 
         db_names = list(DATABASES.keys())
@@ -208,13 +153,10 @@ def render_db_explorer():
                 format_func=lambda x: DATABASES[x].get("display_name", x.replace("_", " ").title())
             )
 
-        if not selected_db:
-            st.info("Select a database to browse tables")
-            return
-
         db_info = DATABASES[selected_db]
         if not os.path.exists(db_info["path"]):
             st.error(f"Database not found: {db_info['path']}")
+            st.info("Run: python scripts/run_all_setup.py")
             return
 
         tables = get_table_list(db_info["path"])

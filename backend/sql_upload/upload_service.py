@@ -372,23 +372,12 @@ class UploadService:
             conn.row_factory = sqlite3.Row
             cursor = conn.cursor()
 
-            # Only load visible databases
-            visible_dbs = self.registry.get_visible_databases().keys()
-
-            if visible_dbs:
-                placeholders = ",".join("?" * len(visible_dbs))
-                cursor.execute(f"""
-                    SELECT db_name, table_name, column_details, row_count,
-                           sample_values, ddl_statement, llm_description
-                    FROM schema_metadata
-                    WHERE db_name IN ({placeholders})
-                """, tuple(visible_dbs))
-            else:
-                cursor.execute("""
-                    SELECT db_name, table_name, column_details, row_count,
-                           sample_values, ddl_statement, llm_description
-                    FROM schema_metadata
-                """)
+            # Load all databases from schema_metadata
+            cursor.execute("""
+                SELECT db_name, table_name, column_details, row_count,
+                       sample_values, ddl_statement, llm_description
+                FROM schema_metadata
+            """)
 
             rows = cursor.fetchall()
             conn.close()
@@ -428,7 +417,7 @@ class UploadService:
 
             # Add to FAISS index
             store.add(texts, metadata_list)
-            print(f"FAISS index rebuilt with {len(texts)} tables from visible databases")
+            print(f"FAISS index rebuilt with {len(texts)} tables")
 
         except Exception as e:
             print(f"Warning: Failed to rebuild FAISS index: {e}")
@@ -497,12 +486,12 @@ class UploadService:
         return True, ""
 
 
-def refresh_schema_for_visible_databases() -> None:
+def refresh_all_schema() -> None:
     """Refresh schema metadata, FAISS index, V2 schema, and V1 keyword cache.
 
-    Call this when database visibility changes.
+    Call this when databases are added or updated.
     """
-    # Clear V1 keyword cache so it reloads with current visibility
+    # Clear V1 keyword cache so it reloads
     from backend.sql.schema_cache import reload_cache
     reload_cache()
 
@@ -520,4 +509,4 @@ def remove_schema_for_database(db_name: str) -> None:
     conn.close()
 
     # Rebuild FAISS index and reload V2 schema
-    refresh_schema_for_visible_databases()
+    refresh_all_schema()

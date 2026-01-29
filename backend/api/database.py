@@ -5,7 +5,7 @@ from typing import Optional, List, Dict, Any
 import os
 
 from backend.db.registry import get_database_registry
-from backend.sql_upload.upload_service import UploadService, refresh_schema_for_visible_databases, remove_schema_for_database
+from backend.sql_upload.upload_service import UploadService, refresh_all_schema, remove_schema_for_database
 from backend.api.auth import get_current_user, require_admin
 
 
@@ -128,19 +128,10 @@ async def upload_sql_file(
 
 @router.get("/list", response_model=DatabaseListResponse)
 async def list_databases(
-    include_hidden: bool = Query(False, description="Include hidden databases"),
     current_user: dict = Depends(get_current_user)
 ):
-    """List all registered databases.
-
-    - Regular users see only visible databases
-    - Admins can see all databases with include_hidden=true
-    """
+    """List all registered databases."""
     registry = get_database_registry()
-
-    # Check if user can see hidden databases
-    is_admin = current_user.get("role") == "admin"
-    show_hidden = include_hidden and is_admin
 
     all_dbs = registry.get_all_databases()
 
@@ -149,16 +140,13 @@ async def list_databases(
         if db_name == "app":
             continue  # Skip app database
 
-        if not show_hidden and not info["is_visible"]:
-            continue
-
         databases.append(DatabaseInfo(
             db_name=db_name,
             db_path=info["db_path"],
             display_name=info.get("display_name"),
             description=info.get("description"),
             source_type=info.get("source_type", "unknown"),
-            is_visible=bool(info.get("is_visible")),
+            is_visible=True,  # All databases are now visible
             is_system=bool(info.get("is_system")),
             table_count=info.get("table_count", 0),
             upload_filename=info.get("upload_filename"),
@@ -166,12 +154,10 @@ async def list_databases(
             created_at=info.get("created_at")
         ))
 
-    visible_count = sum(1 for db in databases if db.is_visible)
-
     return DatabaseListResponse(
         databases=databases,
         total=len(databases),
-        visible_count=visible_count
+        visible_count=len(databases)
     )
 
 
@@ -181,12 +167,9 @@ async def set_database_visibility(
     request: VisibilityRequest,
     current_user: dict = Depends(require_admin)
 ):
-    """Toggle database visibility for chat queries.
+    """Deprecated: All databases are now always visible.
 
-    - Visible databases are included in SQL query schema retrieval
-    - Hidden databases are excluded from chat but still accessible via explorer
-    - At least one database must remain visible
-    - Automatically rebuilds FAISS index when visibility changes
+    This endpoint is kept for backward compatibility but no longer changes visibility.
     """
     registry = get_database_registry()
 
@@ -195,33 +178,11 @@ async def set_database_visibility(
     if not db_info:
         raise HTTPException(status_code=404, detail=f"Database '{db_name}' not found")
 
-    # Check if trying to hide the last visible database
-    if not request.is_visible:
-        visible_count = registry.get_visible_count()
-        if visible_count <= 1 and db_info["is_visible"]:
-            raise HTTPException(
-                status_code=400,
-                detail="Cannot hide the last visible database. At least one database must remain visible."
-            )
-
-    # Update visibility
-    success = registry.set_visibility(db_name, request.is_visible)
-
-    if not success:
-        raise HTTPException(status_code=500, detail="Failed to update database visibility")
-
-    # Refresh FAISS index to reflect visibility change
-    try:
-        refresh_schema_for_visible_databases()
-    except Exception as e:
-        # Log but don't fail the request
-        print(f"Warning: Failed to refresh schema index: {e}")
-
     return {
         "success": True,
         "db_name": db_name,
-        "is_visible": request.is_visible,
-        "message": f"Database '{db_name}' is now {'visible' if request.is_visible else 'hidden'}. Schema index refreshed."
+        "is_visible": True,
+        "message": "Visibility feature has been removed. All databases are always visible."
     }
 
 
@@ -233,7 +194,7 @@ async def delete_database(
     """Delete an uploaded database.
 
     - Only uploaded databases can be deleted
-    - Mock databases cannot be deleted (they can only be hidden)
+    - Mock databases cannot be deleted
     - Deletes both the registry entry and the database file
     - Removes schema metadata and refreshes FAISS index
     """
@@ -248,7 +209,7 @@ async def delete_database(
     if db_info.get("source_type") == "mock":
         raise HTTPException(
             status_code=400,
-            detail="Cannot delete mock databases. Use visibility toggle to hide them instead."
+            detail="Cannot delete mock databases."
         )
 
     # Delete the database
@@ -306,18 +267,13 @@ async def get_database_info(
     if not db_info:
         raise HTTPException(status_code=404, detail=f"Database '{db_name}' not found")
 
-    # Non-admins can only see visible databases
-    is_admin = current_user.get("role") == "admin"
-    if not is_admin and not db_info["is_visible"]:
-        raise HTTPException(status_code=404, detail=f"Database '{db_name}' not found")
-
     return DatabaseInfo(
         db_name=db_name,
         db_path=db_info["db_path"],
         display_name=db_info.get("display_name"),
         description=db_info.get("description"),
         source_type=db_info.get("source_type", "unknown"),
-        is_visible=bool(db_info.get("is_visible")),
+        is_visible=True,  # All databases are now visible
         is_system=bool(db_info.get("is_system")),
         table_count=db_info.get("table_count", 0),
         upload_filename=db_info.get("upload_filename"),
