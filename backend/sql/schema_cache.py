@@ -1,8 +1,11 @@
 """In-memory schema cache - eliminates embedding API calls for schema retrieval."""
 import sqlite3
 import re
+import logging
 from typing import Dict, List, Optional
 from backend.config import settings
+
+logger = logging.getLogger("chatbot.sql.schema_cache")
 
 
 # Keyword to table mapping for instant schema retrieval
@@ -156,9 +159,14 @@ def _load_schema_cache() -> Dict[str, Dict]:
                 "row_count": row['row_count']
             }
         conn.close()
-        print(f"Schema cache loaded: {len(_schema_cache)} tables")
+        logger.info(f"Schema cache loaded: {len(_schema_cache)} tables from {settings.app_db_path}")
+        if _schema_cache:
+            db_names = set(v["db_name"] for v in _schema_cache.values())
+            logger.info(f"Schema cache databases: {db_names}")
+        else:
+            logger.warning(f"Schema cache is EMPTY - schema_metadata table has no rows in {settings.app_db_path}")
     except Exception as e:
-        print(f"Error loading schema cache: {e}")
+        logger.error(f"Error loading schema cache from {settings.app_db_path}: {e}")
         _schema_cache = {}
 
     return _schema_cache

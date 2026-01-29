@@ -3,6 +3,7 @@ import re
 import json
 import sqlite3
 import time
+import logging
 from typing import Dict, List, Optional, Tuple, Any, Set
 from backend.config import settings
 from backend.llm.client import get_llm_client
@@ -10,6 +11,8 @@ from backend.llm.prompts import SQL_GENERATION_PROMPT, SQL_CORRECTION_PROMPT, SQ
 from backend.cache.vector_store import get_schema_store
 from backend.sql.schema_cache import get_schemas_by_keywords
 from backend.db.session import get_multi_db_connection
+
+logger = logging.getLogger("chatbot.sql.pipeline_v1")
 
 
 def _get_all_db_names() -> Set[str]:
@@ -43,13 +46,20 @@ class SQLPipeline:
 
         # Get all databases
         all_dbs = _get_all_db_names()
+        logger.info(f"[retrieve_schemas] query=\"{query[:80]}\" top_k={top_k} registry_dbs={all_dbs or 'EMPTY'}")
 
         # --- Stage 1: Keyword-based retrieval (fast, no API calls) ---
         keyword_schemas = get_schemas_by_keywords(query, max_tables=top_k + 4)
+        logger.info(f"[retrieve_schemas] Keyword match returned {len(keyword_schemas)} schemas: "
+                     f"{[s.get('db_name') + '.' + s.get('table_name') for s in keyword_schemas[:5]]}")
 
-        # Filter by visibility
+        # Filter by registered databases
         if all_dbs:
+            before_count = len(keyword_schemas)
             keyword_schemas = [s for s in keyword_schemas if s.get("db_name") in all_dbs]
+            if before_count != len(keyword_schemas):
+                logger.warning(f"[retrieve_schemas] Registry filter removed {before_count - len(keyword_schemas)} schemas "
+                               f"(registry has: {all_dbs})")
 
         # Track which tables we already have (by db_name.table_name)
         seen_tables = set()
