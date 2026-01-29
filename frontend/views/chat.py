@@ -1,6 +1,5 @@
-"""Chat page - main chat interface."""
+"""Chat page - main chat interface (V1) with visualization support."""
 import streamlit as st
-import json
 from frontend.api_client import APIClient
 from frontend.components.chat_message import render_message
 from frontend.components.feedback_buttons import render_feedback_buttons
@@ -8,7 +7,8 @@ from frontend.components.feedback_buttons import render_feedback_buttons
 
 def render_chat():
     """Render the chat interface."""
-    st.title("Chat with Crew Assistant")
+    st.title("💬 Chat with Crew Assistant")
+    st.caption("V1 - SQLite + FAISS | Ask about crew data, policies, schedules, and more")
 
     # Initialize API client with token
     client = APIClient(st.session_state.token)
@@ -17,8 +17,15 @@ def render_chat():
     chat_container = st.container()
 
     with chat_container:
-        for msg in st.session_state.messages:
-            render_message(msg, client)
+        for i, msg in enumerate(st.session_state.messages):
+            # Get the user query that preceded this assistant message
+            user_query = ""
+            if msg.get("role") == "assistant" and i > 0:
+                prev_msg = st.session_state.messages[i - 1]
+                if prev_msg.get("role") == "user":
+                    user_query = prev_msg.get("content", "")
+
+            render_message(msg, client, user_query=user_query)
 
     # Chat input
     if prompt := st.chat_input("Ask me anything about crew policies, schedules, or data..."):
@@ -41,7 +48,7 @@ def render_chat():
             # Update conversation ID
             st.session_state.conversation_id = result.get("conversation_id")
 
-            # Create assistant message
+            # Create assistant message (store user_query for visualization suggestions)
             assistant_msg = {
                 "role": "assistant",
                 "content": result.get("response", ""),
@@ -51,7 +58,8 @@ def render_chat():
                 "sql_query": result.get("sql_query"),
                 "sql_results": result.get("sql_results"),
                 "sources": result.get("sources"),
-                "processing_time_ms": result.get("processing_time_ms")
+                "processing_time_ms": result.get("processing_time_ms"),
+                "user_query": prompt,  # Store for visualization suggestions
             }
             st.session_state.messages.append(assistant_msg)
 
@@ -60,11 +68,21 @@ def render_chat():
 
     # Sidebar - conversation info
     with st.sidebar:
+        st.subheader("📋 Conversation")
+
         if st.session_state.conversation_id:
-            st.caption(f"Conversation ID: {st.session_state.conversation_id}")
+            st.caption(f"ID: {st.session_state.conversation_id}")
+
+        # New conversation button
+        if st.button("🔄 New Conversation", use_container_width=True):
+            st.session_state.messages = []
+            st.session_state.conversation_id = None
+            st.rerun()
+
+        st.divider()
 
         # Load previous conversations
-        st.subheader("Recent Conversations")
+        st.subheader("📚 Recent Conversations")
         conversations = client.list_conversations(limit=10)
 
         if not conversations.get("error") and conversations.get("conversations"):
@@ -79,6 +97,23 @@ def render_chat():
                         load_conversation(client, conv["conversation_id"])
         else:
             st.caption("No previous conversations")
+
+        st.divider()
+
+        # Quick tips
+        with st.expander("💡 Tips"):
+            st.markdown("""
+            **Try asking:**
+            - "Show crew members by role"
+            - "List flights to Dallas"
+            - "Who is unawarded in January?"
+            - "Compare payroll by department"
+
+            **For charts, try:**
+            - "Show a chart of crew by base"
+            - "Visualize training scores"
+            - "Compare leave balances"
+            """)
 
 
 def load_conversation(client: APIClient, conversation_id: int):

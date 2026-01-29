@@ -1,4 +1,4 @@
-"""Populate schema_metadata table with basic descriptions - NO LLM required."""
+"""Populate schema_metadata table with descriptions - uses LLM for uploaded DBs."""
 import sys
 import os
 import sqlite3
@@ -7,6 +7,33 @@ import json
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from backend.config import settings
+
+
+def _generate_llm_description(db_name: str, table_name: str,
+                               col_details: str, sample_str: str) -> str:
+    """Generate a rich table description using LLM. Returns empty string on failure."""
+    try:
+        from backend.llm.client import get_llm_client
+        from backend.llm.prompts import SCHEMA_DESCRIPTION_PROMPT
+
+        client = get_llm_client()
+        prompt = SCHEMA_DESCRIPTION_PROMPT.format(
+            db_name=db_name,
+            table_name=table_name,
+            columns=col_details,
+            sample_data=sample_str
+        )
+
+        description = client.chat_completion(
+            messages=[{"role": "user", "content": prompt}],
+            temperature=0.3,
+            max_tokens=300,
+            use_fast_model=True
+        )
+        return description.strip() if description else ""
+    except Exception as e:
+        print(f"  LLM description failed for {db_name}.{table_name}: {e}")
+        return ""
 
 
 def get_db_mapping():
@@ -117,11 +144,31 @@ def populate():
             sample = [dict(r) for r in c.fetchall()]
             sample_str = json.dumps(sample, default=str)[:500]
 
-            # Get description
-            desc = TABLE_DESCRIPTIONS.get(db_name, {}).get(
-                table_name,
-                f"Table {table_name} in {db_name} database with {row_count} rows. Columns: {col_details}"
-            )
+            # Get description: hand-written for mock DBs, LLM for uploaded DBs
+            desc = TABLE_DESCRIPTIONS.get(db_name, {}).get(table_name, "")
+
+            if not desc:
+                # No hand-written description — try LLM if API key is available
+                if settings.LLM_API_KEY:
+                    desc = _generate_llm_description(db_name, table_name, col_details, sample_str)
+
+                # Fallback to improved template
+                if not desc:
+                    col_names_lower = col_details.lower()
+                    heuristic = "general data"
+                    if "employee" in col_names_lower or "name" in col_names_lower:
+                        heuristic = "personnel or employee records"
+                    elif "amount" in col_names_lower or "price" in col_names_lower or "pay" in col_names_lower:
+                        heuristic = "financial or payment data"
+                    elif "date" in col_names_lower and "flight" in col_names_lower:
+                        heuristic = "flight schedule or operations data"
+                    elif "score" in col_names_lower or "training" in col_names_lower:
+                        heuristic = "training or assessment records"
+
+                    desc = (f"Table {table_name} in {db_name} database. "
+                            f"Contains {row_count} rows. "
+                            f"Columns: {col_details[:200]}. "
+                            f"Sample values suggest this table stores {heuristic}.")
 
             app_c.execute("""
                 INSERT OR REPLACE INTO schema_metadata

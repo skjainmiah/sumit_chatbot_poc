@@ -1,6 +1,7 @@
 """Chat API endpoints - main orchestration point."""
 import re
 import time
+import logging
 from typing import Optional, List, Tuple
 from pydantic import BaseModel
 from fastapi import APIRouter, HTTPException
@@ -15,6 +16,8 @@ from backend.llm.client import get_llm_client
 from backend.llm.prompts import GENERAL_CHAT_PROMPT
 from backend.db.session import execute_write, execute_query
 from backend.config import settings
+
+logger = logging.getLogger("chatbot.api.chat")
 
 router = APIRouter()
 
@@ -247,15 +250,22 @@ async def send_message(request: ChatRequest, token: str):
 
     elif intent_result.intent == "DATA":
         # SQL Pipeline
-        sql_pipeline = SQLPipeline()
-        result = sql_pipeline.run(processed_query)
+        try:
+            sql_pipeline = SQLPipeline()
+            result = sql_pipeline.run(processed_query)
 
-        if result["success"]:
-            response_text = result["summary"]
-            sql_query = result["sql"]
-            sql_results = result["results"]
-        else:
-            response_text = f"I encountered an issue querying the database: {result.get('error', 'Unknown error')}. Please try rephrasing your question."
+            if result["success"]:
+                response_text = result["summary"]
+                sql_query = result["sql"]
+                sql_results = result["results"]
+            else:
+                logger.warning(f"V1 SQL pipeline failed: {result.get('error', 'unknown')}")
+                response_text = ("I wasn't able to find an answer for that. "
+                                 "Could you try rephrasing your question or providing more details?")
+        except Exception as e:
+            logger.error(f"V1 pipeline error for query '{processed_query}': {e}", exc_info=True)
+            response_text = ("I'm having trouble processing your request right now. "
+                             "Could you try rephrasing your question?")
 
     else:  # GENERAL
         # Quick response for simple greetings (skip LLM call)

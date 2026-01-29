@@ -6,12 +6,17 @@ from datetime import datetime
 from typing import Dict, List, Optional, Any
 from dataclasses import dataclass, field, asdict
 
+import logging
+
 from backend.config import settings
 from backend.sql_upload.pg_parser import PgDumpParser
 from backend.sql_upload.mssql_parser import MssqlDumpParser
 from backend.sql_upload.dialect_detector import SqlDialect, detect_sql_dialect
 from backend.sql_upload.db_creator import DatabaseCreator, CreationResult
 from backend.db.registry import get_database_registry
+from backend.llm.prompts import SCHEMA_DESCRIPTION_PROMPT
+
+logger = logging.getLogger("chatbot.upload_service")
 
 
 @dataclass
@@ -243,8 +248,33 @@ class UploadService:
         # Step 3: Reload V2 schema (for V2 new chat)
         self._reload_v2_schema()
 
+    def _generate_llm_description(self, db_name: str, table_name: str,
+                                   col_details: str, sample_str: str) -> Optional[str]:
+        """Generate a rich table description using LLM."""
+        try:
+            from backend.llm.client import get_llm_client
+            client = get_llm_client()
+
+            prompt = SCHEMA_DESCRIPTION_PROMPT.format(
+                db_name=db_name,
+                table_name=table_name,
+                columns=col_details,
+                sample_data=sample_str
+            )
+
+            description = client.chat_completion(
+                messages=[{"role": "user", "content": prompt}],
+                temperature=0.3,
+                max_tokens=300,
+                use_fast_model=True
+            )
+            return description.strip() if description else None
+        except Exception as e:
+            logger.warning(f"LLM description generation failed for {db_name}.{table_name}: {e}")
+            return None
+
     def _populate_schema_for_databases(self, databases: List[Dict]) -> None:
-        """Populate schema metadata for specified databases."""
+        """Populate schema metadata for specified databases with LLM descriptions."""
         conn = sqlite3.connect(settings.app_db_path)
         cursor = conn.cursor()
 
@@ -283,13 +313,33 @@ class UploadService:
                     ddl = db_cursor.fetchone()["sql"] or ""
 
                     # Get sample values
-                    db_cursor.execute(f"SELECT * FROM [{table_name}] LIMIT 2")
+                    db_cursor.execute(f"SELECT * FROM [{table_name}] LIMIT 3")
                     sample = [dict(r) for r in db_cursor.fetchall()]
                     sample_str = json.dumps(sample, default=str)[:500]
 
-                    # Auto-generated description
-                    desc = (f"Uploaded table {table_name} in {db_name} database "
-                            f"with {row_count} rows. Columns: {col_details[:200]}")
+                    # Try LLM-generated description first
+                    desc = self._generate_llm_description(
+                        db_name, table_name, col_details, sample_str
+                    )
+
+                    # Fallback to improved template if LLM fails
+                    if not desc:
+                        # Heuristic based on column names
+                        col_names_lower = col_details.lower()
+                        heuristic = "general data"
+                        if "employee" in col_names_lower or "name" in col_names_lower:
+                            heuristic = "personnel or employee records"
+                        elif "amount" in col_names_lower or "price" in col_names_lower or "pay" in col_names_lower:
+                            heuristic = "financial or payment data"
+                        elif "date" in col_names_lower and "flight" in col_names_lower:
+                            heuristic = "flight schedule or operations data"
+                        elif "score" in col_names_lower or "training" in col_names_lower:
+                            heuristic = "training or assessment records"
+
+                        desc = (f"Table {table_name} in {db_name} database. "
+                                f"Contains {row_count} rows. "
+                                f"Columns: {col_details[:200]}. "
+                                f"Sample values suggest this table stores {heuristic}.")
 
                     # Insert into schema_metadata
                     cursor.execute("""
@@ -301,7 +351,7 @@ class UploadService:
                 db_conn.close()
 
             except Exception as e:
-                print(f"Warning: Failed to populate schema for {db_name}: {e}")
+                logger.warning(f"Failed to populate schema for {db_name}: {e}")
 
         conn.commit()
         conn.close()
@@ -448,10 +498,14 @@ class UploadService:
 
 
 def refresh_schema_for_visible_databases() -> None:
-    """Refresh schema metadata, FAISS index, and V2 schema for all visible databases.
+    """Refresh schema metadata, FAISS index, V2 schema, and V1 keyword cache.
 
     Call this when database visibility changes.
     """
+    # Clear V1 keyword cache so it reloads with current visibility
+    from backend.sql.schema_cache import reload_cache
+    reload_cache()
+
     service = UploadService()
     service._rebuild_faiss_index()
     service._reload_v2_schema()

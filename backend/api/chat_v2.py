@@ -9,6 +9,7 @@ Simplified architecture:
 """
 
 import time
+import logging
 from typing import Optional, List
 from pydantic import BaseModel
 from fastapi import APIRouter, HTTPException
@@ -17,6 +18,8 @@ from backend.auth.jwt_handler import verify_token
 from backend.sql.pipeline_v2 import get_sql_pipeline
 from backend.pii.masker import mask_pii, unmask_pii
 from backend.llm.client import get_llm_client
+
+logger = logging.getLogger("chatbot.api.chat_v2")
 
 
 router = APIRouter()
@@ -139,9 +142,10 @@ async def send_message(request: ChatRequest, token: str = None):
         pipeline = get_sql_pipeline()
         result = pipeline.run(masked_query, context)
     except Exception as e:
+        logger.error(f"V2 pipeline error for query '{masked_query}': {e}", exc_info=True)
         return ChatResponse(
             success=False,
-            response=f"Sorry, I encountered an error: {str(e)}",
+            response="I'm having trouble processing your request right now. Could you try rephrasing your question?",
             intent="error",
             conversation_id=conv_id,
             error=str(e),
@@ -158,7 +162,9 @@ async def send_message(request: ChatRequest, token: str = None):
     elif result.get("success"):
         response_text = result.get("summary", "Query executed successfully.")
     else:
-        response_text = f"I couldn't complete that query. {result.get('error', '')}"
+        logger.warning(f"V2 query failed: {result.get('error', 'unknown')}")
+        response_text = ("I wasn't able to find an answer for that. "
+                         "Could you try rephrasing your question or providing more details?")
 
     # Unmask PII in response
     if pii_map:

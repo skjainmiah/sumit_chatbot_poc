@@ -39,7 +39,7 @@ class Settings(BaseSettings):
     INTENT_CONFIDENCE_THRESHOLD: float = 0.7
     SQL_MAX_RETRIES: int = 3
     SQL_TIMEOUT_SECONDS: int = 10
-    SCHEMA_TOP_K: int = 5
+    SCHEMA_TOP_K: int = 8
 
     # Admin defaults
     DEFAULT_ADMIN_USERNAME: str = "admin"

@@ -51,6 +51,19 @@ def build_faiss_indexes():
     build_schema_index()
 
 
+def process_sql_imports():
+    """Process any SQL files in data/sql_imports/ folder."""
+    from pathlib import Path
+    from backend.config import settings as _settings
+    import_dir = Path(_settings.DATABASE_DIR).parent / "sql_imports"
+    sql_files = list(import_dir.glob("*.sql")) if import_dir.exists() else []
+    if sql_files:
+        from scripts.import_sql_files import import_sql_files
+        import_sql_files()
+    else:
+        print("  No .sql files found in data/sql_imports/ - skipping.")
+
+
 def verify_setup():
     """Verify the setup was successful."""
     from backend.config import settings
@@ -101,6 +114,7 @@ def main():
     print("  2. Create admin and test users")
     print("  3. Populate schema metadata (no API key needed)")
     print("  4. Build FAISS indexes (requires LLM API)")
+    print("  5. Process SQL imports from data/sql_imports/")
     print("\nNote: Step 4 requires LLM_CHAT_URL and LLM_API_KEY in .env")
 
     # Check for API key
@@ -126,6 +140,9 @@ def main():
         print_header("Skipping Step 4 (No API key)")
         print("Set LLM_CHAT_URL and LLM_API_KEY in .env and run:")
         print("  python scripts/build_faiss_index.py")
+
+    print_header("Step 5: Processing SQL imports")
+    run_step("SQL file imports", process_sql_imports)
 
     print_header("Verification")
     verify_setup()

@@ -18,6 +18,7 @@ from enum import Enum
 
 from backend.config import settings
 from backend.llm.client import get_llm_client
+from backend.llm.prompts import SQL_CORRECTION_PROMPT, SQL_RESULT_SUMMARY_PROMPT
 from backend.schema.loader import get_schema_loader
 from backend.db.session import get_multi_db_connection
 
@@ -71,6 +72,22 @@ CRITICAL RULES:
 5. Use meaningful column aliases for readability
 6. For JOINs, always specify the join condition clearly
 7. Cross-database JOINs are supported: JOIN other_db.table_name ON ...
+8. All crew-related tables use employee_id (TEXT, e.g. 'AA-10001') as the universal join key across ALL databases.
+9. When asking about crew names, ALWAYS include first_name and last_name from crew_management.crew_members
+10. When the question mentions "unawarded" or "not awarded", filter crew_roster.roster_status = 'Not Awarded'
+11. For multi-database questions, use JOINs across databases freely - they work perfectly via employee_id
+12. Always include the crew_management.crew_members table when the user wants to see crew names/details
+
+CRITICAL DATA VALUE REFERENCE:
+- crew_roster.roster_month is TEXT with full month names: 'January', 'February', 'March', 'April', 'May', 'June', etc.
+- crew_roster.roster_year is INTEGER: 2025
+- crew_roster.roster_status values: 'Awarded', 'Reserve', 'Standby', 'Not Awarded', 'Training', 'Leave', 'Mixed'
+- crew_roster.not_awarded_reason values: 'Seniority', 'Qualification Gap', 'Schedule Conflict', 'Base Mismatch', 'Medical Hold', 'Training Conflict', 'Visa Issue', 'Staffing Requirement', 'Bid Not Submitted', 'Pairing Unavailable', 'Rest Requirement', 'Disciplinary Action', 'Probation Period', 'Union Dispute', 'Crew Complement Full', 'Aircraft Type Mismatch', 'Insufficient Flight Hours', 'Administrative Error', 'Voluntary Withdrawal', 'FAA Restriction', 'Fatigue Risk Flag'
+- crew_roster.duty_type values: 'Line Flying', 'Reserve', 'Standby', 'Training', 'Leave', 'Admin', 'Mixed'
+- crew_members.crew_role values: 'Captain', 'First Officer', 'Senior First Officer', 'Flight Engineer', 'Purser', 'Senior Cabin Crew', 'Cabin Crew', 'Trainee'
+- crew_members.status values: 'Active', 'On Leave', 'Suspended', 'Inactive', 'Retired'
+- flights.flight_status values: 'Scheduled', 'Boarding', 'Departed', 'In Air', 'Landed', 'Arrived', 'Cancelled', 'Diverted', 'Delayed'
+- leave_records.leave_type values: 'Annual Leave', 'Sick Leave', 'Emergency Leave', 'Training Leave'
 
 AVAILABLE SCHEMA:
 {schema}
@@ -363,17 +380,13 @@ class SQLPipelineV2:
                 conn.close()
 
     def _correct_sql(self, question: str, failed_sql: str, error: str) -> str:
-        """Attempt to correct failed SQL."""
-        correction_prompt = f"""The following SQL query failed. Please fix it.
-
-Original question: {question}
-
-Failed SQL:
-{failed_sql}
-
-Error message: {error}
-
-Generate a corrected SQL query. Return ONLY the SQL, no explanations."""
+        """Attempt to correct failed SQL using detailed correction prompt."""
+        correction_prompt = SQL_CORRECTION_PROMPT.format(
+            query=question,
+            failed_sql=failed_sql,
+            error_message=error,
+            schemas=self.schema_loader.get_schema_text()
+        )
 
         response = self.llm.chat_completion(
             messages=[
@@ -388,25 +401,19 @@ Generate a corrected SQL query. Return ONLY the SQL, no explanations."""
 
     def _summarize_results(self, question: str, sql: str, results: Dict) -> str:
         """Generate natural language summary of results."""
-        # For small result sets, include all data
-        rows_for_summary = results["rows"][:30]  # Limit for prompt size
+        rows_for_summary = results["rows"][:50]
 
-        summary_prompt = f"""Summarize these query results in natural language.
-
-User's question: {question}
-
-SQL executed: {sql}
-
-Results ({results['row_count']} rows):
-{json.dumps(rows_for_summary, indent=2, default=str)}
-
-Provide a concise, helpful summary. Format numbers and dates nicely.
-If there are many results, highlight key findings rather than listing everything."""
+        summary_prompt = SQL_RESULT_SUMMARY_PROMPT.format(
+            query=question,
+            sql=sql,
+            results=json.dumps(rows_for_summary, indent=2, default=str),
+            row_count=results["row_count"]
+        )
 
         response = self.llm.chat_completion(
             messages=[{"role": "user", "content": summary_prompt}],
             temperature=0.3,
-            max_tokens=500
+            max_tokens=1500
         )
 
         return response.strip()
@@ -530,6 +537,8 @@ If there are many results, highlight key findings rather than listing everything
         return {
             "success": False,
             "error": f"Query failed after {self.max_retries + 1} attempts. Last error: {last_error}",
+            "summary": ("I wasn't able to find an answer for that. "
+                        "Could you try rephrasing your question or providing more details?"),
             "intent": "data",
             "sql": sql,
             "results": None,

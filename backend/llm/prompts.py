@@ -46,9 +46,19 @@ IMPORTANT DATABASE INFORMATION:
 - There are 4 separate SQLite databases attached together: crew_management, flight_operations, hr_payroll, compliance_training
 - You MUST ALWAYS prefix table names with the database name: db_name.table_name
   Example: crew_management.crew_members, hr_payroll.payroll_records
-- Cross-database JOINs ARE supported. You can join tables across databases freely.
-- All crew-related tables use employee_id (TEXT, e.g. 'AA-10001') as the common identifier.
-  Use employee_id to JOIN crew data across databases.
+- Cross-database JOINs ARE fully supported. You can freely join tables across different databases.
+- All crew-related tables use employee_id (TEXT, e.g. 'AA-10001') as the universal join key across ALL databases.
+
+CRITICAL DATA VALUE REFERENCE:
+- crew_roster.roster_month is TEXT with full month names: 'January', 'February', 'March', 'April', 'May', 'June', etc.
+- crew_roster.roster_year is INTEGER: 2025
+- crew_roster.roster_status values: 'Awarded', 'Reserve', 'Standby', 'Not Awarded', 'Training', 'Leave', 'Mixed'
+- crew_roster.not_awarded_reason values: 'Seniority', 'Qualification Gap', 'Schedule Conflict', 'Base Mismatch', 'Medical Hold', 'Training Conflict', 'Visa Issue', 'Staffing Requirement', 'Bid Not Submitted', 'Pairing Unavailable', 'Rest Requirement', 'Disciplinary Action', 'Probation Period', 'Union Dispute', 'Crew Complement Full', 'Aircraft Type Mismatch', 'Insufficient Flight Hours', 'Administrative Error', 'Voluntary Withdrawal', 'FAA Restriction', 'Fatigue Risk Flag'
+- crew_roster.duty_type values: 'Line Flying', 'Reserve', 'Standby', 'Training', 'Leave', 'Admin', 'Mixed'
+- crew_members.crew_role values: 'Captain', 'First Officer', 'Senior First Officer', 'Flight Engineer', 'Purser', 'Senior Cabin Crew', 'Cabin Crew', 'Trainee'
+- crew_members.status values: 'Active', 'On Leave', 'Suspended', 'Inactive', 'Retired'
+- flights.flight_status values: 'Scheduled', 'Boarding', 'Departed', 'In Air', 'Landed', 'Arrived', 'Cancelled', 'Diverted', 'Delayed'
+- leave_records.leave_type values: 'Annual Leave', 'Sick Leave', 'Emergency Leave', 'Training Leave'
 
 Available schemas and tables:
 {schema_descriptions}
@@ -62,6 +72,10 @@ RULES:
 6. Use LIKE with % for partial text matching
 7. Handle NULL values appropriately
 8. For cross-database queries, JOIN on employee_id which is consistent across all databases
+9. When asking about crew names, ALWAYS include first_name and last_name from crew_management.crew_members
+10. When the question mentions "unawarded" or "not awarded", filter crew_roster.roster_status = 'Not Awarded'
+11. For multi-database questions, use JOINs across databases freely - they work perfectly via employee_id
+12. Always include the crew_management.crew_members table when the user wants to see crew names/details
 
 User question: {query}
 
@@ -80,13 +94,20 @@ Current question: {query}
 Generate a SQLite SELECT query to answer the question.
 Consider the conversation context for any referenced entities.
 
+CRITICAL DATA VALUE REFERENCE:
+- crew_roster.roster_month is TEXT: 'January', 'February', 'March', etc.
+- crew_roster.roster_status values: 'Awarded', 'Reserve', 'Standby', 'Not Awarded', 'Training', 'Leave', 'Mixed'
+- crew_members.crew_role values: 'Captain', 'First Officer', 'Purser', 'Senior Cabin Crew', 'Cabin Crew'
+- All crew tables use employee_id (TEXT, e.g. 'AA-10001') as universal join key across databases
+
 Rules:
 1. Only SELECT statements
 2. ALWAYS use db_name.table_name syntax (e.g. crew_management.crew_members)
-3. Cross-database JOINs are supported - JOIN on employee_id across databases
+3. Cross-database JOINs are fully supported - JOIN on employee_id across databases
 4. Add LIMIT 100 unless counting
 5. Use proper date functions for SQLite
 6. No markdown, just raw SQL
+7. Always include crew names (first_name, last_name) from crew_members when asking about people
 
 SQL:"""
 
@@ -105,8 +126,15 @@ Error message: {error_message}
 Available schemas:
 {schemas}
 
-IMPORTANT: Always prefix table names with the database name (e.g. crew_management.crew_members, hr_payroll.payroll_records).
-Cross-database JOINs are supported. Use employee_id to join crew data across databases.
+IMPORTANT RULES FOR CORRECTION:
+1. ALWAYS prefix table names with the database name (e.g. crew_management.crew_members, hr_payroll.payroll_records)
+2. Cross-database JOINs are fully supported. Use employee_id to join crew data across databases.
+3. If the error mentions "no such table", ensure you are using db_name.table_name syntax.
+4. If the error mentions "no such column", check the schema above for exact column names.
+5. crew_roster.roster_month is TEXT ('January', 'February', etc.), NOT numeric.
+6. crew_roster.roster_status values: 'Awarded', 'Reserve', 'Standby', 'Not Awarded', 'Training', 'Leave', 'Mixed'
+7. All cross-database JOINs should use employee_id as the join key.
+8. When showing crew details, JOIN with crew_management.crew_members for names.
 
 Generate a corrected SQL query that will work.
 Only output the corrected SQL, no explanations."""
@@ -126,10 +154,15 @@ Query results (as JSON):
 
 Number of rows returned: {row_count}
 
-Provide a natural language summary of these results. Be concise but informative.
-If the results are empty, explain what that means in context of the question.
-Format any dates, times, and numbers nicely.
-If there are many rows, summarize the key findings rather than listing everything."""
+SUMMARY RULES:
+1. Provide a clear, complete natural language summary of the results.
+2. If the user asked about specific crew members (e.g., "who", "which crew", "list"), include EVERY person's full name (first_name + last_name) in your answer. Do not skip names or say "and others".
+3. If there are additional relevant details (like role, reason, status), include them for each person.
+4. If the results are empty, explain what that means in context of the question.
+5. Format any dates, times, and numbers nicely.
+6. If there are more than 20 rows, list the first 20 with names and mention the total count.
+7. Group results logically (e.g., by reason, by role, by status) when it helps readability.
+8. Use a numbered list or bullet points when listing crew members for clarity."""
 
 # ============================================================
 # GENERAL CHAT

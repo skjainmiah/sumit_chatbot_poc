@@ -1,18 +1,39 @@
 """FastAPI application entry point."""
 import os
-from fastapi import FastAPI
+import uuid
+import time
+import logging
+from pathlib import Path
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 from contextlib import asynccontextmanager
 
 from backend.api.router import api_router
 from backend.config import settings
+
+# ============================================================
+# Logging setup
+# ============================================================
+LOG_DIR = Path(__file__).resolve().parent.parent / "logs"
+LOG_DIR.mkdir(exist_ok=True)
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
+    handlers=[
+        logging.FileHandler(LOG_DIR / "app.log"),
+        logging.StreamHandler(),
+    ],
+)
+logger = logging.getLogger("chatbot")
 
 # Import v2 API (PostgreSQL with full schema)
 try:
     from backend.api import chat_v2
     HAS_V2_API = True
 except ImportError as e:
-    print(f"Warning: v2 API not available: {e}")
+    logger.warning(f"v2 API not available: {e}")
     HAS_V2_API = False
 
 
@@ -20,21 +41,21 @@ except ImportError as e:
 async def lifespan(app: FastAPI):
     """Application lifespan handler."""
     # Startup
-    print("Starting Crew Chatbot API...")
-    print(f"LLM Model: {settings.LLM_MODEL}")
+    logger.info("Starting Crew Chatbot API...")
+    logger.info(f"LLM Model: {settings.LLM_MODEL}")
 
     # Check which mode we're running
     use_postgres = os.getenv("USE_POSTGRES", "false").lower() == "true"
     if use_postgres and HAS_V2_API:
-        print("Mode: PostgreSQL (v2 API)")
-        print(f"PostgreSQL: {os.getenv('PGHOST', 'localhost')}:{os.getenv('PGPORT', '5432')}")
+        logger.info("Mode: PostgreSQL (v2 API)")
+        logger.info(f"PostgreSQL: {os.getenv('PGHOST', 'localhost')}:{os.getenv('PGPORT', '5432')}")
     else:
-        print("Mode: SQLite (v1 API)")
-        print(f"Database Dir: {settings.DATABASE_DIR}")
+        logger.info("Mode: SQLite (v1 API)")
+        logger.info(f"Database Dir: {settings.DATABASE_DIR}")
 
     yield
     # Shutdown
-    print("Shutting down...")
+    logger.info("Shutting down...")
 
 
 app = FastAPI(
@@ -43,6 +64,36 @@ app = FastAPI(
     version="1.0.0",
     lifespan=lifespan
 )
+
+
+# ============================================================
+# Global exception handler
+# ============================================================
+@app.exception_handler(Exception)
+async def global_exception_handler(request: Request, exc: Exception):
+    error_id = str(uuid.uuid4())[:8]
+    logger.error(f"Unhandled exception [{error_id}]: {exc}", exc_info=True)
+    return JSONResponse(
+        status_code=500,
+        content={
+            "success": False,
+            "response": "Something went wrong. Please try again.",
+            "error_id": error_id,
+        },
+    )
+
+
+# ============================================================
+# Request logging middleware
+# ============================================================
+@app.middleware("http")
+async def request_logging_middleware(request: Request, call_next):
+    start = time.time()
+    response = await call_next(request)
+    duration_ms = int((time.time() - start) * 1000)
+    logger.info(f"{request.method} {request.url.path} -> {response.status_code} ({duration_ms}ms)")
+    return response
+
 
 # CORS middleware
 app.add_middleware(

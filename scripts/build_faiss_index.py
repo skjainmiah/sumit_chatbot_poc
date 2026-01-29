@@ -11,8 +11,22 @@ import json
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from backend.config import settings
-from backend.db.session import DB_MAPPING
 from backend.cache.vector_store import get_schema_store, get_document_store
+
+
+def _get_db_mapping():
+    """Get database mapping from registry, falling back to static DB_MAPPING."""
+    try:
+        from backend.db.registry import get_database_registry
+        registry = get_database_registry()
+        mapping = registry.get_visible_databases()
+        if mapping:
+            return mapping
+    except Exception as e:
+        print(f"Note: Using static DB mapping (registry not available: {e})")
+
+    from backend.db.session import DB_MAPPING
+    return {k: v for k, v in DB_MAPPING.items() if k != "app"}
 
 
 def build_schema_index():
@@ -43,7 +57,8 @@ def build_schema_index():
     texts = []
     metadata = []
 
-    for db_name, db_path in DB_MAPPING.items():
+    db_mapping = _get_db_mapping()
+    for db_name, db_path in db_mapping.items():
         if db_name == "app":
             continue
         if not os.path.exists(db_path):

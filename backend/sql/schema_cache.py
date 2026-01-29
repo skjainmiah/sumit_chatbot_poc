@@ -3,6 +3,7 @@ import sqlite3
 import re
 from typing import Dict, List, Optional
 from backend.config import settings
+from backend.db.registry import get_database_registry
 
 
 # Keyword to table mapping for instant schema retrieval
@@ -32,10 +33,32 @@ KEYWORD_TABLE_MAP = {
     "emergency": ["crew_management.crew_contacts"],
     "roster": ["crew_management.crew_roster"],
     "bid": ["crew_management.crew_roster"],
-    "award": ["crew_management.crew_roster"],
-    "not awarded": ["crew_management.crew_roster"],
-    "reserve": ["crew_management.crew_roster"],
-    "standby": ["crew_management.crew_roster"],
+    "award": ["crew_management.crew_roster", "crew_management.crew_members"],
+    "awarded": ["crew_management.crew_roster", "crew_management.crew_members"],
+    "unawarded": ["crew_management.crew_roster", "crew_management.crew_members"],
+    "unaward": ["crew_management.crew_roster", "crew_management.crew_members"],
+    "not awarded": ["crew_management.crew_roster", "crew_management.crew_members"],
+    "reserve": ["crew_management.crew_roster", "crew_management.crew_members"],
+    "standby": ["crew_management.crew_roster", "crew_management.crew_members"],
+    "roster_status": ["crew_management.crew_roster"],
+    "month": ["crew_management.crew_roster"],
+    "january": ["crew_management.crew_roster", "crew_management.crew_members"],
+    "february": ["crew_management.crew_roster", "crew_management.crew_members"],
+    "march": ["crew_management.crew_roster", "crew_management.crew_members"],
+    "april": ["crew_management.crew_roster", "crew_management.crew_members"],
+    "may": ["crew_management.crew_roster", "crew_management.crew_members"],
+    "june": ["crew_management.crew_roster", "crew_management.crew_members"],
+    "july": ["crew_management.crew_roster", "crew_management.crew_members"],
+    "august": ["crew_management.crew_roster", "crew_management.crew_members"],
+    "september": ["crew_management.crew_roster", "crew_management.crew_members"],
+    "october": ["crew_management.crew_roster", "crew_management.crew_members"],
+    "november": ["crew_management.crew_roster", "crew_management.crew_members"],
+    "december": ["crew_management.crew_roster", "crew_management.crew_members"],
+    "seniority": ["crew_management.crew_roster", "crew_management.crew_members"],
+    "bid preference": ["crew_management.crew_roster"],
+    "duty type": ["crew_management.crew_roster"],
+    "flight hours": ["crew_management.crew_roster", "hr_payroll.payroll_records"],
+    "block hours": ["crew_management.crew_roster"],
 
     # Flight operations
     "flight": ["flight_operations.flights", "crew_management.crew_assignments"],
@@ -82,6 +105,24 @@ KEYWORD_TABLE_MAP = {
     "safety": ["compliance_training.safety_incidents"],
     "incident": ["compliance_training.safety_incidents"],
     "audit": ["compliance_training.audit_logs"],
+
+    # Cross-database / cross-domain keywords
+    "who": ["crew_management.crew_members"],
+    "name": ["crew_management.crew_members"],
+    "names": ["crew_management.crew_members"],
+    "list": ["crew_management.crew_members"],
+    "show": ["crew_management.crew_members"],
+    "all crew": ["crew_management.crew_members"],
+    "active": ["crew_management.crew_members"],
+    "base": ["crew_management.crew_members", "flight_operations.airports"],
+    "role": ["crew_management.crew_members", "hr_payroll.pay_grades"],
+    "status": ["crew_management.crew_members"],
+    "score": ["compliance_training.training_records"],
+    "rating": ["hr_payroll.performance_reviews", "crew_management.crew_qualifications"],
+    "overdue": ["compliance_training.compliance_checks"],
+    "expired": ["crew_management.crew_qualifications"],
+    "expiring": ["crew_management.crew_qualifications"],
+    "reason": ["crew_management.crew_roster"],
 }
 
 # Full schema cache loaded from database
@@ -89,20 +130,37 @@ _schema_cache: Optional[Dict[str, Dict]] = None
 
 
 def _load_schema_cache() -> Dict[str, Dict]:
-    """Load all schema metadata from app.db into memory."""
+    """Load schema metadata from app.db into memory, filtered by visible databases."""
     global _schema_cache
     if _schema_cache is not None:
         return _schema_cache
 
     _schema_cache = {}
     try:
+        # Get visible database names from registry
+        try:
+            registry = get_database_registry()
+            visible_db_names = list(registry.get_visible_databases().keys())
+        except Exception:
+            visible_db_names = []
+
         conn = sqlite3.connect(settings.app_db_path)
         conn.row_factory = sqlite3.Row
         cursor = conn.cursor()
-        cursor.execute("""
-            SELECT db_name, table_name, column_details, row_count, ddl_statement, llm_description
-            FROM schema_metadata
-        """)
+
+        if visible_db_names:
+            placeholders = ",".join("?" * len(visible_db_names))
+            cursor.execute(f"""
+                SELECT db_name, table_name, column_details, row_count, ddl_statement, llm_description
+                FROM schema_metadata
+                WHERE db_name IN ({placeholders})
+            """, visible_db_names)
+        else:
+            cursor.execute("""
+                SELECT db_name, table_name, column_details, row_count, ddl_statement, llm_description
+                FROM schema_metadata
+            """)
+
         for row in cursor.fetchall():
             full_name = f"{row['db_name']}.{row['table_name']}"
             _schema_cache[full_name] = {
@@ -114,12 +172,19 @@ def _load_schema_cache() -> Dict[str, Dict]:
                 "row_count": row['row_count']
             }
         conn.close()
-        print(f"Schema cache loaded: {len(_schema_cache)} tables")
+        print(f"Schema cache loaded: {len(_schema_cache)} tables (visible only)")
     except Exception as e:
         print(f"Error loading schema cache: {e}")
         _schema_cache = {}
 
     return _schema_cache
+
+
+def reload_cache():
+    """Clear and reload the schema cache. Call when visibility changes."""
+    global _schema_cache
+    _schema_cache = None
+    _load_schema_cache()
 
 
 def _parse_columns(column_details: str, ddl: str) -> List[Dict]:

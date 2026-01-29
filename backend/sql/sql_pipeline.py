@@ -8,6 +8,7 @@ from backend.config import settings
 from backend.llm.client import get_llm_client
 from backend.llm.prompts import SQL_GENERATION_PROMPT, SQL_CORRECTION_PROMPT, SQL_RESULT_SUMMARY_PROMPT
 from backend.cache.vector_store import get_schema_store
+from backend.sql.schema_cache import get_schemas_by_keywords
 from backend.db.session import get_multi_db_connection
 
 
@@ -29,41 +30,82 @@ class SQLPipeline:
         self.max_retries = settings.SQL_MAX_RETRIES
 
     def retrieve_schemas(self, query: str, top_k: int = None) -> List[Dict]:
-        """Retrieve relevant schemas based on the query using vector search.
+        """Retrieve relevant schemas using keyword matching first, then vector search.
 
+        Uses a two-stage approach:
+        1. Fast keyword matching (no API calls) - reliable for known terms
+        2. FAISS vector search - catches semantic matches keywords might miss
+
+        Results are merged and deduplicated, with keyword matches prioritized.
         Only returns schemas from visible databases.
         """
         top_k = top_k or settings.SCHEMA_TOP_K
-        store = get_schema_store()
 
         # Get visible databases
         visible_dbs = _get_visible_db_names()
 
-        # Search with extra results to account for filtering
-        search_k = top_k * 2 if visible_dbs else top_k
-        results = store.search(query, top_k=search_k)
+        # --- Stage 1: Keyword-based retrieval (fast, no API calls) ---
+        keyword_schemas = get_schemas_by_keywords(query, max_tables=top_k + 4)
 
+        # Filter by visibility
+        if visible_dbs:
+            keyword_schemas = [s for s in keyword_schemas if s.get("db_name") in visible_dbs]
+
+        # Track which tables we already have (by db_name.table_name)
+        seen_tables = set()
         schemas = []
-        for meta, score in results:
-            db_name = meta["db_name"]
+        for s in keyword_schemas:
+            table_key = f"{s['db_name']}.{s['table_name']}"
+            if table_key not in seen_tables:
+                seen_tables.add(table_key)
+                schemas.append(s)
 
-            # Filter by visibility
-            if visible_dbs and db_name not in visible_dbs:
-                continue
+        # --- Stage 2: Vector search to fill remaining slots ---
+        remaining_slots = max(top_k - len(schemas), 2)  # Always try to add at least 2 more
+        try:
+            store = get_schema_store()
+            search_k = remaining_slots * 3  # Over-fetch to account for duplicates/filtering
+            results = store.search(query, top_k=search_k)
 
-            schemas.append({
-                "db_name": db_name,
-                "table_name": meta["table_name"],
-                "description": meta["description"],
-                "columns": meta["columns"],
-                "ddl": meta["ddl"],
-                "relevance_score": score
-            })
+            for meta, score in results:
+                db_name = meta.get("db_name", "")
+                table_name = meta.get("table_name", "")
+                table_key = f"{db_name}.{table_name}"
 
-            if len(schemas) >= top_k:
-                break
+                # Skip duplicates and invisible databases
+                if table_key in seen_tables:
+                    continue
+                if visible_dbs and db_name not in visible_dbs:
+                    continue
 
-        return schemas
+                seen_tables.add(table_key)
+                schemas.append({
+                    "db_name": db_name,
+                    "table_name": table_name,
+                    "description": meta.get("description", ""),
+                    "columns": meta.get("columns", []),
+                    "ddl": meta.get("ddl", ""),
+                    "relevance_score": score
+                })
+
+                if len(schemas) >= top_k + 4:  # Allow extra for cross-DB queries
+                    break
+        except Exception:
+            pass  # Keyword results are sufficient if vector search fails
+
+        # --- Cross-database detection: expand limit if query spans multiple DBs ---
+        db_names_found = set(s["db_name"] for s in schemas)
+        if len(db_names_found) > 1:
+            # Cross-database query detected - always include crew_members as join anchor
+            crew_members_key = "crew_management.crew_members"
+            if crew_members_key not in seen_tables:
+                anchor = get_schemas_by_keywords("crew member", max_tables=1)
+                if anchor:
+                    schemas.insert(0, anchor[0])
+            # Allow more schemas for cross-DB queries
+            return schemas[:top_k + 4]
+
+        return schemas[:top_k + 2]
 
     def format_schemas_for_prompt(self, schemas: List[Dict]) -> str:
         """Format schemas for the SQL generation prompt."""
@@ -179,14 +221,14 @@ Columns:
         prompt = SQL_RESULT_SUMMARY_PROMPT.format(
             query=query,
             sql=sql,
-            results=json.dumps(results["rows"][:20], default=str),  # Limit for prompt
+            results=json.dumps(results["rows"][:50], default=str),  # Include up to 50 rows
             row_count=results["row_count"]
         )
 
         response = self.llm_client.chat_completion(
             messages=[{"role": "user", "content": prompt}],
             temperature=0.3,
-            max_tokens=500
+            max_tokens=1500  # Increased to handle full crew name listings
         )
 
         return response.strip()
