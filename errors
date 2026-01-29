@@ -1,0 +1,53 @@
+2026-01-30 01:47:47,303 [INFO] chatbot: Starting Crew Chatbot API...
+2026-01-30 01:47:47,303 [INFO] chatbot: LLM Model: gpt-5-2
+2026-01-30 01:47:47,303 [INFO] chatbot: Mode: SQLite (v1 API)
+2026-01-30 01:47:47,304 [INFO] chatbot: Database Dir: C:\Users\Shaik.Jainmaih\Chat_v1_v2\sumit_chatbot_poc\data\databases
+2026-01-30 01:47:47,375 [INFO] chatbot: Database registry paths verified
+2026-01-30 01:48:11,421 [INFO] chatbot: POST /api/auth/login -> 200 (636ms)
+2026-01-30 01:48:15,455 [INFO] chatbot: GET /api/chat/conversations -> 200 (5ms)
+2026-01-30 01:48:37,983 [INFO] chatbot.sql.pipeline_v1: [retrieve_schemas] query="what is total crew count ?" top_k=5 registry_dbs={'hr_payroll', 'flight_operations', 'crew_management', 'fleet_maintenance', 'compliance_training'}
+2026-01-30 01:48:37,991 [INFO] chatbot.sql.schema_cache: Schema cache loaded: 33 tables from C:\Users\Shaik.Jainmaih\Chat_v1_v2\sumit_chatbot_poc\data\databases\app.db
+2026-01-30 01:48:37,992 [INFO] chatbot.sql.schema_cache: Schema cache databases: {'hr_payroll', 'flight_operations', 'crew_management', 'fleet_maintenance', 'compliance_training'}
+2026-01-30 01:48:37,993 [INFO] chatbot.sql.pipeline_v1: [retrieve_schemas] Keyword match returned 3 schemas: ['crew_management.crew_roster', 'crew_management.crew_assignments', 'crew_management.crew_members']
+2026-01-30 01:48:37,995 [INFO] chatbot.llm.client: [chat_completion] model=gpt-5-2 json_mode=False sys_prompt_chars=0 user_preview="You are a SQL expert for an American Airlines crew management database system.
+Generate a SQLite SELECT query to answer ..."
+2026-01-30 01:48:37,995 [INFO] chatbot.llm.client: [chat_completion] POST https://quasarmarket.coforge.com/qag/llmrouter-api/v2/completions | model=gpt-5-2
+2026-01-30 01:48:38,967 [INFO] chatbot.llm.client: [chat_completion] Response status=404 | 971ms
+2026-01-30 01:48:38,968 [ERROR] chatbot.llm.client: [chat_completion] HTTP 404 from https://quasarmarket.coforge.com/qag/llmrouter-api/v2/completions | body={"detail":"Not Found"}
+2026-01-30 01:48:38,969 [WARNING] chatbot.llm.client: [chat_completion] Primary request failed after 973ms: 404 Client Error: Not Found for url: https://quasarmarket.coforge.com/qag/llmrouter-api/v2/completions
+2026-01-30 01:48:38,970 [INFO] chatbot.llm.client: [chat_completion] Falling back to v3: https://quasarmarket.coforge.com/qag/llmrouter-api/v3/completions
+2026-01-30 01:48:39,684 [INFO] chatbot.llm.client: [chat_completion] Fallback response status=404 | 713ms
+2026-01-30 01:48:39,685 [ERROR] chatbot.llm.client: [chat_completion] Fallback HTTP 404 | body={"detail":"Not Found"}
+2026-01-30 01:48:39,687 [ERROR] chatbot.llm.client: [chat_completion] FAILED after 1691ms: HTTPError: 404 Client Error: Not Found for url: https://quasarmarket.coforge.com/qag/llmrouter-api/v3/completions
+2026-01-30 01:48:39,687 [ERROR] chatbot.api.chat: V1 pipeline error for query 'what is total crew count ?': 404 Client Error: Not Found for url: https://quasarmarket.coforge.com/qag/llmrouter-api/v3/completions
+Traceback (most recent call last):
+  File "C:\Users\Shaik.Jainmaih\Chat_v1_v2\sumit_chatbot_poc\backend\llm\client.py", line 73, in _request_with_fallback
+    response.raise_for_status()
+    ~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\Shaik.Jainmaih\AppData\Local\Programs\Python\Python313\Lib\site-packages\requests\models.py", line 1026, in raise_for_status
+    raise HTTPError(http_error_msg, response=self)
+requests.exceptions.HTTPError: 404 Client Error: Not Found for url: https://quasarmarket.coforge.com/qag/llmrouter-api/v2/completions
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\Shaik.Jainmaih\Chat_v1_v2\sumit_chatbot_poc\backend\api\chat.py", line 255, in send_message
+    result = sql_pipeline.run(processed_query)
+  File "C:\Users\Shaik.Jainmaih\Chat_v1_v2\sumit_chatbot_poc\backend\sql\sql_pipeline.py", line 263, in run
+    sql = self.generate_sql(query, schemas)
+  File "C:\Users\Shaik.Jainmaih\Chat_v1_v2\sumit_chatbot_poc\backend\sql\sql_pipeline.py", line 148, in generate_sql
+    response = self.llm_client.chat_completion(
+        messages=[{"role": "user", "content": prompt}],
+        temperature=0.0,
+        max_tokens=1000
+    )
+  File "C:\Users\Shaik.Jainmaih\Chat_v1_v2\sumit_chatbot_poc\backend\llm\client.py", line 129, in chat_completion
+    data = self._request_with_fallback(self.chat_url, self.chat_url_v3, payload, call_type="chat_completion")
+  File "C:\Users\Shaik.Jainmaih\Chat_v1_v2\sumit_chatbot_poc\backend\llm\client.py", line 95, in _request_with_fallback
+    response.raise_for_status()
+    ~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\Shaik.Jainmaih\AppData\Local\Programs\Python\Python313\Lib\site-packages\requests\models.py", line 1026, in raise_for_status
+    raise HTTPError(http_error_msg, response=self)
+requests.exceptions.HTTPError: 404 Client Error: Not Found for url: https://quasarmarket.coforge.com/qag/llmrouter-api/v3/completions
+2026-01-30 01:48:39,797 [INFO] chatbot: POST /api/chat/message -> 200 (1918ms)
+2026-01-30 01:48:40,816 [INFO] chatbot: GET /api/chat/conversations -> 200 (5ms)
