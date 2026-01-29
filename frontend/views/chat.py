@@ -8,7 +8,7 @@ from frontend.components.feedback_buttons import render_feedback_buttons
 def render_chat():
     """Render the chat interface."""
     st.title("💬 Chat with Crew Assistant")
-    st.caption("V1 - SQLite + FAISS | Ask about crew data, policies, schedules, and more")
+    st.caption("Ask about crew data, policies, schedules, and more")
 
     # Initialize API client with token
     client = APIClient(st.session_state.token)

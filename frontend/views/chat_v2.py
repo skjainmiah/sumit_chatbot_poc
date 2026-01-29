@@ -11,9 +11,9 @@ from frontend.components.visualization import (
 
 
 def render_chat_v2():
-    """Render the V2 chat interface (PostgreSQL) with visualization support."""
-    st.title("💬 Chat V2 (Full Schema)")
-    st.caption("Faster and more accurate | Beautiful visualizations included")
+    """Render the V2 chat interface with visualization support."""
+    st.title("💬 Chat with Crew Assistant V2")
+    st.caption("Ask about crew data, policies, schedules, and more")
 
     # Initialize API client
     client = APIClient(st.session_state.token)

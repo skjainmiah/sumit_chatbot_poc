@@ -48,16 +48,11 @@ def main():
             st.divider()
 
             # Navigation - include both chat versions
-            nav_options = ["Chat V1 (SQLite)", "Chat V2 (PostgreSQL)", "Database Explorer"]
+            nav_options = ["Chat V1", "Chat V2", "Database Explorer"]
             if st.session_state.user and st.session_state.user.get("role") == "admin":
                 nav_options.append("Admin Panel")
 
             page = st.radio("Navigation", nav_options, label_visibility="collapsed")
-
-            # Version info
-            st.divider()
-            st.caption("V1: SQLite + FAISS")
-            st.caption("V2: PostgreSQL + Full Schema")
 
             st.divider()
 
@@ -82,10 +77,10 @@ def main():
                 st.rerun()
 
         # Main content
-        if page == "Chat V1 (SQLite)":
+        if page == "Chat V1":
             from frontend.views.chat import render_chat
             render_chat()
-        elif page == "Chat V2 (PostgreSQL)":
+        elif page == "Chat V2":
             from frontend.views.chat_v2 import render_chat_v2
             render_chat_v2()
         elif page == "Database Explorer":

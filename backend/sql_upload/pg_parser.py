@@ -40,10 +40,17 @@ class ParsedDatabase:
 class PgDumpParser:
     """Parser for PostgreSQL dump files."""
 
-    # Regex patterns
+    # Regex patterns - updated to handle CASCADE and other PostgreSQL syntax
     CREATE_TABLE_START = re.compile(
         r'CREATE\s+TABLE\s+(?:IF\s+NOT\s+EXISTS\s+)?'
-        r'(?:(?P<schema>\w+)\.)?(?:"?(?P<table>\w+)"?)\s*\(',
+        r'(?:(?P<schema>[\w"]+)\.)?(?:"?(?P<table>[\w"]+)"?)\s*\(',
+        re.IGNORECASE
+    )
+
+    # Pattern to detect DROP TABLE (to extract table names even if CREATE fails)
+    DROP_TABLE_PATTERN = re.compile(
+        r'DROP\s+TABLE\s+(?:IF\s+EXISTS\s+)?'
+        r'(?:(?P<schema>[\w"]+)\.)?(?:"?(?P<table>[\w"]+)"?)',
         re.IGNORECASE
     )
 
@@ -105,12 +112,35 @@ class PgDumpParser:
         copy_inserts = self._extract_copy_statements(sql_content)
         inserts.extend(copy_inserts)
 
+        # If no tables found via CREATE TABLE, try to find database name from comments or DROP statements
+        db_name = None
+        if not tables:
+            # Try to extract from comment like "-- Database: cargo_operations"
+            db_comment = re.search(r'--\s*Database:\s*(\w+)', sql_content, re.IGNORECASE)
+            if db_comment:
+                db_name = db_comment.group(1)
+
+            # Try DROP TABLE statements to infer structure
+            drop_matches = list(self.DROP_TABLE_PATTERN.finditer(sql_content))
+            if drop_matches:
+                # Re-try parsing with more lenient approach
+                tables = self._extract_tables_lenient(sql_content)
+
         if tables:
-            # Generate database name from first table or use generic name
-            db_name = self._generate_db_name(tables)
+            if not db_name:
+                db_name = self._generate_db_name(tables)
             self.databases.append(ParsedDatabase(
                 name=db_name,
                 tables=tables,
+                inserts=inserts
+            ))
+        elif inserts:
+            # We have inserts but no tables - try to infer from inserts
+            if not db_name:
+                db_name = f"{inserts[0].table_name}_db" if inserts else "imported_db"
+            self.databases.append(ParsedDatabase(
+                name=db_name,
+                tables=[],
                 inserts=inserts
             ))
 
@@ -155,7 +185,7 @@ class PgDumpParser:
 
         for match in self.CREATE_TABLE_START.finditer(sql_content):
             schema = match.group("schema") or "public"
-            table_name = match.group("table")
+            table_name = match.group("table").strip('"')
 
             # Find the matching closing parenthesis, handling nested parens
             start_pos = match.end()
@@ -177,6 +207,40 @@ class PgDumpParser:
                 constraints=constraints,
                 raw_sql=raw_sql
             ))
+
+        return tables
+
+    def _extract_tables_lenient(self, sql_content: str) -> List[ParsedTable]:
+        """Extract CREATE TABLE statements with more lenient parsing.
+
+        This handles cases where the standard parser fails due to
+        PostgreSQL-specific syntax like CASCADE, SERIAL, etc.
+        """
+        tables = []
+
+        # More lenient pattern that captures until semicolon
+        lenient_pattern = re.compile(
+            r'CREATE\s+TABLE\s+(?:IF\s+NOT\s+EXISTS\s+)?'
+            r'(?:[\w"]+\.)?(?:"?([\w]+)"?)\s*\('
+            r'(.*?)\);',
+            re.IGNORECASE | re.DOTALL
+        )
+
+        for match in lenient_pattern.finditer(sql_content):
+            table_name = match.group(1).strip('"')
+            body = match.group(2)
+
+            # Parse columns
+            columns = self._parse_columns(body)
+
+            if columns:  # Only add if we found columns
+                tables.append(ParsedTable(
+                    name=table_name,
+                    schema="public",
+                    columns=columns,
+                    constraints=[],
+                    raw_sql=match.group(0)
+                ))
 
         return tables
 
@@ -226,7 +290,7 @@ class PgDumpParser:
 
             # Skip standalone constraints (not inline column constraints)
             upper_line = line.upper().lstrip()
-            if upper_line.startswith(("CONSTRAINT ", "PRIMARY KEY (", "FOREIGN KEY (", "UNIQUE (", "CHECK (")):
+            if upper_line.startswith(("CONSTRAINT ", "PRIMARY KEY (", "FOREIGN KEY (", "UNIQUE (", "CHECK (", "CREATE INDEX", "-- ")):
                 continue
 
             # Parse column definition
@@ -235,11 +299,53 @@ class PgDumpParser:
             if len(parts) >= 2:
                 col_name = parts[0].strip('"').strip("'")
                 # Skip if col_name is a SQL keyword (indicates a constraint)
-                if col_name.upper() in ("PRIMARY", "FOREIGN", "UNIQUE", "CHECK", "CONSTRAINT", "EXCLUDE"):
+                if col_name.upper() in ("PRIMARY", "FOREIGN", "UNIQUE", "CHECK", "CONSTRAINT", "EXCLUDE", "CREATE", "DROP", "ALTER", "INDEX"):
                     continue
 
                 # Reconstruct type - handle types with parentheses like NUMERIC(10,2)
-                col_type = parts[1]
+                col_type = parts[1].upper()
+
+                # Handle PostgreSQL-specific types
+                pg_type_mapping = {
+                    "SERIAL": "INTEGER",
+                    "BIGSERIAL": "INTEGER",
+                    "SMALLSERIAL": "INTEGER",
+                    "BOOLEAN": "INTEGER",
+                    "BOOL": "INTEGER",
+                    "TEXT": "TEXT",
+                    "VARCHAR": "TEXT",
+                    "CHAR": "TEXT",
+                    "CHARACTER": "TEXT",
+                    "TIMESTAMP": "TEXT",
+                    "TIMESTAMPTZ": "TEXT",
+                    "DATE": "TEXT",
+                    "TIME": "TEXT",
+                    "TIMETZ": "TEXT",
+                    "INTERVAL": "TEXT",
+                    "UUID": "TEXT",
+                    "JSON": "TEXT",
+                    "JSONB": "TEXT",
+                    "BYTEA": "BLOB",
+                    "NUMERIC": "REAL",
+                    "DECIMAL": "REAL",
+                    "REAL": "REAL",
+                    "DOUBLE": "REAL",
+                    "FLOAT": "REAL",
+                    "FLOAT4": "REAL",
+                    "FLOAT8": "REAL",
+                    "INT": "INTEGER",
+                    "INT2": "INTEGER",
+                    "INT4": "INTEGER",
+                    "INT8": "INTEGER",
+                    "INTEGER": "INTEGER",
+                    "BIGINT": "INTEGER",
+                    "SMALLINT": "INTEGER",
+                }
+
+                # Get base type (before parenthesis)
+                base_type = col_type.split('(')[0]
+                sqlite_type = pg_type_mapping.get(base_type, col_type)
+
                 idx = 2
                 # If type has opening paren without closing, grab more parts
                 if '(' in col_type and ')' not in col_type:
@@ -254,7 +360,7 @@ class PgDumpParser:
                 rest = " ".join(parts[idx:]).upper() if idx < len(parts) else ""
                 full_upper = line.upper()
 
-                is_pk = "PRIMARY KEY" in full_upper
+                is_pk = "PRIMARY KEY" in full_upper or "SERIAL" in full_upper
                 is_not_null = "NOT NULL" in full_upper
                 has_default = "DEFAULT" in full_upper
 
@@ -265,10 +371,14 @@ class PgDumpParser:
                                               line, re.IGNORECASE)
                     if default_match:
                         default_val = default_match.group(1).strip()
+                        # Handle PostgreSQL boolean defaults
+                        if default_val.upper() in ("TRUE", "FALSE"):
+                            default_val = "1" if default_val.upper() == "TRUE" else "0"
 
                 columns.append({
                     "name": col_name,
-                    "type": col_type,
+                    "type": sqlite_type,
+                    "original_type": col_type,
                     "is_primary_key": is_pk,
                     "is_not_null": is_not_null,
                     "default": default_val,
