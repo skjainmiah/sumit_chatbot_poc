@@ -1,0 +1,549 @@
+"""
+Text-to-SQL Pipeline v2 - Full Schema Approach
+
+Key improvements over v1:
+- No FAISS, full schema in prompt
+- Handles meta-questions directly
+- Better intent detection
+- Single-pass SQL generation
+- Proper error handling and clarification
+- Uses SQLite multi-db connection (supports both mock and uploaded databases)
+"""
+
+import re
+import json
+import time
+from typing import Dict, List, Optional, Tuple, Any
+from enum import Enum
+
+from backend.config import settings
+from backend.llm.client import get_llm_client
+from backend.schema.loader import get_schema_loader
+from backend.db.session import get_multi_db_connection
+
+
+class QueryIntent(Enum):
+    META = "meta"           # Questions about database structure
+    DATA = "data"           # Questions requiring SQL
+    AMBIGUOUS = "ambiguous" # Needs clarification
+    GENERAL = "general"     # Greetings, chitchat
+
+
+# Few-shot examples for SQL generation - customize these for your schema
+FEW_SHOT_EXAMPLES = """
+EXAMPLE QUERIES AND RESPONSES:
+
+Example 1 - Simple query:
+Q: "Show all employees"
+Response: {{"intent": "data", "response": {{"sql": "SELECT * FROM hr_payroll.employees LIMIT 100;", "explanation": "Retrieves all employee records"}}}}
+
+Example 2 - Aggregation:
+Q: "How many flights were scheduled last month?"
+Response: {{"intent": "data", "response": {{"sql": "SELECT COUNT(*) as flight_count FROM flight_operations.flights WHERE scheduled_date >= date('now', 'start of month', '-1 month') AND scheduled_date < date('now', 'start of month');", "explanation": "Counts flights from the previous calendar month"}}}}
+
+Example 3 - JOIN query:
+Q: "List crew members with their assignment details"
+Response: {{"intent": "data", "response": {{"sql": "SELECT cm.first_name, cm.last_name, ca.assignment_type FROM crew_management.crew_members cm JOIN crew_management.crew_assignments ca ON cm.crew_id = ca.crew_id LIMIT 100;", "explanation": "Joins crew members with assignments"}}}}
+
+Example 4 - Meta question:
+Q: "What databases are available?"
+Response: {{"intent": "meta", "response": {{"answer": "There are 4 databases available: crew_management, flight_operations, hr_payroll, compliance_training"}}}}
+
+Example 5 - Ambiguous question:
+Q: "Show me John's data"
+Response: {{"intent": "ambiguous", "response": {{"clarification": "There may be multiple people named John. Could you provide a last name or employee ID? Also, what specific information are you looking for (contact info, salary, assignments)?"}}}}
+"""
+
+
+SYSTEM_PROMPT = """You are an expert SQL assistant. Your job is to help users query databases.
+
+CRITICAL RULES:
+1. Always use FULLY QUALIFIED table names: database_name.table_name
+   Example: hr_payroll.employees (NOT just "employees")
+   Note: Do NOT include schema name - use database_name.table_name format only.
+2. Only generate SELECT statements - NEVER INSERT, UPDATE, DELETE, DROP, ALTER, CREATE
+3. Add LIMIT 100 to queries unless user asks for count/sum/aggregate or specifically wants all records
+4. Use SQLite-compatible syntax:
+   - Date functions: date(), datetime(), strftime(), date('now'), date('now', '-1 month')
+   - Use COALESCE, CASE WHEN, GROUP BY, ORDER BY as normal
+   - String concatenation: use || operator
+   - Use LIKE for pattern matching (case-insensitive by default in SQLite)
+5. Use meaningful column aliases for readability
+6. For JOINs, always specify the join condition clearly
+7. Cross-database JOINs are supported: JOIN other_db.table_name ON ...
+
+AVAILABLE SCHEMA:
+{schema}
+
+{examples}
+
+RESPONSE FORMAT:
+You MUST respond with valid JSON only. No markdown, no explanations outside JSON.
+"""
+
+
+USER_PROMPT_TEMPLATE = """Question: {question}
+
+{context}
+
+Respond with JSON in this exact format:
+{{
+    "intent": "meta" | "data" | "ambiguous",
+    "response": {{
+        "answer": "For meta questions only - direct answer about database structure",
+        "sql": "For data questions only - the SELECT query",
+        "explanation": "For data questions only - brief explanation",
+        "clarification": "For ambiguous questions only - what you need to know"
+    }}
+}}
+
+Only include the relevant fields for the intent type. Respond with valid JSON only."""
+
+
+class SQLPipelineV2:
+    """Improved Text-to-SQL pipeline with full schema approach."""
+
+    def __init__(self):
+        self.llm = get_llm_client()
+        self.schema_loader = get_schema_loader()
+        self.max_retries = getattr(settings, 'SQL_MAX_RETRIES', 2)
+        self.query_timeout = getattr(settings, 'SQL_TIMEOUT_SECONDS', 30)
+
+        # Build system prompt with full schema
+        self._system_prompt = SYSTEM_PROMPT.format(
+            schema=self.schema_loader.get_schema_text(),
+            examples=FEW_SHOT_EXAMPLES
+        )
+
+    def _detect_meta_question(self, question: str) -> bool:
+        """Quick check for meta-questions that don't need LLM."""
+        meta_patterns = [
+            # Database questions
+            r'\b(list|show|what|which|get|display)\b.*\b(database|databases|db|dbs)\b',
+            r'\bdatabases?\s*(available|exist|do (we|you) have)',
+            r'\bhow many\b.*\bdatabases?\b',
+            # Table questions
+            r'\b(list|show|what|which|get|display)\b.*\btables?\b',
+            r'\btables?\s*(available|exist|in)',
+            r'\bhow many\b.*\btables?\b',
+            r'\bwhat tables\b',
+            # Schema/structure questions
+            r'\b(describe|structure|schema|columns?)\b.*\b(database|table|db)\b',
+            r'\bavailable\b.*\b(database|table)',
+            r'\bwhat (is|are) the (schema|structure|columns)',
+            # Count questions
+            r'\b(how many|count|number of)\b.*\b(table|column|database)',
+        ]
+        question_lower = question.lower()
+        return any(re.search(p, question_lower) for p in meta_patterns)
+
+    def _answer_meta_question(self, question: str) -> Dict:
+        """Answer meta-questions directly without SQL."""
+        question_lower = question.lower()
+        schema_loader = self.schema_loader
+        schema_data = schema_loader.get_schema_data()
+        visible_db_names = set(schema_loader.get_database_names(visible_only=True))
+
+        # List databases
+        if re.search(r'\b(list|show|what|which|get|display|available)\b.*\bdatabase', question_lower):
+            db_names = list(visible_db_names)
+            # Also get table counts per database (only visible ones)
+            db_details = []
+            for db in schema_data.get("databases", []):
+                if db["name"] in visible_db_names:
+                    db_details.append(f"  • {db['name']} ({len(db.get('tables', []))} tables)")
+
+            return {
+                "success": True,
+                "intent": "meta",
+                "answer": f"There are {len(db_names)} databases available:\n" + "\n".join(db_details),
+                "sql": None,
+                "results": None
+            }
+
+        # List tables (check for specific database first)
+        if re.search(r'\b(list|show|what|which|get|display|available)\b.*\btable', question_lower):
+            # Check if specific database mentioned
+            db_match = None
+            for db in schema_loader.get_database_names():
+                if db.lower() in question_lower:
+                    db_match = db
+                    break
+
+            tables = schema_loader.get_table_names(db_match)
+            db_qualifier = f" in {db_match}" if db_match else ""
+
+            return {
+                "success": True,
+                "intent": "meta",
+                "answer": f"There are {len(tables)} tables{db_qualifier}:\n" +
+                          "\n".join(f"  • {t}" for t in tables[:50]) +
+                          (f"\n  ... and {len(tables) - 50} more" if len(tables) > 50 else ""),
+                "sql": None,
+                "results": None
+            }
+
+        # Describe table / show columns
+        if re.search(r'\b(describe|columns?|structure|schema)\b.*\b(table|for)\b', question_lower):
+            # Try to find table name in question
+            for db in schema_data.get("databases", []):
+                for table in db.get("tables", []):
+                    table_name = table.get("name", "").lower()
+                    full_name = table.get("full_name", "").lower()
+                    if table_name in question_lower or full_name in question_lower:
+                        # Found the table
+                        columns = table.get("columns", [])
+                        col_lines = []
+                        for col in columns:
+                            flags = []
+                            if col.get("is_primary_key"):
+                                flags.append("PK")
+                            if col.get("is_foreign_key"):
+                                flags.append("FK")
+                            if not col.get("is_nullable", True):
+                                flags.append("NOT NULL")
+                            flag_str = f" [{', '.join(flags)}]" if flags else ""
+                            col_lines.append(f"  • {col['name']}: {col['data_type']}{flag_str}")
+
+                        return {
+                            "success": True,
+                            "intent": "meta",
+                            "answer": f"Table: {db['name']}.{table['full_name']}\n"
+                                      f"Description: {table.get('description', 'N/A')}\n"
+                                      f"Rows: ~{table.get('row_count_estimate', 'unknown'):,}\n"
+                                      f"Columns ({len(columns)}):\n" + "\n".join(col_lines),
+                            "sql": None,
+                            "results": None
+                        }
+
+            # Table not found
+            return {
+                "success": True,
+                "intent": "meta",
+                "answer": "I couldn't identify the table you're asking about. "
+                          "Please specify the table name. Available tables:\n" +
+                          "\n".join(f"  • {t}" for t in schema_loader.get_table_names()[:20]),
+                "sql": None,
+                "results": None
+            }
+
+        # Count tables/databases/columns
+        if re.search(r'\b(how many|count|number of)\b', question_lower):
+            stats = schema_loader.get_stats()
+            return {
+                "success": True,
+                "intent": "meta",
+                "answer": f"Database statistics:\n"
+                          f"  • Databases: {stats.total_databases}\n"
+                          f"  • Tables: {stats.total_tables}\n"
+                          f"  • Columns: {stats.total_columns}\n"
+                          f"  • Estimated prompt tokens: ~{stats.estimated_tokens:,}",
+                "sql": None,
+                "results": None
+            }
+
+        # General structure question - return full meta info
+        return {
+            "success": True,
+            "intent": "meta",
+            "answer": schema_loader.get_meta_info(),
+            "sql": None,
+            "results": None
+        }
+
+    def _validate_sql(self, sql: str) -> Tuple[bool, str]:
+        """Validate SQL for safety."""
+        sql_upper = sql.upper().strip()
+
+        # Must be SELECT
+        if not sql_upper.startswith('SELECT'):
+            return False, "Only SELECT statements are allowed"
+
+        # Check for forbidden operations
+        forbidden = ['DROP', 'DELETE', 'UPDATE', 'INSERT', 'ALTER', 'CREATE',
+                     'TRUNCATE', 'GRANT', 'REVOKE', 'EXEC', 'EXECUTE']
+        for word in forbidden:
+            if re.search(rf'\b{word}\b', sql_upper):
+                return False, f"Forbidden operation: {word}"
+
+        return True, "Valid"
+
+    def _clean_sql(self, sql: str) -> str:
+        """Clean SQL from LLM response."""
+        sql = sql.strip()
+        # Remove markdown code blocks
+        sql = re.sub(r'^```sql\s*', '', sql, flags=re.IGNORECASE)
+        sql = re.sub(r'^```\s*', '', sql)
+        sql = re.sub(r'\s*```$', '', sql)
+        # Remove trailing semicolons (we'll add if needed)
+        sql = sql.rstrip(';').strip()
+        return sql + ';'
+
+    def _parse_llm_response(self, response: str) -> Dict:
+        """Parse JSON response from LLM."""
+        # Try to extract JSON from response
+        try:
+            # Try direct parse
+            return json.loads(response)
+        except json.JSONDecodeError:
+            pass
+
+        # Try to find JSON in response
+        json_match = re.search(r'\{[\s\S]*\}', response)
+        if json_match:
+            try:
+                return json.loads(json_match.group())
+            except json.JSONDecodeError:
+                pass
+
+        # Fallback: treat as raw SQL if it looks like SQL
+        if response.strip().upper().startswith('SELECT'):
+            return {
+                "intent": "data",
+                "response": {
+                    "sql": response.strip(),
+                    "explanation": "Generated SQL query"
+                }
+            }
+
+        raise ValueError(f"Could not parse LLM response: {response[:200]}")
+
+    def _generate_sql(self, question: str, context: str = "") -> Dict:
+        """Generate SQL using LLM with full schema."""
+        user_prompt = USER_PROMPT_TEMPLATE.format(
+            question=question,
+            context=f"Conversation context: {context}" if context else ""
+        )
+
+        response = self.llm.chat_completion(
+            messages=[
+                {"role": "system", "content": self._system_prompt},
+                {"role": "user", "content": user_prompt}
+            ],
+            temperature=0.0,
+            max_tokens=2000,
+            json_mode=True
+        )
+
+        return self._parse_llm_response(response)
+
+    def _clean_sql_for_sqlite(self, sql: str) -> str:
+        """Remove schema qualifiers (e.g. .public.) from SQL for SQLite compatibility."""
+        # Replace db_name.public.table_name with db_name.table_name
+        sql = re.sub(r'(\w+)\.public\.(\w+)', r'\1.\2', sql)
+        # Replace db_name.dbo.table_name with db_name.table_name
+        sql = re.sub(r'(\w+)\.dbo\.(\w+)', r'\1.\2', sql)
+        return sql
+
+    def _execute_sql(self, sql: str) -> Tuple[bool, Any, str]:
+        """Execute SQL query using SQLite multi-db connection."""
+        conn = None
+        try:
+            # Clean SQL for SQLite compatibility
+            sql = self._clean_sql_for_sqlite(sql)
+
+            conn = get_multi_db_connection(visible_only=True)
+            # Set busy timeout to avoid hanging on locked databases
+            conn.execute(f"PRAGMA busy_timeout = {self.query_timeout * 1000}")
+
+            cursor = conn.execute(sql)
+            rows = cursor.fetchall()
+            columns = [desc[0] for desc in cursor.description] if cursor.description else []
+
+            results = {
+                "columns": columns,
+                "rows": [dict(row) for row in rows],
+                "row_count": len(rows)
+            }
+            return True, results, ""
+        except Exception as e:
+            return False, None, str(e)
+        finally:
+            if conn:
+                conn.close()
+
+    def _correct_sql(self, question: str, failed_sql: str, error: str) -> str:
+        """Attempt to correct failed SQL."""
+        correction_prompt = f"""The following SQL query failed. Please fix it.
+
+Original question: {question}
+
+Failed SQL:
+{failed_sql}
+
+Error message: {error}
+
+Generate a corrected SQL query. Return ONLY the SQL, no explanations."""
+
+        response = self.llm.chat_completion(
+            messages=[
+                {"role": "system", "content": self._system_prompt},
+                {"role": "user", "content": correction_prompt}
+            ],
+            temperature=0.0,
+            max_tokens=1000
+        )
+
+        return self._clean_sql(response)
+
+    def _summarize_results(self, question: str, sql: str, results: Dict) -> str:
+        """Generate natural language summary of results."""
+        # For small result sets, include all data
+        rows_for_summary = results["rows"][:30]  # Limit for prompt size
+
+        summary_prompt = f"""Summarize these query results in natural language.
+
+User's question: {question}
+
+SQL executed: {sql}
+
+Results ({results['row_count']} rows):
+{json.dumps(rows_for_summary, indent=2, default=str)}
+
+Provide a concise, helpful summary. Format numbers and dates nicely.
+If there are many results, highlight key findings rather than listing everything."""
+
+        response = self.llm.chat_completion(
+            messages=[{"role": "user", "content": summary_prompt}],
+            temperature=0.3,
+            max_tokens=500
+        )
+
+        return response.strip()
+
+    def refresh_schema(self, reload_loader: bool = True):
+        """Refresh the system prompt with latest schema.
+
+        Args:
+            reload_loader: If True, also reload the schema loader from disk/DB.
+                          Set to False if the loader was already reloaded externally.
+        """
+        if reload_loader:
+            self.schema_loader.reload()
+        self._system_prompt = SYSTEM_PROMPT.format(
+            schema=self.schema_loader.get_schema_text(),
+            examples=FEW_SHOT_EXAMPLES
+        )
+
+    def run(self, question: str, context: str = "") -> Dict:
+        """Run the full SQL pipeline."""
+        start_time = time.time()
+
+        # Step 1: Check for meta-questions (no LLM needed)
+        if self._detect_meta_question(question):
+            result = self._answer_meta_question(question)
+            result["processing_time_ms"] = int((time.time() - start_time) * 1000)
+            return result
+
+        # Step 2: Generate SQL using LLM
+        try:
+            llm_response = self._generate_sql(question, context)
+        except Exception as e:
+            return {
+                "success": False,
+                "error": f"Failed to understand question: {str(e)}",
+                "intent": "error",
+                "sql": None,
+                "results": None,
+                "processing_time_ms": int((time.time() - start_time) * 1000)
+            }
+
+        intent = llm_response.get("intent", "data")
+        response_data = llm_response.get("response", {})
+
+        # Handle ambiguous intent
+        if intent == "ambiguous":
+            return {
+                "success": True,
+                "intent": "ambiguous",
+                "clarification": response_data.get("clarification", "Could you please provide more details?"),
+                "sql": None,
+                "results": None,
+                "processing_time_ms": int((time.time() - start_time) * 1000)
+            }
+
+        # Handle meta intent from LLM
+        if intent == "meta":
+            return {
+                "success": True,
+                "intent": "meta",
+                "answer": response_data.get("answer", ""),
+                "sql": None,
+                "results": None,
+                "processing_time_ms": int((time.time() - start_time) * 1000)
+            }
+
+        # Handle data intent - execute SQL
+        sql = response_data.get("sql", "")
+        if not sql:
+            return {
+                "success": False,
+                "error": "No SQL generated",
+                "intent": "data",
+                "sql": None,
+                "results": None,
+                "processing_time_ms": int((time.time() - start_time) * 1000)
+            }
+
+        sql = self._clean_sql(sql)
+
+        # Validate SQL
+        is_valid, validation_msg = self._validate_sql(sql)
+        if not is_valid:
+            return {
+                "success": False,
+                "error": f"Invalid SQL: {validation_msg}",
+                "intent": "data",
+                "sql": sql,
+                "results": None,
+                "processing_time_ms": int((time.time() - start_time) * 1000)
+            }
+
+        # Execute with retry loop
+        last_error = ""
+        for attempt in range(self.max_retries + 1):
+            success, results, error = self._execute_sql(sql)
+
+            if success:
+                # Generate summary
+                summary = self._summarize_results(question, sql, results)
+
+                return {
+                    "success": True,
+                    "intent": "data",
+                    "sql": sql,
+                    "results": results,
+                    "summary": summary,
+                    "explanation": response_data.get("explanation", ""),
+                    "attempts": attempt + 1,
+                    "processing_time_ms": int((time.time() - start_time) * 1000)
+                }
+
+            # Attempt correction
+            last_error = error
+            if attempt < self.max_retries:
+                sql = self._correct_sql(question, sql, error)
+                is_valid, validation_msg = self._validate_sql(sql)
+                if not is_valid:
+                    last_error = validation_msg
+
+        return {
+            "success": False,
+            "error": f"Query failed after {self.max_retries + 1} attempts. Last error: {last_error}",
+            "intent": "data",
+            "sql": sql,
+            "results": None,
+            "processing_time_ms": int((time.time() - start_time) * 1000)
+        }
+
+
+# Singleton
+_pipeline: Optional[SQLPipelineV2] = None
+
+
+def get_sql_pipeline() -> SQLPipelineV2:
+    """Get SQL pipeline singleton."""
+    global _pipeline
+    if _pipeline is None:
+        _pipeline = SQLPipelineV2()
+    return _pipeline

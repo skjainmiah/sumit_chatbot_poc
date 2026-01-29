@@ -1,0 +1,292 @@
+{
+  "extracted_at": "2024-01-01T00:00:00",
+  "total_databases": 2,
+  "total_tables": 4,
+  "total_columns": 20,
+  "databases": [
+    {
+      "name": "hr_db",
+      "extracted_at": "2024-01-01T00:00:00",
+      "table_count": 2,
+      "tables": [
+        {
+          "database": "hr_db",
+          "schema": "public",
+          "name": "employees",
+          "full_name": "public.employees",
+          "description": "Employee master records",
+          "row_count_estimate": 1000,
+          "primary_keys": ["employee_id"],
+          "foreign_keys": [
+            {
+              "from_column": "department_id",
+              "to_schema": "public",
+              "to_table": "departments",
+              "to_column": "department_id"
+            }
+          ],
+          "indexes": ["employees_pkey", "idx_employees_department"],
+          "column_count": 6,
+          "columns": [
+            {
+              "name": "employee_id",
+              "data_type": "integer",
+              "is_nullable": false,
+              "column_default": "nextval('employees_employee_id_seq'::regclass)",
+              "is_primary_key": true,
+              "is_foreign_key": false,
+              "foreign_key_ref": null,
+              "description": "Unique employee identifier"
+            },
+            {
+              "name": "first_name",
+              "data_type": "varchar(100)",
+              "is_nullable": false,
+              "column_default": null,
+              "is_primary_key": false,
+              "is_foreign_key": false,
+              "foreign_key_ref": null,
+              "description": "Employee first name"
+            },
+            {
+              "name": "last_name",
+              "data_type": "varchar(100)",
+              "is_nullable": false,
+              "column_default": null,
+              "is_primary_key": false,
+              "is_foreign_key": false,
+              "foreign_key_ref": null,
+              "description": "Employee last name"
+            },
+            {
+              "name": "email",
+              "data_type": "varchar(255)",
+              "is_nullable": false,
+              "column_default": null,
+              "is_primary_key": false,
+              "is_foreign_key": false,
+              "foreign_key_ref": null,
+              "description": "Employee email address"
+            },
+            {
+              "name": "department_id",
+              "data_type": "integer",
+              "is_nullable": true,
+              "column_default": null,
+              "is_primary_key": false,
+              "is_foreign_key": true,
+              "foreign_key_ref": "public.departments.department_id",
+              "description": "Foreign key to departments"
+            },
+            {
+              "name": "hire_date",
+              "data_type": "date",
+              "is_nullable": false,
+              "column_default": "CURRENT_DATE",
+              "is_primary_key": false,
+              "is_foreign_key": false,
+              "foreign_key_ref": null,
+              "description": "Date employee was hired"
+            }
+          ]
+        },
+        {
+          "database": "hr_db",
+          "schema": "public",
+          "name": "departments",
+          "full_name": "public.departments",
+          "description": "Department information",
+          "row_count_estimate": 10,
+          "primary_keys": ["department_id"],
+          "foreign_keys": [],
+          "indexes": ["departments_pkey"],
+          "column_count": 4,
+          "columns": [
+            {
+              "name": "department_id",
+              "data_type": "integer",
+              "is_nullable": false,
+              "column_default": "nextval('departments_department_id_seq'::regclass)",
+              "is_primary_key": true,
+              "is_foreign_key": false,
+              "foreign_key_ref": null,
+              "description": "Unique department identifier"
+            },
+            {
+              "name": "name",
+              "data_type": "varchar(100)",
+              "is_nullable": false,
+              "column_default": null,
+              "is_primary_key": false,
+              "is_foreign_key": false,
+              "foreign_key_ref": null,
+              "description": "Department name"
+            },
+            {
+              "name": "location",
+              "data_type": "varchar(100)",
+              "is_nullable": true,
+              "column_default": null,
+              "is_primary_key": false,
+              "is_foreign_key": false,
+              "foreign_key_ref": null,
+              "description": "Department location"
+            },
+            {
+              "name": "budget",
+              "data_type": "numeric(15,2)",
+              "is_nullable": true,
+              "column_default": null,
+              "is_primary_key": false,
+              "is_foreign_key": false,
+              "foreign_key_ref": null,
+              "description": "Annual department budget"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "sales_db",
+      "extracted_at": "2024-01-01T00:00:00",
+      "table_count": 2,
+      "tables": [
+        {
+          "database": "sales_db",
+          "schema": "public",
+          "name": "customers",
+          "full_name": "public.customers",
+          "description": "Customer information",
+          "row_count_estimate": 5000,
+          "primary_keys": ["customer_id"],
+          "foreign_keys": [],
+          "indexes": ["customers_pkey", "idx_customers_email"],
+          "column_count": 5,
+          "columns": [
+            {
+              "name": "customer_id",
+              "data_type": "integer",
+              "is_nullable": false,
+              "column_default": "nextval('customers_customer_id_seq'::regclass)",
+              "is_primary_key": true,
+              "is_foreign_key": false,
+              "foreign_key_ref": null,
+              "description": "Unique customer identifier"
+            },
+            {
+              "name": "name",
+              "data_type": "varchar(200)",
+              "is_nullable": false,
+              "column_default": null,
+              "is_primary_key": false,
+              "is_foreign_key": false,
+              "foreign_key_ref": null,
+              "description": "Customer full name"
+            },
+            {
+              "name": "email",
+              "data_type": "varchar(255)",
+              "is_nullable": false,
+              "column_default": null,
+              "is_primary_key": false,
+              "is_foreign_key": false,
+              "foreign_key_ref": null,
+              "description": "Customer email"
+            },
+            {
+              "name": "created_at",
+              "data_type": "timestamp",
+              "is_nullable": false,
+              "column_default": "CURRENT_TIMESTAMP",
+              "is_primary_key": false,
+              "is_foreign_key": false,
+              "foreign_key_ref": null,
+              "description": "Account creation date"
+            },
+            {
+              "name": "total_spent",
+              "data_type": "numeric(15,2)",
+              "is_nullable": true,
+              "column_default": "0",
+              "is_primary_key": false,
+              "is_foreign_key": false,
+              "foreign_key_ref": null,
+              "description": "Total amount spent by customer"
+            }
+          ]
+        },
+        {
+          "database": "sales_db",
+          "schema": "public",
+          "name": "orders",
+          "full_name": "public.orders",
+          "description": "Order records",
+          "row_count_estimate": 50000,
+          "primary_keys": ["order_id"],
+          "foreign_keys": [
+            {
+              "from_column": "customer_id",
+              "to_schema": "public",
+              "to_table": "customers",
+              "to_column": "customer_id"
+            }
+          ],
+          "indexes": ["orders_pkey", "idx_orders_customer", "idx_orders_date"],
+          "column_count": 5,
+          "columns": [
+            {
+              "name": "order_id",
+              "data_type": "integer",
+              "is_nullable": false,
+              "column_default": "nextval('orders_order_id_seq'::regclass)",
+              "is_primary_key": true,
+              "is_foreign_key": false,
+              "foreign_key_ref": null,
+              "description": "Unique order identifier"
+            },
+            {
+              "name": "customer_id",
+              "data_type": "integer",
+              "is_nullable": false,
+              "column_default": null,
+              "is_primary_key": false,
+              "is_foreign_key": true,
+              "foreign_key_ref": "public.customers.customer_id",
+              "description": "Customer who placed the order"
+            },
+            {
+              "name": "order_date",
+              "data_type": "timestamp",
+              "is_nullable": false,
+              "column_default": "CURRENT_TIMESTAMP",
+              "is_primary_key": false,
+              "is_foreign_key": false,
+              "foreign_key_ref": null,
+              "description": "Date order was placed"
+            },
+            {
+              "name": "amount",
+              "data_type": "numeric(15,2)",
+              "is_nullable": false,
+              "column_default": null,
+              "is_primary_key": false,
+              "is_foreign_key": false,
+              "foreign_key_ref": null,
+              "description": "Order total amount"
+            },
+            {
+              "name": "status",
+              "data_type": "varchar(50)",
+              "is_nullable": false,
+              "column_default": "'pending'",
+              "is_primary_key": false,
+              "is_foreign_key": false,
+              "foreign_key_ref": null,
+              "description": "Order status (pending, completed, cancelled)"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

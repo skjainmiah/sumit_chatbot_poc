@@ -1,0 +1,31 @@
+# Backend
+fastapi
+uvicorn[standard]
+python-jose[cryptography]
+bcrypt
+pydantic-settings
+python-multipart
+python-dotenv
+httpx
+requests
+aiosqlite
+
+# PostgreSQL
+psycopg2-binary
+
+# LLM & AI (using company REST API, no OpenAI SDK)
+# faiss-cpu  # Not needed for v2 (full schema approach)
+
+# PII Masking (optional - comment out if not needed)
+# presidio-analyzer
+# presidio-anonymizer
+# spacy
+
+# SQL
+sqlglot
+
+# Frontend
+streamlit
+plotly
+pandas
+numpy
