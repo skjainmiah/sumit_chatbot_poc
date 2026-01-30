@@ -1,19 +1,165 @@
-AttributeError: 'list' object has no attribute 'get'
-Traceback:
-File "C:\Users\Shaik.Jainmaih\Chat_v1_v2\sumit_chatbot_poc\frontend\app.py", line 95, in <module>
-    main()
-    ~~~~^^
-File "C:\Users\Shaik.Jainmaih\Chat_v1_v2\sumit_chatbot_poc\frontend\app.py", line 91, in main
-    render_admin()
-    ~~~~~~~~~~~~^^
-File "C:\Users\Shaik.Jainmaih\Chat_v1_v2\sumit_chatbot_poc\frontend\views\admin.py", line 34, in render_admin
-    render_database_management()
-    ~~~~~~~~~~~~~~~~~~~~~~~~~~^^
-File "C:\Users\Shaik.Jainmaih\Chat_v1_v2\sumit_chatbot_poc\frontend\views\database_management.py", line 25, in render_database_management
-    render_upload_section(client)
-    ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^
-File "C:\Users\Shaik.Jainmaih\Chat_v1_v2\sumit_chatbot_poc\frontend\views\database_management.py", line 95, in render_upload_section
-    history = client.get_upload_history(limit=10)
-File "C:\Users\Shaik.Jainmaih\Chat_v1_v2\sumit_chatbot_poc\frontend\api_client.py", line 246, in get_upload_history
-    if result.get("error"):
-       ^^^^^^^^^^
+  You can now view your Streamlit app in your browser.
+
+  Local URL: http://localhost:8501
+  Network URL: http://192.168.1.24:8501
+
+2026-01-30 10:25:56.139 Thread 'Thread-5 (_animate)': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+2026-01-30 10:25:56.141 Thread 'Thread-5 (_animate)': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+2026-01-30 10:25:56.141 Thread 'Thread-5 (_animate)': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+Exception in thread Thread-5 (_animate):
+Traceback (most recent call last):
+  File "C:\Users\Shaik.Jainmaih\AppData\Local\Programs\Python\Python313\Lib\threading.py", line 1043, in _bootstrap_inner
+    self.run()
+    ~~~~~~~~^^
+  File "C:\Users\Shaik.Jainmaih\AppData\Local\Programs\Python\Python313\Lib\threading.py", line 994, in run
+    self._target(*self._args, **self._kwargs)
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Shaik.Jainmaih\Chat_v1_v2\sumit_chatbot_poc\frontend\components\loading_facts.py", line 68, in _animate    
+    placeholder.markdown(
+    ~~~~~~~~~~~~~~~~~~~~^
+        f"""
+        ^^^^
+    ...<25 lines>...
+        unsafe_allow_html=True
+        ^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\Shaik.Jainmaih\AppData\Local\Programs\Python\Python313\Lib\site-packages\streamlit\runtime\metrics_util.py", line 443, in wrapped_func
+    result = non_optional_func(*args, **kwargs)
+  File "C:\Users\Shaik.Jainmaih\AppData\Local\Programs\Python\Python313\Lib\site-packages\streamlit\elements\markdown.py", line 166, in markdown
+    return self.dg._enqueue("markdown", markdown_proto, layout_config=layout_config)
+           ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Shaik.Jainmaih\AppData\Local\Programs\Python\Python313\Lib\site-packages\streamlit\delta_generator.py", line 502, in _enqueue
+    _enqueue_message(msg)
+    ~~~~~~~~~~~~~~~~^^^^^
+  File "C:\Users\Shaik.Jainmaih\AppData\Local\Programs\Python\Python313\Lib\site-packages\streamlit\runtime\scriptrunner_utils\script_run_context.py", line 292, in enqueue_message
+    raise NoSessionContext()
+streamlit.errors.NoSessionContext
+2026-01-30 10:26:51.618 Thread 'Thread-6 (_animate)': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+2026-01-30 10:26:51.619 Thread 'Thread-6 (_animate)': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+2026-01-30 10:26:51.620 Thread 'Thread-6 (_animate)': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+Exception in thread Thread-6 (_animate):
+Traceback (most recent call last):
+  File "C:\Users\Shaik.Jainmaih\AppData\Local\Programs\Python\Python313\Lib\threading.py", line 1043, in _bootstrap_inner   
+    self.run()
+    ~~~~~~~~^^
+  File "C:\Users\Shaik.Jainmaih\AppData\Local\Programs\Python\Python313\Lib\threading.py", line 994, in run
+    self._target(*self._args, **self._kwargs)
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Shaik.Jainmaih\Chat_v1_v2\sumit_chatbot_poc\frontend\components\loading_facts.py", line 68, in _animate    
+    placeholder.markdown(
+    ~~~~~~~~~~~~~~~~~~~~^
+        f"""
+        ^^^^
+    ...<25 lines>...
+        unsafe_allow_html=True
+        ^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\Shaik.Jainmaih\AppData\Local\Programs\Python\Python313\Lib\site-packages\streamlit\runtime\metrics_util.py", line 443, in wrapped_func
+    result = non_optional_func(*args, **kwargs)
+  File "C:\Users\Shaik.Jainmaih\AppData\Local\Programs\Python\Python313\Lib\site-packages\streamlit\elements\markdown.py", line 166, in markdown
+    return self.dg._enqueue("markdown", markdown_proto, layout_config=layout_config)
+           ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Shaik.Jainmaih\AppData\Local\Programs\Python\Python313\Lib\site-packages\streamlit\delta_generator.py", line 502, in _enqueue
+    _enqueue_message(msg)
+    ~~~~~~~~~~~~~~~~^^^^^
+  File "C:\Users\Shaik.Jainmaih\AppData\Local\Programs\Python\Python313\Lib\site-packages\streamlit\runtime\scriptrunner_utils\script_run_context.py", line 292, in enqueue_message
+    raise NoSessionContext()
+streamlit.errors.NoSessionContext
+2026-01-30 10:27:23.353 Thread 'Thread-7 (_animate)': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+2026-01-30 10:27:23.355 Thread 'Thread-7 (_animate)': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+2026-01-30 10:27:23.355 Thread 'Thread-7 (_animate)': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+Exception in thread Thread-7 (_animate):
+Traceback (most recent call last):
+  File "C:\Users\Shaik.Jainmaih\AppData\Local\Programs\Python\Python313\Lib\threading.py", line 1043, in _bootstrap_inner   
+    self.run()
+    ~~~~~~~~^^
+  File "C:\Users\Shaik.Jainmaih\AppData\Local\Programs\Python\Python313\Lib\threading.py", line 994, in run
+    self._target(*self._args, **self._kwargs)
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Shaik.Jainmaih\Chat_v1_v2\sumit_chatbot_poc\frontend\components\loading_facts.py", line 68, in _animate    
+    placeholder.markdown(
+    ~~~~~~~~~~~~~~~~~~~~^
+        f"""
+        ^^^^
+    ...<25 lines>...
+        unsafe_allow_html=True
+        ^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\Shaik.Jainmaih\AppData\Local\Programs\Python\Python313\Lib\site-packages\streamlit\runtime\metrics_util.py", line 443, in wrapped_func
+    result = non_optional_func(*args, **kwargs)
+  File "C:\Users\Shaik.Jainmaih\AppData\Local\Programs\Python\Python313\Lib\site-packages\streamlit\elements\markdown.py", line 166, in markdown
+    return self.dg._enqueue("markdown", markdown_proto, layout_config=layout_config)
+           ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Shaik.Jainmaih\AppData\Local\Programs\Python\Python313\Lib\site-packages\streamlit\delta_generator.py", line 502, in _enqueue
+    _enqueue_message(msg)
+    ~~~~~~~~~~~~~~~~^^^^^
+  File "C:\Users\Shaik.Jainmaih\AppData\Local\Programs\Python\Python313\Lib\site-packages\streamlit\runtime\scriptrunner_utils\script_run_context.py", line 292, in enqueue_message
+    raise NoSessionContext()
+streamlit.errors.NoSessionContext
+2026-01-30 10:27:59.352 Thread 'Thread-8 (_animate)': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+2026-01-30 10:27:59.353 Thread 'Thread-8 (_animate)': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+2026-01-30 10:27:59.354 Thread 'Thread-8 (_animate)': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+Exception in thread Thread-8 (_animate):
+Traceback (most recent call last):
+  File "C:\Users\Shaik.Jainmaih\AppData\Local\Programs\Python\Python313\Lib\threading.py", line 1043, in _bootstrap_inner   
+    self.run()
+    ~~~~~~~~^^
+  File "C:\Users\Shaik.Jainmaih\AppData\Local\Programs\Python\Python313\Lib\threading.py", line 994, in run
+    self._target(*self._args, **self._kwargs)
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Shaik.Jainmaih\Chat_v1_v2\sumit_chatbot_poc\frontend\components\loading_facts.py", line 68, in _animate    
+    placeholder.markdown(
+    ~~~~~~~~~~~~~~~~~~~~^
+        f"""
+        ^^^^
+    ...<25 lines>...
+        unsafe_allow_html=True
+        ^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\Shaik.Jainmaih\AppData\Local\Programs\Python\Python313\Lib\site-packages\streamlit\runtime\metrics_util.py", line 443, in wrapped_func
+    result = non_optional_func(*args, **kwargs)
+  File "C:\Users\Shaik.Jainmaih\AppData\Local\Programs\Python\Python313\Lib\site-packages\streamlit\elements\markdown.py", line 166, in markdown
+    return self.dg._enqueue("markdown", markdown_proto, layout_config=layout_config)
+           ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Shaik.Jainmaih\AppData\Local\Programs\Python\Python313\Lib\site-packages\streamlit\delta_generator.py", line 502, in _enqueue
+    _enqueue_message(msg)
+    ~~~~~~~~~~~~~~~~^^^^^
+  File "C:\Users\Shaik.Jainmaih\AppData\Local\Programs\Python\Python313\Lib\site-packages\streamlit\runtime\scriptrunner_utils\script_run_context.py", line 292, in enqueue_message
+    raise NoSessionContext()
+streamlit.errors.NoSessionContext
+2026-01-30 10:28:44.986 Thread 'Thread-12 (_animate)': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+2026-01-30 10:28:44.987 Thread 'Thread-12 (_animate)': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+2026-01-30 10:28:44.988 Thread 'Thread-12 (_animate)': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+Exception in thread Thread-12 (_animate):
+Traceback (most recent call last):
+  File "C:\Users\Shaik.Jainmaih\AppData\Local\Programs\Python\Python313\Lib\threading.py", line 1043, in _bootstrap_inner   
+    self.run()
+    ~~~~~~~~^^
+  File "C:\Users\Shaik.Jainmaih\AppData\Local\Programs\Python\Python313\Lib\threading.py", line 994, in run
+    self._target(*self._args, **self._kwargs)
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Shaik.Jainmaih\Chat_v1_v2\sumit_chatbot_poc\frontend\components\loading_facts.py", line 68, in _animate    
+    placeholder.markdown(
+    ~~~~~~~~~~~~~~~~~~~~^
+        f"""
+        ^^^^
+    ...<25 lines>...
+        unsafe_allow_html=True
+        ^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\Shaik.Jainmaih\AppData\Local\Programs\Python\Python313\Lib\site-packages\streamlit\runtime\metrics_util.py", line 443, in wrapped_func
+    result = non_optional_func(*args, **kwargs)
+  File "C:\Users\Shaik.Jainmaih\AppData\Local\Programs\Python\Python313\Lib\site-packages\streamlit\elements\markdown.py", line 166, in markdown
+    return self.dg._enqueue("markdown", markdown_proto, layout_config=layout_config)
+           ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Shaik.Jainmaih\AppData\Local\Programs\Python\Python313\Lib\site-packages\streamlit\delta_generator.py", line 502, in _enqueue
+    _enqueue_message(msg)
+    ~~~~~~~~~~~~~~~~^^^^^
+  File "C:\Users\Shaik.Jainmaih\AppData\Local\Programs\Python\Python313\Lib\site-packages\streamlit\runtime\scriptrunner_utils\script_run_context.py", line 292, in enqueue_message
+    raise NoSessionContext()
+streamlit.errors.NoSessionContext
