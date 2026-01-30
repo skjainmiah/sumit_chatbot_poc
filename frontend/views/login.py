@@ -35,7 +35,7 @@ def render_login_form():
     with st.form("login_form"):
         username = st.text_input("Username", placeholder="Enter your username")
         password = st.text_input("Password", type="password", placeholder="Enter your password")
-        submit = st.form_submit_button("Login", use_container_width=True)
+        submit = st.form_submit_button("Login", width="stretch")
 
         if submit:
             if not username or not password:
@@ -63,7 +63,7 @@ def render_register_form():
         full_name = st.text_input("Full Name", placeholder="Enter your full name", key="reg_fullname")
         password = st.text_input("Password", type="password", placeholder="Choose a password", key="reg_password")
         confirm_password = st.text_input("Confirm Password", type="password", placeholder="Confirm your password", key="reg_confirm")
-        submit = st.form_submit_button("Register", use_container_width=True)
+        submit = st.form_submit_button("Register", width="stretch")
 
         if submit:
             if not all([username, email, password, confirm_password]):

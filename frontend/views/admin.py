@@ -72,7 +72,7 @@ def render_dashboard(client: APIClient):
                 title="Query Intent Distribution",
                 color_discrete_sequence=px.colors.qualitative.Set2
             )
-            st.plotly_chart(fig, use_container_width=True)
+            st.plotly_chart(fig, width="stretch")
         else:
             st.info("No intent data available")
 
@@ -90,7 +90,7 @@ def render_dashboard(client: APIClient):
                 )
             ])
             fig.update_layout(title="User Feedback")
-            st.plotly_chart(fig, use_container_width=True)
+            st.plotly_chart(fig, width="stretch")
         else:
             st.info("No feedback data available")
 
@@ -106,7 +106,7 @@ def render_dashboard(client: APIClient):
             title="Messages Per Day",
             markers=True
         )
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, width="stretch")
     else:
         st.info("No activity data available")
 
@@ -135,7 +135,7 @@ def render_users(client: APIClient):
 
     st.dataframe(
         df[available_cols],
-        use_container_width=True,
+        width="stretch",
         hide_index=True
     )
 

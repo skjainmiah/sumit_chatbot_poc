@@ -7,6 +7,7 @@ from frontend.components.visualization import (
     render_chart_suggestions,
     analyze_data,
     get_unique_key,
+    reset_key_counts,
 )
 
 
@@ -67,13 +68,13 @@ def render_chat_v2():
         st.divider()
 
         # New conversation button
-        if st.button("🔄 New V2 Conversation", use_container_width=True, key="new_conv_v2"):
+        if st.button("🔄 New V2 Conversation", width="stretch", key="new_conv_v2"):
             st.session_state.messages_v2 = []
             st.session_state.conversation_id_v2 = None
             st.rerun()
 
         # Reload schema button
-        if st.button("🔃 Reload Schema", use_container_width=True, key="reload_schema"):
+        if st.button("🔃 Reload Schema", width="stretch", key="reload_schema"):
             result = client.reload_schema()
             if result.get("success"):
                 st.success("Schema reloaded!")
@@ -99,6 +100,7 @@ def render_chat_v2():
 
     # Display conversation history
     chat_container = st.container()
+    reset_key_counts()
 
     with chat_container:
         for i, msg in enumerate(st.session_state.messages_v2):
@@ -265,7 +267,7 @@ def render_message_v2(msg: dict, user_query: str = ""):
                             )
                         else:
                             # Simple data table
-                            st.dataframe(df, use_container_width=True, hide_index=True)
+                            st.dataframe(df, width="stretch", hide_index=True)
 
                             # Download button
                             csv = df.to_csv(index=False)
@@ -299,7 +301,7 @@ def render_suggested_questions():
     cols = st.columns(2)
     for i, suggestion in enumerate(suggestions):
         with cols[i % 2]:
-            if st.button(suggestion, key=f"suggest_{i}", use_container_width=True):
+            if st.button(suggestion, key=f"suggest_{i}", width="stretch"):
                 return suggestion
 
     return None

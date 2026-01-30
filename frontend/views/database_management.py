@@ -112,7 +112,7 @@ def render_upload_section(client: APIClient):
 
         if history_data:
             df = pd.DataFrame(history_data)
-            st.dataframe(df, use_container_width=True, hide_index=True)
+            st.dataframe(df, width="stretch", hide_index=True)
 
 
 def render_visibility_section(client: APIClient):

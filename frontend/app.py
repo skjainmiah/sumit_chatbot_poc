@@ -57,7 +57,7 @@ def main():
             st.divider()
 
             # New conversation button (clears both V1 and V2)
-            if st.button("New Conversation", use_container_width=True):
+            if st.button("New Conversation", width="stretch"):
                 st.session_state.conversation_id = None
                 st.session_state.messages = []
                 # Also clear V2 state if exists
@@ -68,7 +68,7 @@ def main():
                 st.rerun()
 
             # Logout button
-            if st.button("Logout", use_container_width=True):
+            if st.button("Logout", width="stretch"):
                 st.session_state.authenticated = False
                 st.session_state.token = None
                 st.session_state.user = None

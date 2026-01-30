@@ -34,11 +34,25 @@ CHART_CONFIGS = {
 }
 
 
+_key_counts: Dict[str, int] = {}
+
+
+def reset_key_counts():
+    """Reset key counters. Call at the start of each Streamlit render cycle."""
+    _key_counts.clear()
+
+
 def get_unique_key(prefix: str, data: Any) -> str:
-    """Generate a unique key based on data content."""
+    """Generate a unique key based on data content, with collision avoidance."""
     data_str = str(data)[:1000]
     hash_val = hashlib.md5(data_str.encode()).hexdigest()[:8]
-    return f"{prefix}_{hash_val}"
+    base_key = f"{prefix}_{hash_val}"
+    # Track how many times this base key has been requested in this render cycle
+    _key_counts[base_key] = _key_counts.get(base_key, 0) + 1
+    count = _key_counts[base_key]
+    if count == 1:
+        return base_key
+    return f"{base_key}_{count}"
 
 
 def analyze_data(df: pd.DataFrame) -> Dict:
@@ -312,7 +326,7 @@ def render_chart_selector(analysis: Dict, key_prefix: str) -> Tuple[str, str, st
             label = f"{config.get('icon', '📊')} {config.get('name', chart_type)}"
             if is_recommended:
                 label += " ⭐"
-            if st.button(label, key=f"{key_prefix}_btn_{chart_type}", use_container_width=True):
+            if st.button(label, key=f"{key_prefix}_btn_{chart_type}", width="stretch"):
                 selected_chart = chart_type
 
     # If more than 6 charts, show dropdown
@@ -375,7 +389,7 @@ def render_visualization(
 
     # If only 1 row or no suitable charts, just show table
     if len(df) == 1 or len(analysis["suitable_charts"]) <= 1:
-        st.dataframe(df, use_container_width=True, hide_index=True)
+        st.dataframe(df, width="stretch", hide_index=True)
         return
 
     with st.expander(f"📊 Visualization ({len(df)} rows)", expanded=default_expanded):
@@ -406,7 +420,7 @@ def render_visualization(
 
         # Render chart or table
         if selected_chart == "table":
-            st.dataframe(df, use_container_width=True, hide_index=True)
+            st.dataframe(df, width="stretch", hide_index=True)
         else:
             try:
                 fig = create_chart(
@@ -435,14 +449,14 @@ def render_visualization(
                     }
                 }
 
-                st.plotly_chart(fig, use_container_width=True, config=config)
+                st.plotly_chart(fig, width="stretch", config=config)
 
                 # Fullscreen / Enlarge button using modal
                 render_fullscreen_button(fig, unique_key)
 
             except Exception as e:
                 st.warning(f"Could not create {selected_chart} chart: {str(e)}")
-                st.dataframe(df, use_container_width=True, hide_index=True)
+                st.dataframe(df, width="stretch", hide_index=True)
 
         # Download options
         if allow_download:
@@ -456,7 +470,7 @@ def render_visualization(
                     f"data_{unique_key}.csv",
                     "text/csv",
                     key=f"{unique_key}_dl_csv",
-                    use_container_width=True
+                    width="stretch"
                 )
             with col2:
                 json_data = df.to_json(orient='records', indent=2)
@@ -466,7 +480,7 @@ def render_visualization(
                     f"data_{unique_key}.json",
                     "application/json",
                     key=f"{unique_key}_dl_json",
-                    use_container_width=True
+                    width="stretch"
                 )
             with col3:
                 if selected_chart != "table":
@@ -478,7 +492,7 @@ def render_fullscreen_button(fig: go.Figure, key: str):
     """Render a fullscreen/enlarge button with modal dialog."""
 
     # Create an enlarged version of the chart
-    if st.button("🔍 Enlarge Chart", key=f"{key}_enlarge", use_container_width=False):
+    if st.button("🔍 Enlarge Chart", key=f"{key}_enlarge", width="content"):
         st.session_state[f"{key}_fullscreen"] = True
 
     # Show modal if fullscreen is active
@@ -506,11 +520,11 @@ def render_chart_modal(fig: go.Figure, key: str):
         }
     }
 
-    st.plotly_chart(fig_large, use_container_width=True, config=config)
+    st.plotly_chart(fig_large, width="stretch", config=config)
 
     col1, col2 = st.columns(2)
     with col1:
-        if st.button("Close", use_container_width=True):
+        if st.button("Close", width="stretch"):
             st.session_state[f"{key}_fullscreen"] = False
             st.rerun()
     with col2:
@@ -625,7 +639,7 @@ def render_chart_suggestions(df: pd.DataFrame, query: str = "", key_prefix: str 
                 label,
                 key=f"{key_prefix}_{sugg['type']}",
                 help=sugg['reason'],
-                use_container_width=True
+                width="stretch"
             ):
                 selected = sugg['type']
 

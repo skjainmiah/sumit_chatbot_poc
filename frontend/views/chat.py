@@ -3,6 +3,7 @@ import streamlit as st
 from frontend.api_client import APIClient
 from frontend.components.chat_message import render_message
 from frontend.components.feedback_buttons import render_feedback_buttons
+from frontend.components.visualization import reset_key_counts
 
 
 def render_chat():
@@ -15,6 +16,7 @@ def render_chat():
 
     # Display conversation history
     chat_container = st.container()
+    reset_key_counts()
 
     with chat_container:
         for i, msg in enumerate(st.session_state.messages):
@@ -74,7 +76,7 @@ def render_chat():
             st.caption(f"ID: {st.session_state.conversation_id}")
 
         # New conversation button
-        if st.button("🔄 New Conversation", use_container_width=True):
+        if st.button("🔄 New Conversation", width="stretch"):
             st.session_state.messages = []
             st.session_state.conversation_id = None
             st.rerun()
@@ -93,7 +95,7 @@ def render_chat():
                     title = conv.get("title", "Untitled")[:30]
                     if len(conv.get("title", "")) > 30:
                         title += "..."
-                    if st.button(title, key=f"conv_{conv['conversation_id']}", use_container_width=True):
+                    if st.button(title, key=f"conv_{conv['conversation_id']}", width="stretch"):
                         load_conversation(client, conv["conversation_id"])
         else:
             st.caption("No previous conversations")

@@ -59,7 +59,7 @@ def render_sql_results(sql_query: str = None, results: dict = None, query_text: 
                     )
                 else:
                     # Just show data table for simple results
-                    st.dataframe(df, use_container_width=True, hide_index=True)
+                    st.dataframe(df, width="stretch", hide_index=True)
 
                     # Download button
                     csv = df.to_csv(index=False)
@@ -86,7 +86,7 @@ def render_quick_chart(df: pd.DataFrame, chart_type: str = None, key_prefix: str
         chart_type = analysis["recommended_chart"]
 
     if chart_type == "table":
-        st.dataframe(df, use_container_width=True, hide_index=True)
+        st.dataframe(df, width="stretch", hide_index=True)
         return
 
     try:
@@ -104,10 +104,10 @@ def render_quick_chart(df: pd.DataFrame, chart_type: str = None, key_prefix: str
             'modeBarButtonsToRemove': ['lasso2d', 'select2d'],
         }
 
-        st.plotly_chart(fig, use_container_width=True, config=config)
+        st.plotly_chart(fig, width="stretch", config=config)
 
     except Exception as e:
-        st.dataframe(df, use_container_width=True, hide_index=True)
+        st.dataframe(df, width="stretch", hide_index=True)
 
 
 def render_auto_chart(df: pd.DataFrame):

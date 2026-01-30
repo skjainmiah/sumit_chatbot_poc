@@ -115,7 +115,7 @@ def render_db_explorer():
                         size_kb = os.path.getsize(info["path"]) / 1024
                         st.caption(f"Size: {size_kb:.0f} KB | Tables: {len(tables)}")
                         df = pd.DataFrame(tables)
-                        st.dataframe(df, use_container_width=True, hide_index=True)
+                        st.dataframe(df, width="stretch", hide_index=True)
                     else:
                         st.info("No tables in this database")
                 else:
@@ -173,7 +173,7 @@ def render_db_explorer():
             # Schema
             st.subheader(f"Schema: {selected_db}.{selected_table}")
             schema = get_table_schema(db_info["path"], selected_table)
-            st.dataframe(pd.DataFrame(schema), use_container_width=True, hide_index=True)
+            st.dataframe(pd.DataFrame(schema), width="stretch", hide_index=True)
 
             # DDL
             with st.expander("📄 CREATE TABLE Statement"):
@@ -184,7 +184,7 @@ def render_db_explorer():
             st.subheader("📋 Data Preview")
             row_limit = st.slider("Rows to show", 5, 200, 25, key="row_limit")
             df = get_table_data(db_info["path"], selected_table, row_limit)
-            st.dataframe(df, use_container_width=True, hide_index=True)
+            st.dataframe(df, width="stretch", hide_index=True)
 
             row_count = next(t["rows"] for t in tables if t["table"] == selected_table)
             st.caption(f"Showing {len(df)} of {row_count} total rows")
@@ -215,7 +215,7 @@ def render_db_explorer():
                         "SELECT db_name, table_name, llm_description, row_count FROM schema_metadata ORDER BY db_name, table_name",
                         conn
                     )
-                    st.dataframe(df, use_container_width=True, hide_index=True)
+                    st.dataframe(df, width="stretch", hide_index=True)
                     st.caption(f"{count} table schemas indexed")
                 else:
                     st.warning("Schema metadata is empty. Run the setup to populate it:")
