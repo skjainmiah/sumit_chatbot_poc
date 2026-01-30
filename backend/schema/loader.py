@@ -15,14 +15,18 @@ class SchemaStats:
     estimated_tokens: int
 
 
-def _get_visible_db_names() -> Set[str]:
-    """Get set of visible database names from registry."""
+def _get_visible_db_names() -> Optional[Set[str]]:
+    """Get set of visible database names from registry.
+
+    Returns None if the registry is unavailable (treat as 'show all'),
+    or a (possibly empty) set of visible db names.
+    """
     try:
         from backend.db.registry import get_database_registry
         registry = get_database_registry()
         return set(registry.get_visible_databases().keys())
     except Exception:
-        return set()
+        return None  # Registry unavailable — caller should fall back to all
 
 
 class SchemaLoader:
@@ -211,12 +215,13 @@ class SchemaLoader:
 
         Args:
             all_dbs: Set of visible database names to include. If None, include all.
+                     An empty set means no databases are visible.
         """
         lines = []
 
         # Filter databases if visibility set provided
         databases = self._schema_data["databases"]
-        if all_dbs:
+        if all_dbs is not None:
             databases = [db for db in databases if db["name"] in all_dbs]
 
         if not databases:
@@ -297,10 +302,11 @@ class SchemaLoader:
 
         # Generate filtered schema text based on visibility
         all_dbs = _get_visible_db_names()
-        if not all_dbs:
-            # No registry or all visible
+        if all_dbs is None:
+            # Registry unavailable — fall back to full schema
             return self._schema_text
 
+        # all_dbs may be empty (all databases hidden) — that's valid
         return self._generate_prompt_schema(all_dbs)
 
     def get_schema_data(self) -> Dict:
@@ -328,9 +334,11 @@ class SchemaLoader:
             return all_names
 
         all_dbs = _get_visible_db_names()
-        if not all_dbs:
+        if all_dbs is None:
+            # Registry unavailable — fall back to all
             return all_names
 
+        # all_dbs may be empty (all databases hidden) — return only matching
         return [name for name in all_names if name in all_dbs]
 
     def get_table_names(self, database: str = None, visible_only: bool = True) -> List[str]:
@@ -340,13 +348,13 @@ class SchemaLoader:
             database: Filter to specific database name.
             visible_only: If True, only include tables from visible databases.
         """
-        all_dbs = _get_visible_db_names() if visible_only else set()
+        all_dbs = _get_visible_db_names() if visible_only else None
 
         tables = []
         for db in self._schema_data["databases"]:
             if database and db["name"] != database:
                 continue
-            if visible_only and all_dbs and db["name"] not in all_dbs:
+            if visible_only and all_dbs is not None and db["name"] not in all_dbs:
                 continue
             for table in db["tables"]:
                 table_name = table.get("name", table.get("full_name", ""))

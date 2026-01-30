@@ -125,8 +125,12 @@ class SQLPipelineV2:
         self.max_retries = getattr(settings, 'SQL_MAX_RETRIES', 2)
         self.query_timeout = getattr(settings, 'SQL_TIMEOUT_SECONDS', 30)
 
-        # Build system prompt with full schema
-        self._system_prompt = SYSTEM_PROMPT.format(
+    def _get_system_prompt(self) -> str:
+        """Build system prompt with current visible schema.
+
+        Regenerated on each call so visibility changes take effect immediately.
+        """
+        return SYSTEM_PROMPT.format(
             schema=self.schema_loader.get_schema_text(),
             examples=FEW_SHOT_EXAMPLES
         )
@@ -331,12 +335,13 @@ class SQLPipelineV2:
             context=f"Conversation context: {context}" if context else ""
         )
 
-        logger.info(f"[generate_sql] Sending schema ({len(self._system_prompt)} chars) + question to LLM")
+        system_prompt = self._get_system_prompt()
+        logger.info(f"[generate_sql] Sending schema ({len(system_prompt)} chars) + question to LLM")
         step_start = time.time()
         try:
             response = self.llm.chat_completion(
                 messages=[
-                    {"role": "system", "content": self._system_prompt},
+                    {"role": "system", "content": system_prompt},
                     {"role": "user", "content": user_prompt}
                 ],
                 temperature=0.0,
@@ -410,7 +415,7 @@ class SQLPipelineV2:
         try:
             response = self.llm.chat_completion(
                 messages=[
-                    {"role": "system", "content": self._system_prompt},
+                    {"role": "system", "content": self._get_system_prompt()},
                     {"role": "user", "content": correction_prompt}
                 ],
                 temperature=0.0,
@@ -473,7 +478,7 @@ class SQLPipelineV2:
         return summary, suggestions
 
     def refresh_schema(self, reload_loader: bool = True):
-        """Refresh the system prompt with latest schema.
+        """Refresh the schema loader data (e.g. after upload).
 
         Args:
             reload_loader: If True, also reload the schema loader from disk/DB.
@@ -481,10 +486,6 @@ class SQLPipelineV2:
         """
         if reload_loader:
             self.schema_loader.reload()
-        self._system_prompt = SYSTEM_PROMPT.format(
-            schema=self.schema_loader.get_schema_text(),
-            examples=FEW_SHOT_EXAMPLES
-        )
 
     def run(self, question: str, context: str = "") -> Dict:
         """Run the full SQL pipeline."""

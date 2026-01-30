@@ -15,14 +15,18 @@ from backend.db.session import get_multi_db_connection
 logger = logging.getLogger("chatbot.sql.pipeline_v1")
 
 
-def _get_visible_db_names() -> Set[str]:
-    """Get set of visible database names from registry."""
+def _get_visible_db_names() -> Optional[Set[str]]:
+    """Get set of visible database names from registry.
+
+    Returns None if the registry is unavailable (treat as 'show all'),
+    or a (possibly empty) set of visible db names.
+    """
     try:
         from backend.db.registry import get_database_registry
         registry = get_database_registry()
         return set(registry.get_visible_databases().keys())
     except Exception:
-        return set()
+        return None
 
 
 class SQLPipeline:
@@ -46,15 +50,15 @@ class SQLPipeline:
 
         # Get all databases
         all_dbs = _get_visible_db_names()
-        logger.info(f"[retrieve_schemas] query=\"{query[:80]}\" top_k={top_k} registry_dbs={all_dbs or 'EMPTY'}")
+        logger.info(f"[retrieve_schemas] query=\"{query[:80]}\" top_k={top_k} registry_dbs={all_dbs if all_dbs is not None else 'UNAVAILABLE'}")
 
         # --- Stage 1: Keyword-based retrieval (fast, no API calls) ---
         keyword_schemas = get_schemas_by_keywords(query, max_tables=top_k + 4)
         logger.info(f"[retrieve_schemas] Keyword match returned {len(keyword_schemas)} schemas: "
                      f"{[s.get('db_name') + '.' + s.get('table_name') for s in keyword_schemas[:5]]}")
 
-        # Filter by registered databases
-        if all_dbs:
+        # Filter by registered databases (None = registry unavailable, skip filter)
+        if all_dbs is not None:
             before_count = len(keyword_schemas)
             keyword_schemas = [s for s in keyword_schemas if s.get("db_name") in all_dbs]
             if before_count != len(keyword_schemas):
@@ -85,7 +89,7 @@ class SQLPipeline:
                 # Skip duplicates and invisible databases
                 if table_key in seen_tables:
                     continue
-                if all_dbs and db_name not in all_dbs:
+                if all_dbs is not None and db_name not in all_dbs:
                     continue
 
                 seen_tables.add(table_key)
