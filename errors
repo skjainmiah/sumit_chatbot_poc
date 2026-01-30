@@ -1,10 +1,3 @@
-For `use_container_width=True`, use `width='stretch'`. For `use_container_width=False`, use `width='content'`.
-2026-01-30 02:09:27.465 Please replace `use_container_width` with `width`.
-
-`use_container_width` will be removed after 2025-12-31.
-
-For `use_container_width=True`, use `width='stretch'`. For `use_container_width=False`, use `width='content'`.
-2026-01-30 02:09:27.476 Uncaught app execution
 Traceback (most recent call last):
   File "C:\Users\Shaik.Jainmaih\AppData\Local\Programs\Python\Python313\Lib\site-packages\streamlit\runtime\scriptrunner\exec_code.py", line 128, in exec_func_with_error_handling
     result = func()
@@ -14,54 +7,23 @@ Traceback (most recent call last):
   File "C:\Users\Shaik.Jainmaih\Chat_v1_v2\sumit_chatbot_poc\frontend\app.py", line 95, in <module>
     main()
     ~~~~^^
-  File "C:\Users\Shaik.Jainmaih\Chat_v1_v2\sumit_chatbot_poc\frontend\app.py", line 82, in main
-    render_chat()
-    ~~~~~~~~~~~^^
-  File "C:\Users\Shaik.Jainmaih\Chat_v1_v2\sumit_chatbot_poc\frontend\views\chat.py", line 28, in render_chat
-    render_message(msg, client, user_query=user_query)
-    ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\Shaik.Jainmaih\Chat_v1_v2\sumit_chatbot_poc\frontend\components\chat_message.py", line 35, in render_message
-    render_sql_results(
-    ~~~~~~~~~~~~~~~~~~^
-        msg.get("sql_query"),
-        ^^^^^^^^^^^^^^^^^^^^^
-        msg.get("sql_results"),
-        ^^^^^^^^^^^^^^^^^^^^^^^
-        query_text=query_text
-        ^^^^^^^^^^^^^^^^^^^^^
-    )
-    ^
-  File "C:\Users\Shaik.Jainmaih\Chat_v1_v2\sumit_chatbot_poc\frontend\components\sql_display.py", line 66, in render_sql_results
-    st.download_button(
-    ~~~~~~~~~~~~~~~~~~^
-        "📥 Download CSV",
-        ^^^^^^^^^^^^^^^^^^
-    ...<3 lines>...
-        key=get_unique_key("dl", results)
-        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-    )
-    ^
-  File "C:\Users\Shaik.Jainmaih\AppData\Local\Programs\Python\Python313\Lib\site-packages\streamlit\runtime\metrics_util.py", line 443, in wrapped_func
-    result = non_optional_func(*args, **kwargs)
-  File "C:\Users\Shaik.Jainmaih\AppData\Local\Programs\Python\Python313\Lib\site-packages\streamlit\elements\widgets\button.py", line 576, in download_button
-    return self._download_button(
-           ~~~~~~~~~~~~~~~~~~~~~^
-        label=label,
-        ^^^^^^^^^^^^
-    ...<12 lines>...
-        width=width,
-        ^^^^^^^^^^^^
-    )
-    ^
-  File "C:\Users\Shaik.Jainmaih\AppData\Local\Programs\Python\Python313\Lib\site-packages\streamlit\elements\widgets\button.py", line 914, in _download_button
-    element_id = compute_and_register_element_id(
-        "download_button",
-    ...<9 lines>...
-        width=width,
-    )
-  File "C:\Users\Shaik.Jainmaih\AppData\Local\Programs\Python\Python313\Lib\site-packages\streamlit\elements\lib\utils.py", line 265, in compute_and_register_element_id
-    _register_element_id(ctx, element_type, element_id)
-    ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\Shaik.Jainmaih\AppData\Local\Programs\Python\Python313\Lib\site-packages\streamlit\elements\lib\utils.py", line 145, in _register_element_id
-    raise StreamlitDuplicateElementKey(user_key)
-streamlit.errors.StreamlitDuplicateElementKey: There are multiple elements with the same `key='dl_dca8eb7f'`. To fix this, please make sure that the `key` argument is unique for each element you create.
+    main()
+    main()
+    ~~~~^^
+    main()
+    ~~~~^^
+    main()
+    main()
+    ~~~~^^
+    main()
+    ~~~~^^
+  File "C:\Users\Shaik.Jainmaih\Chat_v1_v2\sumit_chatbot_poc\frontend\app.py", line 91, in main
+    render_admin()
+    ~~~~~~~~~~~~^^
+  File "C:\Users\Shaik.Jainmaih\Chat_v1_v2\sumit_chatbot_poc\frontend\views\admin.py", line 28, in render_admin
+    render_users(client)
+    ~~~~~~~~~~~~^^^^^^^^
+  File "C:\Users\Shaik.Jainmaih\Chat_v1_v2\sumit_chatbot_poc\frontend\views\admin.py", line 120, in render_users
+    if users.get("error"):
+       ^^^^^^^^^
+AttributeError: 'list' object has no attribute 'get'
