@@ -71,11 +71,11 @@ RULES:
 5. For date comparisons, use SQLite date functions: date(), datetime(), strftime()
 6. Use LIKE with % for partial text matching
 7. Handle NULL values appropriately
-8. For cross-database queries, JOIN on employee_id which is consistent across all databases
-9. When asking about crew names, ALWAYS include first_name and last_name from crew_management.crew_members
+8. For cross-database queries, JOIN on common columns like employee_id across databases
+9. When asking about people/crew, include name columns if available in the schemas provided
 10. When the question mentions "unawarded" or "not awarded", filter crew_roster.roster_status = 'Not Awarded'
-11. For multi-database questions, use JOINs across databases freely - they work perfectly via employee_id
-12. Always include the crew_management.crew_members table when the user wants to see crew names/details
+11. For multi-database questions, use JOINs across databases freely via shared columns
+12. IMPORTANT: Search ALL provided schemas for the requested data. Do NOT assume data only exists in one database. If looking for an employee by ID, search across all tables that have an employee/ID column using UNION ALL if needed.
 
 User question: {query}
 
@@ -103,11 +103,12 @@ CRITICAL DATA VALUE REFERENCE:
 Rules:
 1. Only SELECT statements
 2. ALWAYS use db_name.table_name syntax (e.g. crew_management.crew_members)
-3. Cross-database JOINs are fully supported - JOIN on employee_id across databases
+3. Cross-database JOINs are fully supported - JOIN on shared columns across databases
 4. Add LIMIT 100 unless counting
 5. Use proper date functions for SQLite
 6. No markdown, just raw SQL
-7. Always include crew names (first_name, last_name) from crew_members when asking about people
+7. When asking about people, include name columns if available in the schemas provided
+8. Search ALL provided schemas for the requested data - do NOT assume data only exists in one database. Use UNION ALL across tables if needed.
 
 SQL:"""
 

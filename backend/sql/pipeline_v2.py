@@ -69,11 +69,11 @@ CRITICAL RULES:
 5. Use meaningful column aliases for readability
 6. For JOINs, always specify the join condition clearly
 7. Cross-database JOINs are supported: JOIN other_db.table_name ON ...
-8. All crew-related tables use employee_id (TEXT) as the universal join key across ALL databases.
-9. When asking about crew names, ALWAYS include first_name and last_name from crew_management.crew_members
+8. For cross-database queries, JOIN on common columns like employee_id across databases.
+9. When asking about people/crew, include name columns if available in the schemas provided.
 10. When the question mentions "unawarded" or "not awarded", filter crew_roster.roster_status = 'Not Awarded'
-11. For multi-database questions, use JOINs across databases freely - they work perfectly via employee_id
-12. Always include the crew_management.crew_members table when the user wants to see crew names/details
+11. For multi-database questions, use JOINs across databases freely via shared columns.
+12. IMPORTANT: Search ALL provided schemas for the requested data. Do NOT assume data only exists in one database. If looking for an employee by ID, search across all tables that have an employee/ID column using UNION ALL if needed.
 
 CRITICAL DATA VALUE REFERENCE:
 - crew_roster.roster_month is TEXT with full month names: 'January', 'February', 'March', 'April', 'May', 'June', etc.
