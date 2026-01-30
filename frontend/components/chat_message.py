@@ -1,4 +1,5 @@
 """Renders individual chat messages with intent badges, SQL results, and follow-up suggestions."""
+import random
 import streamlit as st
 from frontend.components.sql_display import render_sql_results
 from frontend.components.source_display import render_sources
@@ -6,7 +7,7 @@ from frontend.components.feedback_buttons import render_feedback_buttons
 from frontend.components.visualization import get_unique_key
 
 
-def render_message(msg: dict, client=None, user_query: str = ""):
+def render_message(msg: dict, client=None, user_query: str = "", message_index: int = 0):
     """Shows a single chat message with intent badge, SQL results, suggestions, and feedback."""
     role = msg.get("role", "user")
 
@@ -53,19 +54,23 @@ def render_message(msg: dict, client=None, user_query: str = ""):
                 else:
                     st.caption(f"Response time: :red[{time_ms}ms]")
 
-            # Follow-up suggestion buttons
+            # Follow-up suggestion buttons (shown randomly after first few messages)
             if msg.get("suggestions"):
-                st.markdown("**You might also want to ask:**")
-                suggestion_cols = st.columns(min(len(msg["suggestions"]), 3))
-                for j, suggestion in enumerate(msg["suggestions"][:3]):
-                    with suggestion_cols[j]:
-                        if st.button(
-                            f"💡 {suggestion}",
-                            key=get_unique_key(f"v1_sug_{j}", suggestion),
-                            use_container_width=True
-                        ):
-                            st.session_state["v1_pending_suggestion"] = suggestion
-                            st.rerun()
+                v1_msg_count = st.session_state.get("v1_msg_count", 0)
+                rng = random.Random(message_index)
+                show_suggestions = v1_msg_count <= 2 or rng.random() < 0.4
+                if show_suggestions:
+                    st.markdown("**You might also want to ask:**")
+                    suggestion_cols = st.columns(min(len(msg["suggestions"]), 3))
+                    for j, suggestion in enumerate(msg["suggestions"][:3]):
+                        with suggestion_cols[j]:
+                            if st.button(
+                                f"💡 {suggestion}",
+                                key=get_unique_key(f"v1_sug_{j}", suggestion),
+                                use_container_width=True
+                            ):
+                                st.session_state["v1_pending_suggestion"] = suggestion
+                                st.rerun()
 
             # Feedback buttons
             if msg.get("message_id") and client:

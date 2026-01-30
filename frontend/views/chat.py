@@ -7,19 +7,48 @@ from frontend.components.visualization import reset_key_counts
 from frontend.components.loading_facts import show_loading_with_facts
 
 
+def _init_visitor_name(client: APIClient):
+    """Check for visitor name on first load. Sets session state flags."""
+    if "visitor_name_checked" in st.session_state:
+        return
+    st.session_state["visitor_name_checked"] = True
+    try:
+        result = client.get_visitor_name()
+        if result.get("name"):
+            st.session_state["visitor_name"] = result["name"]
+        else:
+            st.session_state["awaiting_name"] = True
+    except Exception:
+        # Don't block chat if visitor name lookup fails
+        st.session_state["visitor_name_checked"] = True
+
+
 def render_chat():
     """Main V1 chat page - displays messages, handles user input, shows conversation history."""
-    st.title("💬 Chat with Crew Assistant")
+    st.title("Chat with Crew Assistant")
     st.caption("Ask about crew data, policies, schedules, and more")
 
     # Initialize API client with token
     client = APIClient(st.session_state.token)
+
+    # Visitor name greeting
+    _init_visitor_name(client)
 
     # Display conversation history
     chat_container = st.container()
     reset_key_counts()
 
     with chat_container:
+        # Show greeting or name prompt as first message when conversation is empty
+        if not st.session_state.messages:
+            visitor_name = st.session_state.get("visitor_name")
+            if visitor_name:
+                with st.chat_message("assistant", avatar=None):
+                    st.write(f"Welcome back, {visitor_name}!")
+            elif st.session_state.get("awaiting_name"):
+                with st.chat_message("assistant", avatar=None):
+                    st.write("Hi! What should I call you?")
+
         for i, msg in enumerate(st.session_state.messages):
             # Get the user query that preceded this assistant message
             user_query = ""
@@ -28,13 +57,26 @@ def render_chat():
                 if prev_msg.get("role") == "user":
                     user_query = prev_msg.get("content", "")
 
-            render_message(msg, client, user_query=user_query)
+            render_message(msg, client, user_query=user_query, message_index=i)
 
     # Handle pending suggestion clicks
     pending = st.session_state.pop("v1_pending_suggestion", None)
 
     # Chat input
     if prompt := (pending or st.chat_input("Ask me anything about crew policies, schedules, or data...")):
+        # If awaiting visitor name, capture it instead of sending to LLM
+        if st.session_state.get("awaiting_name"):
+            st.session_state["visitor_name"] = prompt.strip()
+            st.session_state["awaiting_name"] = False
+            try:
+                client.set_visitor_name(prompt.strip())
+            except Exception:
+                pass
+            st.rerun()
+            return
+        # Track message count for suggestion randomization
+        st.session_state["v1_msg_count"] = st.session_state.get("v1_msg_count", 0) + 1
+
         # Add user message to display
         user_msg = {"role": "user", "content": prompt}
         st.session_state.messages.append(user_msg)
@@ -43,6 +85,12 @@ def render_chat():
         with chat_container:
             with st.chat_message("user", avatar=None):
                 st.write(prompt)
+
+        # Auto-scroll to show the user's question above the input bar
+        st.markdown(
+            "<script>window.parent.document.querySelector('section.main').scrollTo(0, 999999)</script>",
+            unsafe_allow_html=True,
+        )
 
         # Send to backend with loading animation
         loading_placeholder = st.empty()
@@ -80,6 +128,10 @@ def render_chat():
 
     # Sidebar - conversation info
     with st.sidebar:
+        visitor_name = st.session_state.get("visitor_name")
+        if visitor_name:
+            st.caption(f"👤 Hi, {visitor_name}")
+
         st.subheader("📋 Conversation")
 
         if st.session_state.conversation_id:

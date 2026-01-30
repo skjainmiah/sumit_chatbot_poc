@@ -1,4 +1,5 @@
 """Chat V2 page - uses full schema approach with advanced visualization."""
+import random
 import streamlit as st
 import pandas as pd
 from frontend.api_client import APIClient
@@ -12,13 +13,31 @@ from frontend.components.visualization import (
 from frontend.components.loading_facts import show_loading_with_facts
 
 
+def _init_visitor_name_v2(client: APIClient):
+    """Check for visitor name on first load. Sets session state flags."""
+    if "visitor_name_checked" in st.session_state:
+        return
+    st.session_state["visitor_name_checked"] = True
+    try:
+        result = client.get_visitor_name()
+        if result.get("name"):
+            st.session_state["visitor_name"] = result["name"]
+        else:
+            st.session_state["awaiting_name"] = True
+    except Exception:
+        st.session_state["visitor_name_checked"] = True
+
+
 def render_chat_v2():
     """Main V2 chat page - handles message display, schema info sidebar, and query submission."""
-    st.title("💬 Chat with Crew Assistant V2")
+    st.title("Chat with Crew Assistant V2")
     st.caption("Ask about crew data, policies, schedules, and more")
 
     # Initialize API client
     client = APIClient(st.session_state.token)
+
+    # Visitor name greeting
+    _init_visitor_name_v2(client)
 
     # Initialize v2-specific session state
     if "messages_v2" not in st.session_state:
@@ -28,6 +47,9 @@ def render_chat_v2():
 
     # Schema info in sidebar
     with st.sidebar:
+        visitor_name = st.session_state.get("visitor_name")
+        if visitor_name:
+            st.caption(f"👤 Hi, {visitor_name}")
         st.subheader("📊 V2 Schema Info")
 
         # Health check
@@ -104,6 +126,16 @@ def render_chat_v2():
     reset_key_counts()
 
     with chat_container:
+        # Show greeting or name prompt as first message when conversation is empty
+        if not st.session_state.messages_v2:
+            visitor_name = st.session_state.get("visitor_name")
+            if visitor_name:
+                with st.chat_message("assistant", avatar=None):
+                    st.write(f"Welcome back, {visitor_name}!")
+            elif st.session_state.get("awaiting_name"):
+                with st.chat_message("assistant", avatar=None):
+                    st.write("Hi! What should I call you?")
+
         for i, msg in enumerate(st.session_state.messages_v2):
             # Get preceding user query
             user_query = ""
@@ -112,13 +144,26 @@ def render_chat_v2():
                 if prev_msg.get("role") == "user":
                     user_query = prev_msg.get("content", "")
 
-            render_message_v2(msg, user_query)
+            render_message_v2(msg, user_query, message_index=i)
 
     # Handle pending suggestion clicks
     pending = st.session_state.pop("v2_pending_suggestion", None)
 
     # Chat input
     if prompt := (pending or st.chat_input("Ask about your databases...", key="chat_input_v2")):
+        # If awaiting visitor name, capture it instead of sending to LLM
+        if st.session_state.get("awaiting_name"):
+            st.session_state["visitor_name"] = prompt.strip()
+            st.session_state["awaiting_name"] = False
+            try:
+                client.set_visitor_name(prompt.strip())
+            except Exception:
+                pass
+            st.rerun()
+            return
+        # Track message count for suggestion randomization
+        st.session_state["v2_msg_count"] = st.session_state.get("v2_msg_count", 0) + 1
+
         # Add user message
         user_msg = {"role": "user", "content": prompt}
         st.session_state.messages_v2.append(user_msg)
@@ -127,6 +172,12 @@ def render_chat_v2():
         with chat_container:
             with st.chat_message("user", avatar=None):
                 st.write(prompt)
+
+        # Auto-scroll to show the user's question above the input bar
+        st.markdown(
+            "<script>window.parent.document.querySelector('section.main').scrollTo(0, 999999)</script>",
+            unsafe_allow_html=True,
+        )
 
         # Build context from recent messages
         context = build_context(st.session_state.messages_v2[-6:-1])
@@ -189,7 +240,7 @@ def build_context(messages: list) -> str:
     return "\n".join(context_parts)
 
 
-def render_message_v2(msg: dict, user_query: str = ""):
+def render_message_v2(msg: dict, user_query: str = "", message_index: int = 0):
     """Shows one chat message - user or assistant - with charts, SQL, and suggestions."""
     role = msg.get("role", "user")
 
@@ -305,19 +356,23 @@ def render_message_v2(msg: dict, user_query: str = ""):
             if msg.get("error") and not msg.get("success"):
                 st.error(f"Error: {msg.get('error')}")
 
-            # Follow-up suggestion buttons
+            # Follow-up suggestion buttons (shown randomly after first few messages)
             if msg.get("suggestions"):
-                st.markdown("**You might also want to ask:**")
-                suggestion_cols = st.columns(min(len(msg["suggestions"]), 3))
-                for j, suggestion in enumerate(msg["suggestions"][:3]):
-                    with suggestion_cols[j]:
-                        if st.button(
-                            f"💡 {suggestion}",
-                            key=get_unique_key(f"v2_sug_{j}", suggestion),
-                            use_container_width=True
-                        ):
-                            st.session_state["v2_pending_suggestion"] = suggestion
-                            st.rerun()
+                v2_msg_count = st.session_state.get("v2_msg_count", 0)
+                rng = random.Random(message_index)
+                show_suggestions = v2_msg_count <= 2 or rng.random() < 0.4
+                if show_suggestions:
+                    st.markdown("**You might also want to ask:**")
+                    suggestion_cols = st.columns(min(len(msg["suggestions"]), 3))
+                    for j, suggestion in enumerate(msg["suggestions"][:3]):
+                        with suggestion_cols[j]:
+                            if st.button(
+                                f"💡 {suggestion}",
+                                key=get_unique_key(f"v2_sug_{j}", suggestion),
+                                use_container_width=True
+                            ):
+                                st.session_state["v2_pending_suggestion"] = suggestion
+                                st.rerun()
 
 
 def render_suggested_questions():

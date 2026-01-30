@@ -1116,6 +1116,15 @@ def setup_app_db():
         table_count INTEGER DEFAULT 0,
         created_at TEXT DEFAULT CURRENT_TIMESTAMP)""")
 
+    # Visitor names - stores preferred names by IP for personalized greetings
+    c.execute("""CREATE TABLE IF NOT EXISTS visitor_names (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        ip_address TEXT UNIQUE NOT NULL,
+        preferred_name TEXT NOT NULL,
+        created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+        updated_at TEXT DEFAULT CURRENT_TIMESTAMP
+    )""")
+
     # Upload history - tracks SQL file uploads
     c.execute("""CREATE TABLE IF NOT EXISTS upload_history (
         upload_id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -1141,6 +1150,15 @@ def seed_database_registry():
     db_path = get_db_path("app.db")
     conn = sqlite3.connect(db_path)
     c = conn.cursor()
+
+    # Ensure visitor_names table exists (migration for existing databases)
+    c.execute("""CREATE TABLE IF NOT EXISTS visitor_names (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        ip_address TEXT UNIQUE NOT NULL,
+        preferred_name TEXT NOT NULL,
+        created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+        updated_at TEXT DEFAULT CURRENT_TIMESTAMP
+    )""")
 
     # Define mock databases to register
     mock_databases = [

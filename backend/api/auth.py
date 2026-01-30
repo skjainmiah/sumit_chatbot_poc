@@ -1,6 +1,7 @@
 """Authentication API endpoints."""
 from datetime import datetime
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, HTTPException, Depends, Request
+from pydantic import BaseModel
 from backend.auth.models import LoginRequest, TokenResponse, UserCreate, UserResponse
 from backend.auth.password import hash_password, verify_password
 from backend.auth.jwt_handler import create_access_token, verify_token, TokenData
@@ -151,3 +152,49 @@ async def refresh_token(token: str):
     })
 
     return {"access_token": new_token, "token_type": "bearer"}
+
+
+# ==========================================
+# Visitor name (IP-based greeting)
+# ==========================================
+
+class VisitorNameRequest(BaseModel):
+    name: str
+
+
+def _get_client_ip(request: Request) -> str:
+    """Extract client IP from request, checking X-Forwarded-For header first."""
+    forwarded = request.headers.get("X-Forwarded-For")
+    if forwarded:
+        return forwarded.split(",")[0].strip()
+    return request.client.host
+
+
+@router.get("/visitor-name")
+async def get_visitor_name(request: Request):
+    """Look up visitor's preferred name by IP address."""
+    ip = _get_client_ip(request)
+    rows = execute_query(
+        settings.app_db_path,
+        "SELECT preferred_name FROM visitor_names WHERE ip_address = ?",
+        (ip,)
+    )
+    if rows:
+        return {"name": rows[0]["preferred_name"]}
+    return {"name": None}
+
+
+@router.post("/visitor-name")
+async def set_visitor_name(request: Request, body: VisitorNameRequest):
+    """Store or update visitor's preferred name by IP address."""
+    ip = _get_client_ip(request)
+    now = datetime.utcnow().isoformat()
+    with get_app_db() as conn:
+        conn.execute(
+            """INSERT INTO visitor_names (ip_address, preferred_name, created_at, updated_at)
+               VALUES (?, ?, ?, ?)
+               ON CONFLICT(ip_address) DO UPDATE SET preferred_name = ?, updated_at = ?""",
+            (ip, body.name, now, now, body.name, now)
+        )
+        conn.commit()
+    return {"success": True, "name": body.name}

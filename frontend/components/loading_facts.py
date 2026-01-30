@@ -2,35 +2,48 @@
 import random
 import time
 import threading
+from pathlib import Path
 import streamlit as st
 
 
-AA_FACTS = [
+# Load facts from external file with hardcoded fallback
+_FACTS_FILE = Path(__file__).resolve().parent.parent.parent / "data" / "loading_facts.txt"
+
+_FALLBACK_FACTS = [
     "American Airlines was founded in 1930 through the merger of over 80 small airlines.",
     "AA operates about 6,700 flights per day to nearly 350 destinations in 50+ countries.",
     "The AA fleet has over 900 mainline aircraft, making it one of the largest in the world.",
-    "American Airlines was the first airline to introduce a frequent flyer program, AAdvantage, in 1981.",
     "Dallas/Fort Worth International Airport (DFW) is American Airlines' largest hub.",
     "AA was the first airline to use an electronic booking system (SABRE) in the 1960s.",
-    "American Airlines' fleet includes Boeing 737s, 777s, 787 Dreamliners, and Airbus A320 family aircraft.",
-    "The AA eagle logo has been a symbol of the airline since the 1930s.",
-    "American Airlines carried over 200 million passengers in a record year.",
-    "AA employs over 130,000 people, including about 15,000 pilots and 27,000 flight attendants.",
-    "American Airlines was the first US airline to introduce the Super 80 (MD-80) aircraft.",
-    "The AA Admirals Club, started in 1939, was the first airline lounge in the world.",
-    "American Airlines' network spans hubs at DFW, Charlotte, Chicago O'Hare, Miami, Philadelphia, Phoenix, and more.",
-    "AA was a founding member of the oneworld alliance in 1999.",
-    "American Airlines' Flagship First class debuted on the A321T transcon routes.",
-    "The airline's maintenance base in Tulsa, Oklahoma is one of the largest in the world.",
-    "AA's CR Smith Museum in Fort Worth preserves the history of American Airlines since 1930.",
-    "American Airlines was the launch customer for the Boeing 707 in commercial service.",
-    "The AA credit union has been serving employees and their families since 1935.",
-    "American Airlines was the first to offer in-flight entertainment on domestic flights.",
-    "AA pilots log millions of flight hours each year across the network.",
-    "The American Airlines Training and Conference Center in Fort Worth spans over 40 acres.",
-    "AA's cargo division handles millions of pounds of freight and mail every day.",
-    "American Airlines merged with US Airways in 2013, creating the world's largest airline at the time.",
 ]
+
+def _load_facts() -> list:
+    try:
+        text = _FACTS_FILE.read_text(encoding="utf-8")
+        facts = [line.strip() for line in text.splitlines() if line.strip()]
+        if facts:
+            return facts
+    except Exception:
+        pass
+    return list(_FALLBACK_FACTS)
+
+AA_FACTS = _load_facts()
+
+
+def _pick_facts(count: int = 10) -> list:
+    """Pick facts avoiding repeats within the current session."""
+    shown = st.session_state.get("shown_facts_set", set())
+
+    available = [f for f in AA_FACTS if f not in shown]
+    if len(available) < count:
+        # Reset when we've shown everything
+        shown = set()
+        available = list(AA_FACTS)
+
+    selected = random.sample(available, min(count, len(available)))
+    shown.update(selected)
+    st.session_state["shown_facts_set"] = shown
+    return selected
 
 
 def show_loading_with_facts(placeholder):
@@ -43,12 +56,15 @@ def show_loading_with_facts(placeholder):
         A stop event (threading.Event) - call .set() on it when the task is done.
     """
     stop_event = threading.Event()
+    facts = _pick_facts(10)
 
     def _animate():
-        facts = random.sample(AA_FACTS, min(len(AA_FACTS), 10))
         idx = 0
+        dot_cycle = 0
         while not stop_event.is_set():
             fact = facts[idx % len(facts)]
+            dots = "." * (dot_cycle % 4)
+            footer = f"Processing your query{dots}"
             placeholder.markdown(
                 f"""
                 <div style="
@@ -66,7 +82,7 @@ def show_loading_with_facts(placeholder):
                     </div>
                     <div>{fact}</div>
                     <div style="margin-top: 8px; font-size: 12px; opacity: 0.6;">
-                        Processing your query...
+                        {footer}
                     </div>
                 </div>
                 <style>
@@ -78,9 +94,11 @@ def show_loading_with_facts(placeholder):
                 """,
                 unsafe_allow_html=True
             )
-            idx += 1
-            # Wait 3 seconds or until stop is signaled
-            stop_event.wait(timeout=3.0)
+            dot_cycle += 1
+            if dot_cycle % 4 == 0:
+                idx += 1
+            # Wait ~0.75s per dot frame so a full fact cycle is ~3s
+            stop_event.wait(timeout=0.75)
 
     thread = threading.Thread(target=_animate, daemon=True)
     thread.start()

@@ -64,6 +64,14 @@ class APIClient:
         """Get current user info."""
         return self._make_request("GET", "/auth/me")
 
+    def get_visitor_name(self) -> Dict[str, Any]:
+        """Look up visitor's preferred name by IP."""
+        return self._make_request("GET", "/auth/visitor-name")
+
+    def set_visitor_name(self, name: str) -> Dict[str, Any]:
+        """Store visitor's preferred name."""
+        return self._make_request("POST", "/auth/visitor-name", json={"name": name})
+
     def send_message(self, message: str, conversation_id: Optional[int] = None) -> Dict[str, Any]:
         """Send a chat message."""
         payload = {"message": message}
