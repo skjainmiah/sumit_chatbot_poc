@@ -1,29 +1,19 @@
-Traceback (most recent call last):
-  File "C:\Users\Shaik.Jainmaih\AppData\Local\Programs\Python\Python313\Lib\site-packages\streamlit\runtime\scriptrunner\exec_code.py", line 128, in exec_func_with_error_handling
-    result = func()
-  File "C:\Users\Shaik.Jainmaih\AppData\Local\Programs\Python\Python313\Lib\site-packages\streamlit\runtime\scriptrunner\script_runner.py", line 669, in code_to_exec
-    exec(code, module.__dict__)  # noqa: S102
-    ~~~~^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\Shaik.Jainmaih\Chat_v1_v2\sumit_chatbot_poc\frontend\app.py", line 95, in <module>
+AttributeError: 'list' object has no attribute 'get'
+Traceback:
+File "C:\Users\Shaik.Jainmaih\Chat_v1_v2\sumit_chatbot_poc\frontend\app.py", line 95, in <module>
     main()
     ~~~~^^
-    main()
-    main()
-    ~~~~^^
-    main()
-    ~~~~^^
-    main()
-    main()
-    ~~~~^^
-    main()
-    ~~~~^^
-  File "C:\Users\Shaik.Jainmaih\Chat_v1_v2\sumit_chatbot_poc\frontend\app.py", line 91, in main
+File "C:\Users\Shaik.Jainmaih\Chat_v1_v2\sumit_chatbot_poc\frontend\app.py", line 91, in main
     render_admin()
     ~~~~~~~~~~~~^^
-  File "C:\Users\Shaik.Jainmaih\Chat_v1_v2\sumit_chatbot_poc\frontend\views\admin.py", line 28, in render_admin
-    render_users(client)
-    ~~~~~~~~~~~~^^^^^^^^
-  File "C:\Users\Shaik.Jainmaih\Chat_v1_v2\sumit_chatbot_poc\frontend\views\admin.py", line 120, in render_users
-    if users.get("error"):
-       ^^^^^^^^^
-AttributeError: 'list' object has no attribute 'get'
+File "C:\Users\Shaik.Jainmaih\Chat_v1_v2\sumit_chatbot_poc\frontend\views\admin.py", line 34, in render_admin
+    render_database_management()
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+File "C:\Users\Shaik.Jainmaih\Chat_v1_v2\sumit_chatbot_poc\frontend\views\database_management.py", line 25, in render_database_management
+    render_upload_section(client)
+    ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^
+File "C:\Users\Shaik.Jainmaih\Chat_v1_v2\sumit_chatbot_poc\frontend\views\database_management.py", line 95, in render_upload_section
+    history = client.get_upload_history(limit=10)
+File "C:\Users\Shaik.Jainmaih\Chat_v1_v2\sumit_chatbot_poc\frontend\api_client.py", line 246, in get_upload_history
+    if result.get("error"):
+       ^^^^^^^^^^
