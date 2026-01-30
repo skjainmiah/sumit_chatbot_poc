@@ -1,8 +1,18 @@
-I want to find some details related to employee 101
+hey I want to know about 101 employee
 
-No records were found for employee 101 (or AA-101) in the crew members table, so there’s nothing to report for their profile details, training records, benefits, or emergency contacts. This usually means the employee ID doesn’t exist in the system, is stored under a different identifier/format, or the crew member record is inactive/archived in a way that isn’t returned by this query.
+What information do you need about employee 101 (e.g., schedule, contact info, training/compliance status, payroll, or something else)?
 
-Intent: DATA | Confidence: 78%
+Intent: CLARIFICATION | Confidence: 62%
+
+Response time: 4046ms
+
+
+
+show me all possible information in a compact way
+
+No records were found for employee AA-101 (or roster EmployeeID 101) across the joined systems. That means there’s no matching crew member profile in crew_management.crew_members and/or no matching roster record in crew_roster.reservescrewmember for that identifier, so the query also returns no linked payroll, leave, training, compliance, or safety incident information for this person.
+
+Intent: DATA | Confidence: 86%
 
 🔍 View SQL Query & Results
 
@@ -10,40 +20,198 @@ Generated SQL:
 
 SELECT
   cm.employee_id,
+  cm.crew_id,
   cm.first_name,
   cm.last_name,
   cm.email,
   cm.phone,
+  cm.date_of_birth,
+  cm.nationality,
+  cm.passport_number,
+  cm.passport_expiry,
+  cm.hire_date,
+  cm.seniority_number,
   cm.crew_role,
   cm.base_airport,
   cm.status,
-  cm.hire_date,
-  cm.seniority_number,
+  rcm.EmployeeID AS roster_employee_numeric_id,
+  rcm.ReservesCrewMemberID,
+  rcm.FirstName AS roster_first_name,
+  rcm.LastName AS roster_last_name,
+  rcm.SeniorityNumber AS roster_seniority_number,
+  rcm.BaseDateID,
+  rcm.AVLDays,
+  rcm.AVLDaysWithFT,
+  rcm.ASGDays,
+  rcm.ASGDaysWithFT,
+  rcm.ASGSequence,
+  rcm.ASGStandby,
+  rcm.ETBonFD,
+  rcm.IsVolunteer,
+  rcm.IsSick,
+  rcm.IsCompletelyAvailableReserve,
+  pr.payroll_id,
+  pr.pay_period_start,
+  pr.pay_period_end,
+  pr.base_pay,
+  pr.flight_hours,
+  pr.flight_hour_pay,
+  pr.per_diem_days,
+  pr.per_diem_pay,
+  pr.overtime_hours,
+  pr.overtime_pay,
+  pr.deductions,
+  pr.tax_withheld,
+  pr.net_pay,
+  pr.payment_date,
+  pr.payment_status,
+  lb.balance_id,
+  lb.leave_type,
+  lb.year AS leave_year,
+  lb.entitled_days,
+  lb.used_days,
+  lb.pending_days,
+  lb.carried_over,
   tr.record_id AS training_record_id,
   tr.course_id,
   tr.training_date,
   tr.completion_date,
-  tr.result,
   tr.score,
-  tr.expiry_date,
-  b.benefit_id,
-  b.benefit_type,
-  b.plan_name,
-  b.status AS benefit_status,
-  b.coverage_start,
-  b.coverage_end,
-  cc.contact_id AS emergency_contact_id,
-  cc.contact_name AS emergency_contact_name,
-  cc.relationship AS emergency_contact_relationship,
-  cc.phone_primary AS emergency_contact_phone,
-  cc.is_primary AS emergency_contact_is_primary
+  tr.result AS training_result,
+  tr.instructor_name,
+  tr.facility,
+  tr.certificate_number,
+  tr.expiry_date AS training_expiry_date,
+  tr.notes AS training_notes,
+  cc.check_id AS compliance_check_id,
+  cc.check_type,
+  cc.check_date,
+  cc.result AS compliance_result,
+  cc.next_due_date,
+  cc.examiner_name,
+  cc.remarks AS compliance_remarks,
+  cc.is_overdue,
+  si.incident_id,
+  si.flight_id AS incident_flight_id,
+  si.incident_date,
+  si.incident_type,
+  si.severity,
+  si.description AS incident_description,
+  si.corrective_action,
+  si.investigation_status,
+  si.resolution_date
 FROM crew_management.crew_members cm
+LEFT JOIN crew_roster.reservescrewmember rcm
+  ON CAST(rcm.EmployeeID AS TEXT) = REPLACE(cm.employee_id, 'AA-', '')
+LEFT JOIN hr_payroll.payroll_records pr
+  ON pr.crew_id = cm.crew_id
+LEFT JOIN hr_payroll.leave_balances lb
+  ON lb.crew_id = cm.crew_id
 LEFT JOIN compliance_training.training_records tr
   ON tr.crew_id = cm.crew_id
-LEFT JOIN hr_payroll.benefits b
-  ON b.crew_id = cm.crew_id
-LEFT JOIN crew_management.crew_contacts cc
+LEFT JOIN compliance_training.compliance_checks cc
   ON cc.crew_id = cm.crew_id
-WHERE cm.employee_id IN ('101', 'AA-101')
-ORDER BY tr.completion_date DESC, b.coverage_start DESC, cc.is_primary DESC
+LEFT JOIN compliance_training.safety_incidents si
+  ON si.reported_by_crew_id = cm.crew_id
+WHERE cm.employee_id = 'AA-101'
+   OR CAST(rcm.EmployeeID AS TEXT) = '101'
 LIMIT 100;
+
+Query returned no results
+
+Response time: 17904ms
+
+You might also want to ask:
+
+
+
+
+
+
+can you check in entire dbs
+
+No matching records were found anywhere in the tables checked for employee IDs “101” or “AA-101”. Specifically, the query returned 0 rows, meaning there were no entries for those IDs in:
+
+crew_roster.reserveslegality (reserve legality records)
+compliance_training.compliance_checks (training/compliance checks)
+crew_management.crew_documents (uploaded/verified crew documents)
+compliance_training.audit_logs (audit log entries referencing those IDs, including in old/new values)
+In context of “check in entire dbs,” this indicates that within the specific tables searched, the database contains no records linked to those crew identifiers (or they may exist under a different ID format).
+
+Intent: DATA | Confidence: 88%
+
+🔍 View SQL Query & Results
+
+Generated SQL:
+
+SELECT *
+FROM (
+  SELECT 'crew_roster.reserveslegality' AS source_table,
+         CAST(rl.ReservesCrewMemberID AS TEXT) AS employee_id,
+         NULL AS first_name,
+         NULL AS last_name,
+         'ReservesLegalityID=' || rl.ReservesLegalityID ||
+         ', BaseDateID=' || rl.BaseDateID ||
+         ', SequencePositionDetailsID=' || rl.SequencePositionDetailsID ||
+         ', StandByID=' || rl.StandByID ||
+         ', MovableDays=' || rl.MovableDays ||
+         ', LineHolderDays=' || rl.LineHolderDays AS details
+  FROM crew_roster.reserveslegality rl
+  WHERE CAST(rl.ReservesCrewMemberID AS TEXT) IN ('101','AA-101')
+
+  UNION ALL
+
+  SELECT 'compliance_training.compliance_checks' AS source_table,
+         CAST(cc.crew_id AS TEXT) AS employee_id,
+         NULL AS first_name,
+         NULL AS last_name,
+         'check_id=' || cc.check_id ||
+         ', check_type=' || cc.check_type ||
+         ', check_date=' || cc.check_date ||
+         ', result=' || cc.result ||
+         ', next_due_date=' || cc.next_due_date ||
+         ', examiner_name=' || cc.examiner_name ||
+         ', is_overdue=' || cc.is_overdue ||
+         ', remarks=' || COALESCE(cc.remarks,'') AS details
+  FROM compliance_training.compliance_checks cc
+  WHERE CAST(cc.crew_id AS TEXT) IN ('101','AA-101')
+
+  UNION ALL
+
+  SELECT 'crew_management.crew_documents' AS source_table,
+         CAST(cd.crew_id AS TEXT) AS employee_id,
+         NULL AS first_name,
+         NULL AS last_name,
+         'document_id=' || cd.document_id ||
+         ', document_type=' || cd.document_type ||
+         ', document_name=' || cd.document_name ||
+         ', upload_date=' || cd.upload_date ||
+         ', expiry_date=' || cd.expiry_date ||
+         ', verified=' || cd.verified ||
+         ', verified_by=' || COALESCE(cd.verified_by,'') ||
+         ', file_path=' || COALESCE(cd.file_path,'') AS details
+  FROM crew_management.crew_documents cd
+  WHERE CAST(cd.crew_id AS TEXT) IN ('101','AA-101')
+
+  UNION ALL
+
+  SELECT 'compliance_training.audit_logs' AS source_table,
+         CAST(al.entity_id AS TEXT) AS employee_id,
+         NULL AS first_name,
+         NULL AS last_name,
+         'log_id=' || al.log_id ||
+         ', entity_type=' || al.entity_type ||
+         ', action=' || al.action ||
+         ', performed_by=' || al.performed_by ||
+         ', ip_address=' || COALESCE(al.ip_address,'') ||
+         ', performed_at=' || al.performed_at ||
+         ', old_value=' || COALESCE(al.old_value,'') ||
+         ', new_value=' || COALESCE(al.new_value,'') AS details
+  FROM compliance_training.audit_logs al
+  WHERE CAST(al.entity_id AS TEXT) IN ('101','AA-101')
+     OR al.old_value LIKE '%101%'
+     OR al.new_value LIKE '%101%'
+) x
+LIMIT 100;
+
+Query returned no results
