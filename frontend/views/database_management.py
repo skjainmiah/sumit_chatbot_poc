@@ -94,7 +94,7 @@ def render_upload_section(client: APIClient):
 
     history = client.get_upload_history(limit=10)
 
-    if history.get("error"):
+    if isinstance(history, dict) and history.get("error"):
         st.warning("Could not load upload history")
     elif not history:
         st.info("No upload history yet")

@@ -243,7 +243,7 @@ class APIClient:
             "/database/upload-history",
             params={"limit": limit}
         )
-        if result.get("error"):
+        if isinstance(result, dict) and result.get("error"):
             return result
         return result if isinstance(result, list) else []
 
