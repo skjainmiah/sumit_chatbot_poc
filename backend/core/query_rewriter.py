@@ -33,12 +33,38 @@ def rewrite_query(query: str, conversation_history: List[Dict[str, str]]) -> str
 
 
 def needs_rewriting(query: str) -> bool:
-    """Check if a query likely needs rewriting (contains pronouns or references)."""
-    pronouns = ['it', 'this', 'that', 'they', 'them', 'he', 'she', 'his', 'her', 'those', 'these']
-    references = ['the same', 'above', 'previous', 'last', 'mentioned', 'earlier']
+    """Check if a query likely needs rewriting (contains pronouns, references, or follow-up patterns)."""
+    query_lower = f' {query.lower()} '
 
-    query_lower = query.lower()
-    for word in pronouns + references:
-        if f' {word} ' in f' {query_lower} ':
+    # Pronouns that reference previous context
+    pronouns = ['it', 'this', 'that', 'they', 'them', 'he', 'she', 'his', 'her', 'those', 'these']
+    for word in pronouns:
+        if f' {word} ' in query_lower:
             return True
+
+    # Explicit references to previous conversation
+    references = ['the same', 'above', 'previous', 'last', 'mentioned', 'earlier']
+    for phrase in references:
+        if f' {phrase} ' in query_lower:
+            return True
+
+    # Contradiction / follow-up starters — user is responding to a previous answer
+    followup_starters = ['but ', 'however ', 'actually ', 'no ', 'wrong ', 'incorrect ',
+                         'not right', 'that\'s not', 'thats not', 'wait ',
+                         'what about ', 'how about ', 'and what ', 'and how ',
+                         'also ', 'additionally ', 'what else', 'anything else',
+                         'more about', 'tell me more', 'explain more',
+                         'why not', 'why is', 'why are', 'why did',
+                         'can you also', 'show me more', 'what if']
+    stripped = query.strip().lower()
+    for starter in followup_starters:
+        if stripped.startswith(starter):
+            return True
+
+    # Short vague queries (< 5 words, no verb-like keywords) are likely follow-ups
+    words = query.strip().split()
+    if len(words) <= 3 and not any(kw in query_lower for kw in
+            [' show ', ' list ', ' get ', ' find ', ' how many ', ' count ', ' what ']):
+        return True
+
     return False

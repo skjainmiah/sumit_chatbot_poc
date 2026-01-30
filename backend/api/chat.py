@@ -220,10 +220,19 @@ async def send_message(request: ChatRequest, token: str):
         intent_result.intent = "DATA"  # Mark as DATA for UI display
 
     elif intent_result.intent == "DATA":
-        # SQL Pipeline
+        # SQL Pipeline — build conversation context for follow-up handling
+        conversation_context = ""
+        if history:
+            context_parts = []
+            for msg in history[-5:]:
+                role = msg.get("role", "user").capitalize()
+                content = msg.get("content", "")[:200]
+                context_parts.append(f"{role}: {content}")
+            conversation_context = "\n".join(context_parts)
+
         try:
             sql_pipeline = SQLPipeline()
-            result = sql_pipeline.run(processed_query)
+            result = sql_pipeline.run(processed_query, context=conversation_context)
 
             if result["success"]:
                 response_text = result["summary"]

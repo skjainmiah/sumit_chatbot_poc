@@ -7,7 +7,7 @@ import logging
 from typing import Dict, List, Optional, Tuple, Any, Set
 from backend.config import settings
 from backend.llm.client import get_llm_client
-from backend.llm.prompts import SQL_GENERATION_PROMPT, SQL_CORRECTION_PROMPT, SQL_RESULT_SUMMARY_PROMPT
+from backend.llm.prompts import SQL_GENERATION_PROMPT, SQL_GENERATION_WITH_CONTEXT_PROMPT, SQL_CORRECTION_PROMPT, SQL_RESULT_SUMMARY_PROMPT
 from backend.cache.vector_store import get_schema_store
 from backend.sql.schema_cache import get_schemas_by_keywords
 from backend.db.session import get_multi_db_connection
@@ -136,14 +136,21 @@ Columns:
 """)
         return "\n---\n".join(formatted)
 
-    def generate_sql(self, query: str, schemas: List[Dict]) -> str:
-        """Generate SQL from natural language query."""
+    def generate_sql(self, query: str, schemas: List[Dict], context: str = "") -> str:
+        """Generate SQL from natural language query, optionally with conversation context."""
         schema_text = self.format_schemas_for_prompt(schemas)
 
-        prompt = SQL_GENERATION_PROMPT.format(
-            schema_descriptions=schema_text,
-            query=query
-        )
+        if context:
+            prompt = SQL_GENERATION_WITH_CONTEXT_PROMPT.format(
+                conversation_context=context,
+                schema_descriptions=schema_text,
+                query=query
+            )
+        else:
+            prompt = SQL_GENERATION_PROMPT.format(
+                schema_descriptions=schema_text,
+                query=query
+            )
 
         logger.info(f"[generate_sql] Sending query to LLM with {len(schemas)} schemas, prompt_len={len(prompt)}")
         step_start = time.time()
@@ -278,10 +285,15 @@ Columns:
 
         return self._parse_suggestions(response)
 
-    def run(self, query: str) -> Dict:
-        """Run the full SQL pipeline."""
+    def run(self, query: str, context: str = "") -> Dict:
+        """Run the full SQL pipeline.
+
+        Args:
+            query: The user's natural language question.
+            context: Optional conversation context (recent turns) for follow-up handling.
+        """
         start_time = time.time()
-        logger.info(f"[pipeline] START query=\"{query[:120]}\"")
+        logger.info(f"[pipeline] START query=\"{query[:120]}\" context_len={len(context)}")
 
         # Step 1: Retrieve relevant schemas
         schemas = self.retrieve_schemas(query)
@@ -296,9 +308,9 @@ Columns:
                 "processing_time_ms": int((time.time() - start_time) * 1000)
             }
 
-        # Step 2: Generate SQL
+        # Step 2: Generate SQL (with conversation context if available)
         logger.info(f"[pipeline] Using {len(schemas)} schemas: {[s['db_name']+'.'+s['table_name'] for s in schemas[:5]]}")
-        sql = self.generate_sql(query, schemas)
+        sql = self.generate_sql(query, schemas, context)
 
         # Step 3: Validate
         is_valid, validation_msg = self.validate_sql(sql)
