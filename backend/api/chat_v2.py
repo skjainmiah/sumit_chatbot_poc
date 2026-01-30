@@ -161,7 +161,9 @@ async def send_message(request: ChatRequest, token: str = None):
     elif intent == "ambiguous":
         response_text = result.get("clarification", "Could you please provide more details?")
     elif result.get("success"):
-        response_text = result.get("summary", "Query executed successfully.")
+        response_text = result.get("summary") or ""
+        if not response_text.strip():
+            response_text = "The query executed successfully but returned no data matching your criteria."
     else:
         logger.warning(f"V2 query failed: {result.get('error', 'unknown')}")
         response_text = ("I wasn't able to find an answer for that. "

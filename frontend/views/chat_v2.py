@@ -1,6 +1,7 @@
 """Chat V2 page - uses full schema approach with advanced visualization."""
 import random
 import streamlit as st
+import streamlit.components.v1 as components
 import pandas as pd
 from frontend.api_client import APIClient
 from frontend.components.visualization import (
@@ -11,6 +12,17 @@ from frontend.components.visualization import (
     reset_key_counts,
 )
 from frontend.components.loading_facts import show_loading_with_facts
+
+
+def _scroll_to_bottom():
+    """Inject JS to smoothly scroll the main content area to the bottom."""
+    components.html(
+        """<script>
+        const main = window.parent.document.querySelector('section.main');
+        if (main) main.scrollTo({top: main.scrollHeight, behavior: 'smooth'});
+        </script>""",
+        height=0,
+    )
 
 
 # ==========================================
@@ -242,6 +254,10 @@ def render_chat_v2():
 
             render_message_v2(msg, user_query, message_index=i)
 
+    # Auto-scroll to latest message after a new answer or conversation load
+    if st.session_state.pop("v2_scroll_to_bottom", False):
+        _scroll_to_bottom()
+
     # Handle pending suggestion clicks
     pending = st.session_state.pop("v2_pending_suggestion", None)
 
@@ -327,10 +343,7 @@ def render_chat_v2():
                 st.write(prompt)
 
         # Auto-scroll to show the user's question above the input bar
-        st.markdown(
-            "<script>window.parent.document.querySelector('section.main').scrollTo(0, 999999)</script>",
-            unsafe_allow_html=True,
-        )
+        _scroll_to_bottom()
 
         # Build context from recent messages
         context = build_context(st.session_state.messages_v2[-6:-1])
@@ -382,7 +395,8 @@ def render_chat_v2():
             }
             st.session_state.messages_v2.append(assistant_msg)
 
-            # Rerun to display
+            # Scroll to show the new answer on rerun
+            st.session_state["v2_scroll_to_bottom"] = True
             st.rerun()
 
 

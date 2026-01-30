@@ -334,8 +334,20 @@ Columns:
 
             if success:
                 # Generate summary with follow-up suggestions
-                logger.info("[pipeline] SQL executed OK, generating summary...")
-                summary, suggestions = self.summarize_results(query, sql, results)
+                logger.info(f"[pipeline] SQL executed OK | {results['row_count']} rows")
+
+                if results["row_count"] == 0:
+                    # No data found — skip LLM summarization, return clear message
+                    summary = ("No records were found matching your query. "
+                               "You may want to try different search criteria or check if the data exists in the database.")
+                    suggestions = []
+                    logger.info("[pipeline] Zero rows returned, skipping summarization")
+                else:
+                    summary, suggestions = self.summarize_results(query, sql, results)
+                    # Guard against empty LLM summary
+                    if not summary or not summary.strip():
+                        summary = f"Query returned {results['row_count']} row(s)."
+                        logger.warning("[pipeline] LLM returned empty summary, using fallback")
 
                 elapsed = int((time.time() - start_time) * 1000)
                 logger.info(f"[pipeline] DONE success | attempts={attempt + 1} | {elapsed}ms | {results['row_count']} rows")

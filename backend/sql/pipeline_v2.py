@@ -582,15 +582,25 @@ class SQLPipelineV2:
             success, results, error = self._execute_sql(sql)
 
             if success:
-                # Generate summary with follow-up suggestions
-                logger.info(f"[pipeline] SQL executed OK, generating summary...")
+                logger.info(f"[pipeline] SQL executed OK | {results['row_count']} rows")
                 suggestions = []
-                try:
-                    summary, suggestions = self._summarize_results(question, sql, results)
-                except Exception as e:
-                    elapsed = int((time.time() - start_time) * 1000)
-                    logger.error(f"[pipeline] Summarization failed after {elapsed}ms: {e}", exc_info=True)
-                    summary = f"Query returned {results['row_count']} rows."
+
+                if results["row_count"] == 0:
+                    # No data found — skip LLM summarization, return clear message
+                    summary = ("No records were found matching your query. "
+                               "You may want to try different search criteria or check if the data exists in the database.")
+                    logger.info("[pipeline] Zero rows returned, skipping summarization")
+                else:
+                    try:
+                        summary, suggestions = self._summarize_results(question, sql, results)
+                        # Guard against empty LLM summary
+                        if not summary or not summary.strip():
+                            summary = f"Query returned {results['row_count']} row(s)."
+                            logger.warning("[pipeline] LLM returned empty summary, using fallback")
+                    except Exception as e:
+                        elapsed = int((time.time() - start_time) * 1000)
+                        logger.error(f"[pipeline] Summarization failed after {elapsed}ms: {e}", exc_info=True)
+                        summary = f"Query returned {results['row_count']} rows."
 
                 elapsed = int((time.time() - start_time) * 1000)
                 logger.info(f"[pipeline] DONE data success | attempts={attempt + 1} | {elapsed}ms")

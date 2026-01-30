@@ -1,10 +1,22 @@
 """Chat page - main V1 chat interface with visualization support."""
 import streamlit as st
+import streamlit.components.v1 as components
 from frontend.api_client import APIClient
 from frontend.components.chat_message import render_message
 from frontend.components.feedback_buttons import render_feedback_buttons
 from frontend.components.visualization import reset_key_counts
 from frontend.components.loading_facts import show_loading_with_facts
+
+
+def _scroll_to_bottom():
+    """Inject JS to smoothly scroll the main content area to the bottom."""
+    components.html(
+        """<script>
+        const main = window.parent.document.querySelector('section.main');
+        if (main) main.scrollTo({top: main.scrollHeight, behavior: 'smooth'});
+        </script>""",
+        height=0,
+    )
 
 
 # ==========================================
@@ -155,6 +167,10 @@ def render_chat():
 
             render_message(msg, client, user_query=user_query, message_index=i)
 
+    # Auto-scroll to latest message after a new answer or conversation load
+    if st.session_state.pop("v1_scroll_to_bottom", False):
+        _scroll_to_bottom()
+
     # Handle pending suggestion clicks
     pending = st.session_state.pop("v1_pending_suggestion", None)
 
@@ -242,10 +258,7 @@ def render_chat():
                 st.write(prompt)
 
         # Auto-scroll to show the user's question above the input bar
-        st.markdown(
-            "<script>window.parent.document.querySelector('section.main').scrollTo(0, 999999)</script>",
-            unsafe_allow_html=True,
-        )
+        _scroll_to_bottom()
 
         # Send to backend with loading animation
         loading_placeholder = st.empty()
@@ -287,7 +300,8 @@ def render_chat():
             }
             st.session_state.messages.append(assistant_msg)
 
-            # Rerun to display new message
+            # Scroll to show the new answer on rerun
+            st.session_state["v1_scroll_to_bottom"] = True
             st.rerun()
 
     # Sidebar - conversation info
@@ -368,4 +382,5 @@ def load_conversation(client: APIClient, conversation_id: int):
         }
         st.session_state.messages.append(formatted_msg)
 
+    st.session_state["v1_scroll_to_bottom"] = True
     st.rerun()

@@ -235,7 +235,9 @@ async def send_message(request: ChatRequest, token: str):
             result = sql_pipeline.run(processed_query, context=conversation_context)
 
             if result["success"]:
-                response_text = result["summary"]
+                response_text = result.get("summary") or ""
+                if not response_text.strip():
+                    response_text = "The query executed successfully but returned no data matching your criteria."
                 sql_query = result["sql"]
                 sql_results = result["results"]
                 suggestions = result.get("suggestions")
