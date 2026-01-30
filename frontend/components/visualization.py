@@ -1,4 +1,4 @@
-"""Advanced visualization component with beautiful charts and popup support."""
+"""Chart and visualization engine - supports bar, line, pie, scatter, heatmap, and more."""
 import streamlit as st
 import pandas as pd
 import plotly.express as px
@@ -56,7 +56,7 @@ def get_unique_key(prefix: str, data: Any) -> str:
 
 
 def analyze_data(df: pd.DataFrame) -> Dict:
-    """Analyze DataFrame to determine best visualization options."""
+    """Looks at the DataFrame columns and row count to figure out which chart types make sense."""
     analysis = {
         "row_count": len(df),
         "col_count": len(df.columns),
@@ -84,6 +84,11 @@ def analyze_data(df: pd.DataFrame) -> Dict:
 
     # Always allow table
     analysis["suitable_charts"].append("table")
+
+    # Single-row with numeric data -> metric display
+    if row_count == 1 and num_cols:
+        analysis["suitable_charts"].append("metric")
+        analysis["recommended_chart"] = "metric"
 
     if row_count >= 2:
         if cat_cols and num_cols:
@@ -151,7 +156,7 @@ def create_chart(
     show_values: bool = True,
     height: int = 400,
 ) -> go.Figure:
-    """Create a beautiful chart based on type and data."""
+    """Creates a Plotly chart of the given type from the DataFrame."""
     colors = COLOR_PALETTES.get(palette, COLOR_PALETTES["default"])
 
     if not title:
@@ -387,8 +392,19 @@ def render_visualization(
     # Analyze data
     analysis = analyze_data(df)
 
-    # If only 1 row or no suitable charts, just show table
-    if len(df) == 1 or len(analysis["suitable_charts"]) <= 1:
+    # Single-row metric display for aggregate/count results
+    if len(df) == 1 and analysis.get("recommended_chart") == "metric":
+        num_cols = analysis["numeric_cols"]
+        cols = st.columns(min(len(num_cols), 4))
+        for i, col_name in enumerate(num_cols[:4]):
+            with cols[i]:
+                val = df[col_name].iloc[0]
+                label = col_name.replace("_", " ").title()
+                st.metric(label=label, value=f"{val:,.0f}" if isinstance(val, (int, float)) else str(val))
+        return
+
+    # No suitable charts beyond table -> just show table
+    if len(analysis["suitable_charts"]) <= 1:
         st.dataframe(df, width="stretch", hide_index=True)
         return
 

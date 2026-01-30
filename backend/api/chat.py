@@ -1,4 +1,4 @@
-"""Chat API endpoints - main orchestration point."""
+"""V1 chat endpoint - handles intent classification, PII masking, SQL pipeline, and general chat."""
 import re
 import time
 import logging
@@ -167,6 +167,7 @@ class ChatResponse(BaseModel):
     sql_query: Optional[str] = None
     sql_results: Optional[dict] = None
     sources: Optional[List[dict]] = None
+    suggestions: Optional[List[str]] = None
     follow_up_question: Optional[str] = None
     processing_time_ms: int
 
@@ -194,16 +195,22 @@ async def send_message(request: ChatRequest, token: str):
     # Get conversation history
     history = conv_manager.get_recent_turns(5)
 
+    logger.info(f"V1 request: conv={conv_id} query=\"{request.message[:120]}\"")
+
     # PII masking
     masked_query, pii_map = mask_pii(request.message)
+    if pii_map:
+        logger.info(f"V1 PII masked: {len(pii_map)} items")
 
     # Query rewriting for follow-ups
     processed_query = masked_query
     if history and needs_rewriting(masked_query):
         processed_query = rewrite_query(masked_query, history)
+        logger.info(f"V1 rewritten query: \"{processed_query[:120]}\"")
 
     # Intent classification
     intent_result = classify_intent(processed_query, history)
+    logger.info(f"V1 intent: {intent_result.intent} confidence={intent_result.confidence}")
 
     # Save user message
     user_msg_id = conv_manager.add_message(
@@ -238,6 +245,7 @@ async def send_message(request: ChatRequest, token: str):
     sql_query = None
     sql_results = None
     sources = None
+    suggestions = None
 
     # Check for meta-queries (about database structure) first
     is_meta, meta_type = check_meta_query(processed_query)
@@ -258,6 +266,7 @@ async def send_message(request: ChatRequest, token: str):
                 response_text = result["summary"]
                 sql_query = result["sql"]
                 sql_results = result["results"]
+                suggestions = result.get("suggestions")
             else:
                 logger.warning(f"V1 SQL pipeline failed: {result.get('error', 'unknown')}")
                 response_text = ("I wasn't able to find an answer for that. "
@@ -310,6 +319,11 @@ async def send_message(request: ChatRequest, token: str):
     if pii_map:
         response_text = unmask_pii(response_text, pii_map)
 
+    elapsed_ms = int((time.time() - start_time) * 1000)
+    logger.info(f"V1 response: intent={intent_result.intent} has_sql={sql_query is not None} "
+                f"has_results={sql_results is not None} suggestions={len(suggestions) if suggestions else 0} "
+                f"time={elapsed_ms}ms")
+
     # Save assistant response
     assistant_msg_id = conv_manager.add_message(
         role="assistant",
@@ -332,6 +346,7 @@ async def send_message(request: ChatRequest, token: str):
         sql_query=sql_query,
         sql_results=sql_results,
         sources=sources,
+        suggestions=suggestions,
         processing_time_ms=int((time.time() - start_time) * 1000)
     )
 

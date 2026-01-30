@@ -1,4 +1,4 @@
-"""Chat V2 page - PostgreSQL with Full Schema approach and advanced visualization."""
+"""Chat V2 page - uses full schema approach with advanced visualization."""
 import streamlit as st
 import pandas as pd
 from frontend.api_client import APIClient
@@ -9,10 +9,11 @@ from frontend.components.visualization import (
     get_unique_key,
     reset_key_counts,
 )
+from frontend.components.loading_facts import show_loading_with_facts
 
 
 def render_chat_v2():
-    """Render the V2 chat interface with visualization support."""
+    """Main V2 chat page - handles message display, schema info sidebar, and query submission."""
     st.title("💬 Chat with Crew Assistant V2")
     st.caption("Ask about crew data, policies, schedules, and more")
 
@@ -113,27 +114,35 @@ def render_chat_v2():
 
             render_message_v2(msg, user_query)
 
+    # Handle pending suggestion clicks
+    pending = st.session_state.pop("v2_pending_suggestion", None)
+
     # Chat input
-    if prompt := st.chat_input("Ask about your databases...", key="chat_input_v2"):
+    if prompt := (pending or st.chat_input("Ask about your databases...", key="chat_input_v2")):
         # Add user message
         user_msg = {"role": "user", "content": prompt}
         st.session_state.messages_v2.append(user_msg)
 
         # Display user message
         with chat_container:
-            with st.chat_message("user"):
+            with st.chat_message("user", avatar=None):
                 st.write(prompt)
 
         # Build context from recent messages
         context = build_context(st.session_state.messages_v2[-6:-1])
 
-        # Send to backend
-        with st.spinner("Querying..."):
+        # Send to backend with loading animation
+        loading_placeholder = st.empty()
+        stop_event = show_loading_with_facts(loading_placeholder)
+        try:
             result = client.send_message_v2(
                 prompt,
                 st.session_state.conversation_id_v2,
                 context
             )
+        finally:
+            stop_event.set()
+            loading_placeholder.empty()
 
         # Distinguish HTTP/connection errors (error=True) from application-level errors
         # HTTP errors have {"error": True, "detail": "..."} - no response to display
@@ -154,10 +163,11 @@ def render_chat_v2():
                 "sql_query": result.get("sql_query"),
                 "sql_results": result.get("sql_results"),
                 "clarification": result.get("clarification"),
+                "suggestions": result.get("suggestions"),
                 "processing_time_ms": result.get("processing_time_ms"),
                 "success": result.get("success", False),
                 "error": result.get("error"),
-                "user_query": prompt,  # Store for visualization suggestions
+                "user_query": prompt,
             }
             st.session_state.messages_v2.append(assistant_msg)
 
@@ -166,7 +176,7 @@ def render_chat_v2():
 
 
 def build_context(messages: list) -> str:
-    """Build context string from recent messages."""
+    """Builds a short context string from the last few messages for the LLM."""
     if not messages:
         return ""
 
@@ -180,10 +190,10 @@ def build_context(messages: list) -> str:
 
 
 def render_message_v2(msg: dict, user_query: str = ""):
-    """Render a single V2 chat message with visualization support."""
+    """Shows one chat message - user or assistant - with charts, SQL, and suggestions."""
     role = msg.get("role", "user")
 
-    with st.chat_message(role):
+    with st.chat_message(role, avatar=None):
         # Main content
         st.write(msg.get("content", ""))
 
@@ -241,22 +251,32 @@ def render_message_v2(msg: dict, user_query: str = ""):
                     query_for_viz = user_query or msg.get("user_query", "")
 
                     # Check if user explicitly asked for visualization
-                    viz_keywords = ["chart", "graph", "plot", "visualize", "trend", "compare", "distribution", "breakdown"]
+                    viz_keywords = ["chart", "graph", "plot", "visualize", "trend", "compare", "distribution",
+                                    "breakdown", "count", "total", "sum", "average", "how many", "number of", "table"]
                     wants_viz = any(kw in query_for_viz.lower() for kw in viz_keywords)
 
-                    # Show chart suggestions for suitable data
-                    if len(df) >= 2 and len(analysis["suitable_charts"]) > 1:
-                        if wants_viz or len(df) <= 20:
-                            render_chart_suggestions(
-                                df,
-                                query_for_viz,
-                                key_prefix=get_unique_key("v2_suggest", results)
-                            )
+                    has_charts = len(analysis["suitable_charts"]) > 1
+
+                    # Auto-render chart inline when viz keywords detected
+                    if has_charts and wants_viz:
+                        render_chart_suggestions(
+                            df,
+                            query_for_viz,
+                            key_prefix=get_unique_key("v2_suggest", results)
+                        )
+
+                    # Check if user asked for a specific chart type that doesn't suit the data
+                    chart_type_keywords = {"bar": "bar", "pie": "pie", "line": "line", "donut": "donut", "scatter": "scatter"}
+                    for kw, ctype in chart_type_keywords.items():
+                        if kw in query_for_viz.lower() and ctype not in analysis["suitable_charts"]:
+                            better = analysis["recommended_chart"] or "bar"
+                            st.info(f"A {ctype} chart isn't ideal for this data. Showing a {better} chart instead.")
+                            break
 
                     # Main results expander with visualization
+                    wants_table = "table" in query_for_viz.lower()
                     with st.expander(f"📊 Results ({row_count} rows)", expanded=True):
-                        if len(df) >= 2 and len(analysis["suitable_charts"]) > 1:
-                            # Full visualization component
+                        if has_charts:
                             render_visualization(
                                 df,
                                 title=None,
@@ -266,10 +286,8 @@ def render_message_v2(msg: dict, user_query: str = ""):
                                 allow_download=True
                             )
                         else:
-                            # Simple data table
                             st.dataframe(df, width="stretch", hide_index=True)
 
-                            # Download button
                             csv = df.to_csv(index=False)
                             st.download_button(
                                 label="📥 Download CSV",
@@ -287,9 +305,23 @@ def render_message_v2(msg: dict, user_query: str = ""):
             if msg.get("error") and not msg.get("success"):
                 st.error(f"Error: {msg.get('error')}")
 
+            # Follow-up suggestion buttons
+            if msg.get("suggestions"):
+                st.markdown("**You might also want to ask:**")
+                suggestion_cols = st.columns(min(len(msg["suggestions"]), 3))
+                for j, suggestion in enumerate(msg["suggestions"][:3]):
+                    with suggestion_cols[j]:
+                        if st.button(
+                            f"💡 {suggestion}",
+                            key=get_unique_key(f"v2_sug_{j}", suggestion),
+                            use_container_width=True
+                        ):
+                            st.session_state["v2_pending_suggestion"] = suggestion
+                            st.rerun()
+
 
 def render_suggested_questions():
-    """Render suggested questions based on schema."""
+    """Shows some starter questions the user can click on to get going."""
     st.subheader("Try asking:")
     suggestions = [
         "List available databases",

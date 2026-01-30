@@ -1,11 +1,6 @@
 """
-Chat API v2 - PostgreSQL with Full Schema Approach
-
-Simplified architecture:
-- No FAISS
-- Full schema in prompt
-- Handles meta, data, and ambiguous questions
-- PostgreSQL backend
+V2 chat endpoint - uses the full-schema pipeline for SQL generation.
+Handles greetings, PII masking, and routes queries through the V2 pipeline.
 """
 
 import time
@@ -39,6 +34,7 @@ class ChatResponse(BaseModel):
     sql_query: Optional[str] = None
     sql_results: Optional[dict] = None
     clarification: Optional[str] = None
+    suggestions: Optional[List[str]] = None
     processing_time_ms: int
     error: Optional[str] = None
 
@@ -186,6 +182,7 @@ async def send_message(request: ChatRequest, token: str = None):
         sql_query=result.get("sql"),
         sql_results=result.get("results"),
         clarification=result.get("clarification") if intent == "ambiguous" else None,
+        suggestions=result.get("suggestions"),
         processing_time_ms=result.get("processing_time_ms", int((time.time() - start_time) * 1000)),
         error=result.get("error")
     )

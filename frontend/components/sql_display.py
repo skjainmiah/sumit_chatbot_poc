@@ -1,4 +1,4 @@
-"""SQL query and results display component with advanced visualization."""
+"""Handles rendering of SQL queries and result tables with chart suggestions."""
 import streamlit as st
 import pandas as pd
 from frontend.components.visualization import (
@@ -12,11 +12,12 @@ from frontend.components.visualization import (
 
 
 def render_sql_results(sql_query: str = None, results: dict = None, query_text: str = ""):
-    """Render SQL query and results with beautiful visualization."""
+    """Displays the SQL query and results in an expander, with charts when the data suits it."""
     if not sql_query and not results:
         return
 
-    with st.expander("🔍 View SQL Query & Results", expanded=False):
+    wants_table = "table" in query_text.lower() if query_text else False
+    with st.expander("🔍 View SQL Query & Results", expanded=wants_table):
         # Show SQL query with syntax highlighting
         if sql_query:
             st.markdown("**Generated SQL:**")
@@ -39,29 +40,28 @@ def render_sql_results(sql_query: str = None, results: dict = None, query_text: 
 
                 # Check if data is suitable for visualization
                 analysis = analyze_data(df)
+                has_charts = len(analysis["suitable_charts"]) > 1
 
-                if len(df) >= 2 and len(analysis["suitable_charts"]) > 1:
-                    # Show chart suggestions if query suggests visualization
-                    viz_keywords = ["show", "display", "chart", "graph", "plot", "visualize", "trend", "compare"]
-                    should_suggest = any(kw in query_text.lower() for kw in viz_keywords)
+                viz_keywords = ["show", "display", "chart", "graph", "plot", "visualize", "trend", "compare",
+                                "count", "total", "sum", "average", "how many", "number of", "table"]
+                should_suggest = any(kw in query_text.lower() for kw in viz_keywords)
+                wants_table = "table" in query_text.lower()
 
+                if has_charts:
                     if should_suggest or len(df) <= 20:
                         render_chart_suggestions(df, query_text, key_prefix=get_unique_key("sql", results))
 
-                    # Render full visualization component
                     render_visualization(
                         df,
                         title=None,
                         key_prefix=get_unique_key("sqlviz", results),
                         show_selector=True,
-                        default_expanded=len(df) <= 15,
+                        default_expanded=should_suggest or len(df) <= 15,
                         allow_download=True
                     )
                 else:
-                    # Just show data table for simple results
                     st.dataframe(df, width="stretch", hide_index=True)
 
-                    # Download button
                     csv = df.to_csv(index=False)
                     st.download_button(
                         "📥 Download CSV",
@@ -76,7 +76,7 @@ def render_sql_results(sql_query: str = None, results: dict = None, query_text: 
 
 
 def render_quick_chart(df: pd.DataFrame, chart_type: str = None, key_prefix: str = "quick"):
-    """Render a quick chart without the full selector UI."""
+    """Renders a simple chart directly, skipping the full chart selector controls."""
     if df is None or len(df) < 2:
         return
 

@@ -1,4 +1,4 @@
-"""Text-to-SQL pipeline with schema retrieval and self-correction."""
+"""V1 text-to-SQL pipeline - uses keyword + FAISS schema retrieval, then generates and executes SQL."""
 import re
 import json
 import sqlite3
@@ -145,16 +145,22 @@ Columns:
             query=query
         )
 
+        logger.info(f"[generate_sql] Sending query to LLM with {len(schemas)} schemas, prompt_len={len(prompt)}")
+        step_start = time.time()
+
         response = self.llm_client.chat_completion(
             messages=[{"role": "user", "content": prompt}],
             temperature=0.0,
             max_tokens=1000
         )
 
+        step_ms = int((time.time() - step_start) * 1000)
+
         # Clean up SQL
         sql = response.strip()
         sql = sql.replace("```sql", "").replace("```", "").strip()
 
+        logger.info(f"[generate_sql] LLM responded in {step_ms}ms | sql=\"{sql[:150]}\"")
         return sql
 
     def validate_sql(self, sql: str) -> Tuple[bool, str]:
@@ -176,8 +182,11 @@ Columns:
     def execute_sql(self, sql: str, schemas: List[Dict]) -> Tuple[bool, Any, str]:
         """Execute SQL query with all databases attached for cross-DB support."""
         if not schemas:
+            logger.warning("[execute_sql] No schemas available, skipping execution")
             return False, None, "No schemas available"
 
+        step_start = time.time()
+        logger.info(f"[execute_sql] Executing: {sql[:200]}")
         try:
             conn = get_multi_db_connection()
             cursor = conn.cursor()
@@ -197,15 +206,22 @@ Columns:
 
             conn.close()
 
+            step_ms = int((time.time() - step_start) * 1000)
+            logger.info(f"[execute_sql] OK {step_ms}ms | {len(results)} rows, {len(columns)} columns")
             return True, {"columns": columns, "rows": results, "row_count": len(results)}, ""
 
         except sqlite3.Error as e:
+            step_ms = int((time.time() - step_start) * 1000)
+            logger.error(f"[execute_sql] SQLite error after {step_ms}ms: {e}")
             return False, None, str(e)
         except Exception as e:
+            step_ms = int((time.time() - step_start) * 1000)
+            logger.error(f"[execute_sql] Error after {step_ms}ms: {e}")
             return False, None, str(e)
 
     def correct_sql(self, query: str, failed_sql: str, error: str, schemas: List[Dict]) -> str:
         """Attempt to correct failed SQL."""
+        logger.info(f"[correct_sql] Correcting failed SQL | error={error[:150]}")
         schema_text = self.format_schemas_for_prompt(schemas)
 
         prompt = SQL_CORRECTION_PROMPT.format(
@@ -215,6 +231,7 @@ Columns:
             schemas=schema_text
         )
 
+        step_start = time.time()
         response = self.llm_client.chat_completion(
             messages=[{"role": "user", "content": prompt}],
             temperature=0.0,
@@ -224,32 +241,52 @@ Columns:
         sql = response.strip()
         sql = sql.replace("```sql", "").replace("```", "").strip()
 
+        step_ms = int((time.time() - step_start) * 1000)
+        logger.info(f"[correct_sql] LLM corrected in {step_ms}ms | new_sql=\"{sql[:150]}\"")
         return sql
 
-    def summarize_results(self, query: str, sql: str, results: Dict) -> str:
-        """Generate a natural language summary of results."""
+    def _parse_suggestions(self, text: str):
+        """Extract follow-up suggestions from summary text. Returns (clean_summary, suggestions_list)."""
+        lines = text.strip().split("\n")
+        suggestions = []
+        summary_lines = []
+        for line in lines:
+            stripped = line.strip()
+            if stripped.startswith("SUGGESTION:"):
+                suggestion = stripped[len("SUGGESTION:"):].strip()
+                if suggestion:
+                    suggestions.append(suggestion)
+            else:
+                summary_lines.append(line)
+        clean_summary = "\n".join(summary_lines).rstrip()
+        return clean_summary, suggestions[:3]
+
+    def summarize_results(self, query: str, sql: str, results: Dict) -> tuple:
+        """Generate a natural language summary with follow-up suggestions. Returns (summary, suggestions)."""
         prompt = SQL_RESULT_SUMMARY_PROMPT.format(
             query=query,
             sql=sql,
-            results=json.dumps(results["rows"][:50], default=str),  # Include up to 50 rows
+            results=json.dumps(results["rows"][:50], default=str),
             row_count=results["row_count"]
         )
 
         response = self.llm_client.chat_completion(
             messages=[{"role": "user", "content": prompt}],
             temperature=0.3,
-            max_tokens=1500  # Increased to handle full crew name listings
+            max_tokens=1500
         )
 
-        return response.strip()
+        return self._parse_suggestions(response)
 
     def run(self, query: str) -> Dict:
         """Run the full SQL pipeline."""
         start_time = time.time()
+        logger.info(f"[pipeline] START query=\"{query[:120]}\"")
 
         # Step 1: Retrieve relevant schemas
         schemas = self.retrieve_schemas(query)
         if not schemas:
+            logger.warning("[pipeline] No schemas found for query")
             return {
                 "success": False,
                 "error": "Could not find relevant database tables for your query",
@@ -260,11 +297,13 @@ Columns:
             }
 
         # Step 2: Generate SQL
+        logger.info(f"[pipeline] Using {len(schemas)} schemas: {[s['db_name']+'.'+s['table_name'] for s in schemas[:5]]}")
         sql = self.generate_sql(query, schemas)
 
         # Step 3: Validate
         is_valid, validation_msg = self.validate_sql(sql)
         if not is_valid:
+            logger.warning(f"[pipeline] SQL validation failed: {validation_msg}")
             return {
                 "success": False,
                 "error": f"Generated invalid SQL: {validation_msg}",
@@ -278,25 +317,31 @@ Columns:
         # Step 4: Execute with retry loop
         last_error = ""
         for attempt in range(self.max_retries):
+            logger.info(f"[pipeline] Execute attempt {attempt + 1}/{self.max_retries}")
             success, results, error = self.execute_sql(sql, schemas)
 
             if success:
-                # Generate summary
-                summary = self.summarize_results(query, sql, results)
+                # Generate summary with follow-up suggestions
+                logger.info("[pipeline] SQL executed OK, generating summary...")
+                summary, suggestions = self.summarize_results(query, sql, results)
 
+                elapsed = int((time.time() - start_time) * 1000)
+                logger.info(f"[pipeline] DONE success | attempts={attempt + 1} | {elapsed}ms | {results['row_count']} rows")
                 return {
                     "success": True,
                     "sql": sql,
                     "results": results,
                     "summary": summary,
+                    "suggestions": suggestions,
                     "schemas_used": [s["table_name"] for s in schemas],
                     "attempts": attempt + 1,
-                    "processing_time_ms": int((time.time() - start_time) * 1000)
+                    "processing_time_ms": elapsed
                 }
 
             # Attempt correction
             last_error = error
             if attempt < self.max_retries - 1:
+                logger.info(f"[pipeline] SQL failed, attempting correction (attempt {attempt + 1})")
                 sql = self.correct_sql(query, sql, error, schemas)
                 is_valid, validation_msg = self.validate_sql(sql)
                 if not is_valid:

@@ -1,4 +1,4 @@
-"""Prompt templates for all LLM operations."""
+"""All the prompt templates used for intent classification, SQL generation, summarization, etc."""
 
 # ============================================================
 # INTENT CLASSIFICATION
@@ -162,7 +162,15 @@ SUMMARY RULES:
 5. Format any dates, times, and numbers nicely.
 6. If there are more than 20 rows, list the first 20 with names and mention the total count.
 7. Group results logically (e.g., by reason, by role, by status) when it helps readability.
-8. Use a numbered list or bullet points when listing crew members for clarity."""
+8. Use a numbered list or bullet points when listing crew members for clarity.
+
+FOLLOW-UP SUGGESTIONS:
+After your summary, add exactly 3 follow-up questions the user might want to ask next. These should be related to the current query results and naturally extend the analysis.
+
+Format the follow-up suggestions on separate lines at the very end, each prefixed with "SUGGESTION:" like this:
+SUGGESTION: What is the breakdown of crew by base location?
+SUGGESTION: Show me the training completion rate for each role
+SUGGESTION: Which crew members have expiring qualifications?"""
 
 # ============================================================
 # GENERAL CHAT

@@ -1,13 +1,14 @@
-"""Chat page - main chat interface (V1) with visualization support."""
+"""Chat page - main V1 chat interface with visualization support."""
 import streamlit as st
 from frontend.api_client import APIClient
 from frontend.components.chat_message import render_message
 from frontend.components.feedback_buttons import render_feedback_buttons
 from frontend.components.visualization import reset_key_counts
+from frontend.components.loading_facts import show_loading_with_facts
 
 
 def render_chat():
-    """Render the chat interface."""
+    """Main V1 chat page - displays messages, handles user input, shows conversation history."""
     st.title("💬 Chat with Crew Assistant")
     st.caption("Ask about crew data, policies, schedules, and more")
 
@@ -29,20 +30,28 @@ def render_chat():
 
             render_message(msg, client, user_query=user_query)
 
+    # Handle pending suggestion clicks
+    pending = st.session_state.pop("v1_pending_suggestion", None)
+
     # Chat input
-    if prompt := st.chat_input("Ask me anything about crew policies, schedules, or data..."):
+    if prompt := (pending or st.chat_input("Ask me anything about crew policies, schedules, or data...")):
         # Add user message to display
         user_msg = {"role": "user", "content": prompt}
         st.session_state.messages.append(user_msg)
 
         # Display user message
         with chat_container:
-            with st.chat_message("user"):
+            with st.chat_message("user", avatar=None):
                 st.write(prompt)
 
-        # Send to backend
-        with st.spinner("Thinking..."):
+        # Send to backend with loading animation
+        loading_placeholder = st.empty()
+        stop_event = show_loading_with_facts(loading_placeholder)
+        try:
             result = client.send_message(prompt, st.session_state.conversation_id)
+        finally:
+            stop_event.set()
+            loading_placeholder.empty()
 
         if result.get("error"):
             st.error(f"Error: {result.get('detail', 'Unknown error')}")
@@ -60,8 +69,9 @@ def render_chat():
                 "sql_query": result.get("sql_query"),
                 "sql_results": result.get("sql_results"),
                 "sources": result.get("sources"),
+                "suggestions": result.get("suggestions"),
                 "processing_time_ms": result.get("processing_time_ms"),
-                "user_query": prompt,  # Store for visualization suggestions
+                "user_query": prompt,
             }
             st.session_state.messages.append(assistant_msg)
 
@@ -119,7 +129,7 @@ def render_chat():
 
 
 def load_conversation(client: APIClient, conversation_id: int):
-    """Load a previous conversation."""
+    """Fetches and loads a previous conversation from the backend into session state."""
     result = client.get_history(conversation_id)
 
     if result.get("error"):

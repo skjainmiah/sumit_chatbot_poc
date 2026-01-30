@@ -1,15 +1,16 @@
-"""Chat message component with visualization support."""
+"""Renders individual chat messages with intent badges, SQL results, and follow-up suggestions."""
 import streamlit as st
 from frontend.components.sql_display import render_sql_results
 from frontend.components.source_display import render_sources
 from frontend.components.feedback_buttons import render_feedback_buttons
+from frontend.components.visualization import get_unique_key
 
 
 def render_message(msg: dict, client=None, user_query: str = ""):
-    """Render a single chat message with visualization support."""
+    """Shows a single chat message with intent badge, SQL results, suggestions, and feedback."""
     role = msg.get("role", "user")
 
-    with st.chat_message(role):
+    with st.chat_message(role, avatar=None):
         # Main content
         st.write(msg.get("content", ""))
 
@@ -51,6 +52,20 @@ def render_message(msg: dict, client=None, user_query: str = ""):
                     st.caption(f"Response time: :orange[{time_ms}ms]")
                 else:
                     st.caption(f"Response time: :red[{time_ms}ms]")
+
+            # Follow-up suggestion buttons
+            if msg.get("suggestions"):
+                st.markdown("**You might also want to ask:**")
+                suggestion_cols = st.columns(min(len(msg["suggestions"]), 3))
+                for j, suggestion in enumerate(msg["suggestions"][:3]):
+                    with suggestion_cols[j]:
+                        if st.button(
+                            f"💡 {suggestion}",
+                            key=get_unique_key(f"v1_sug_{j}", suggestion),
+                            use_container_width=True
+                        ):
+                            st.session_state["v1_pending_suggestion"] = suggestion
+                            st.rerun()
 
             # Feedback buttons
             if msg.get("message_id") and client:

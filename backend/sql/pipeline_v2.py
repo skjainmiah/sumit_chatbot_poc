@@ -1,13 +1,7 @@
 """
-Text-to-SQL Pipeline v2 - Full Schema Approach
-
-Key improvements over v1:
-- No FAISS, full schema in prompt
-- Handles meta-questions directly
-- Better intent detection
-- Single-pass SQL generation
-- Proper error handling and clarification
-- Uses SQLite multi-db connection (supports both mock and uploaded databases)
+V2 SQL pipeline - sends the full schema in the prompt instead of using FAISS retrieval.
+Handles meta questions (about DB structure) directly, generates SQL for data queries,
+and does self-correction if the first attempt fails.
 """
 
 import re
@@ -430,8 +424,25 @@ class SQLPipelineV2:
         logger.info(f"[correct_sql] LLM corrected in {step_ms}ms | new_sql=\"{corrected[:150]}\"")
         return corrected
 
-    def _summarize_results(self, question: str, sql: str, results: Dict) -> str:
-        """Generate natural language summary of results."""
+    def _parse_suggestions(self, text: str):
+        """Extract follow-up suggestions from summary text. Returns (clean_summary, suggestions_list)."""
+        lines = text.strip().split("\n")
+        suggestions = []
+        summary_lines = []
+        for line in lines:
+            stripped = line.strip()
+            if stripped.startswith("SUGGESTION:"):
+                suggestion = stripped[len("SUGGESTION:"):].strip()
+                if suggestion:
+                    suggestions.append(suggestion)
+            else:
+                summary_lines.append(line)
+        # Remove trailing empty lines from summary
+        clean_summary = "\n".join(summary_lines).rstrip()
+        return clean_summary, suggestions[:3]
+
+    def _summarize_results(self, question: str, sql: str, results: Dict) -> tuple:
+        """Generate natural language summary of results. Returns (summary, suggestions)."""
         rows_for_summary = results["rows"][:50]
         logger.info(f"[summarize] Summarizing {results['row_count']} rows for question")
 
@@ -455,8 +466,9 @@ class SQLPipelineV2:
             raise
 
         step_ms = int((time.time() - step_start) * 1000)
-        logger.info(f"[summarize] OK {step_ms}ms | summary_chars={len(response)}")
-        return response.strip()
+        summary, suggestions = self._parse_suggestions(response)
+        logger.info(f"[summarize] OK {step_ms}ms | summary_chars={len(summary)} | suggestions={len(suggestions)}")
+        return summary, suggestions
 
     def refresh_schema(self, reload_loader: bool = True):
         """Refresh the system prompt with latest schema.
@@ -568,10 +580,11 @@ class SQLPipelineV2:
             success, results, error = self._execute_sql(sql)
 
             if success:
-                # Generate summary
+                # Generate summary with follow-up suggestions
                 logger.info(f"[pipeline] SQL executed OK, generating summary...")
+                suggestions = []
                 try:
-                    summary = self._summarize_results(question, sql, results)
+                    summary, suggestions = self._summarize_results(question, sql, results)
                 except Exception as e:
                     elapsed = int((time.time() - start_time) * 1000)
                     logger.error(f"[pipeline] Summarization failed after {elapsed}ms: {e}", exc_info=True)
@@ -585,6 +598,7 @@ class SQLPipelineV2:
                     "sql": sql,
                     "results": results,
                     "summary": summary,
+                    "suggestions": suggestions,
                     "explanation": response_data.get("explanation", ""),
                     "attempts": attempt + 1,
                     "processing_time_ms": elapsed
