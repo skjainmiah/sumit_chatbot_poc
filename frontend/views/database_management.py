@@ -16,11 +16,16 @@ def render_database_management():
 
     client = APIClient(st.session_state.token)
 
-    # Two sections: Upload and Visibility
-    upload_section, visibility_section = st.tabs(["Upload SQL File", "Database Visibility"])
+    # Three sections: Upload SQL, Upload CSV/Excel, Visibility
+    upload_section, csv_section, visibility_section = st.tabs(
+        ["Upload SQL File", "Upload CSV / Excel", "Database Visibility"]
+    )
 
     with upload_section:
         render_upload_section(client)
+
+    with csv_section:
+        render_csv_upload_section(client)
 
     with visibility_section:
         render_visibility_section(client)
@@ -113,6 +118,123 @@ def render_upload_section(client: APIClient):
         if history_data:
             df = pd.DataFrame(history_data)
             st.dataframe(df, width="stretch", hide_index=True)
+
+
+def render_csv_upload_section(client: APIClient):
+    """Render the CSV/Excel file upload section."""
+    st.markdown("### Upload CSV / Excel Files")
+    st.caption(
+        "Upload `.csv`, `.xlsx`, or `.xls` files to create database tables. "
+        "Each file becomes a separate table (filename is used as the table name)."
+    )
+
+    # File uploader
+    uploaded_files = st.file_uploader(
+        "Choose CSV or Excel files",
+        type=["csv", "xlsx", "xls"],
+        accept_multiple_files=True,
+        help="You can upload multiple files at once. Each file becomes a table.",
+        key="csv_uploader"
+    )
+
+    # Database target selection
+    db_mode = st.radio(
+        "Target database",
+        ["Create new database", "Add to existing database"],
+        key="csv_db_mode",
+        horizontal=True
+    )
+
+    db_name = ""
+    if db_mode == "Create new database":
+        db_name = st.text_input(
+            "Database name",
+            placeholder="e.g. sales_data",
+            help="Letters, numbers, and underscores only. Will be lowercased.",
+            key="csv_db_name"
+        )
+    else:
+        # List existing uploaded databases
+        result = client.list_databases(include_hidden=True)
+        if result.get("error"):
+            st.error("Could not load databases")
+            return
+        databases = result.get("databases", [])
+        uploaded_dbs = [
+            db["db_name"] for db in databases
+            if db.get("source_type") == "uploaded"
+        ]
+        if not uploaded_dbs:
+            st.warning("No uploaded databases found. Create a new one instead.")
+            return
+        db_name = st.selectbox(
+            "Select database",
+            options=uploaded_dbs,
+            key="csv_existing_db"
+        )
+
+    is_new_db = db_mode == "Create new database"
+
+    auto_visible = st.checkbox(
+        "Make database visible after upload",
+        value=True,
+        help="If checked, the database will be available for chat queries immediately.",
+        key="csv_auto_visible"
+    )
+
+    if uploaded_files:
+        st.info(f"**{len(uploaded_files)} file(s) selected:** " +
+                ", ".join(f.name for f in uploaded_files))
+
+        if st.button("Upload and Process", type="primary", key="csv_upload_btn"):
+            if not db_name or not db_name.strip():
+                st.error("Please enter a database name.")
+                return
+
+            with st.spinner("Processing files..."):
+                result = client.upload_csv_files(
+                    files=uploaded_files,
+                    db_name=db_name,
+                    is_new_db=is_new_db,
+                    auto_visible=auto_visible
+                )
+
+                if result.get("error"):
+                    st.error(f"Upload failed: {result.get('detail', 'Unknown error')}")
+                elif result.get("success"):
+                    st.success(
+                        f"Upload completed! "
+                        f"**{result.get('total_tables', 0)} table(s)** created with "
+                        f"**{result.get('total_rows', 0):,} total rows**."
+                    )
+
+                    # Show created databases/tables
+                    databases = result.get("databases_created", [])
+                    if databases:
+                        for db in databases:
+                            st.markdown(
+                                f"- Database **{db['db_name']}**: "
+                                f"{db['tables_created']} tables, "
+                                f"{db['rows_inserted']:,} rows"
+                            )
+                        st.info("Schema metadata populated and indexes rebuilt automatically.")
+
+                    # Show warnings
+                    warnings = result.get("warnings", [])
+                    if warnings:
+                        with st.expander("Warnings"):
+                            for w in warnings:
+                                st.warning(w)
+
+                    # Show errors (partial failures)
+                    errors = result.get("errors", [])
+                    if errors:
+                        with st.expander("Errors"):
+                            for e in errors:
+                                st.error(e)
+                else:
+                    errors = result.get("errors", ["Unknown error"])
+                    st.error(f"Upload failed: {errors[0]}")
 
 
 def render_visibility_section(client: APIClient):

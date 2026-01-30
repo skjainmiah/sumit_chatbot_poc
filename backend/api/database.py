@@ -1,5 +1,5 @@
 """Database management API endpoints."""
-from fastapi import APIRouter, HTTPException, UploadFile, File, Depends, Query
+from fastapi import APIRouter, HTTPException, UploadFile, File, Depends, Query, Form
 from pydantic import BaseModel
 from typing import Optional, List, Dict, Any
 import os
@@ -124,6 +124,65 @@ async def upload_sql_file(
         raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Upload processing failed: {str(e)}")
+
+
+@router.post("/upload-csv", response_model=UploadResponse)
+async def upload_csv_files(
+    files: List[UploadFile] = File(...),
+    db_name: str = Form(...),
+    is_new_db: bool = Form(True),
+    auto_visible: bool = Form(True),
+    current_user: dict = Depends(require_admin)
+):
+    """Upload CSV/Excel files to create tables in a SQLite database.
+
+    - Accepts .csv, .xlsx, .xls files
+    - Each file becomes a table (filename -> table name)
+    - Can create a new database or add tables to an existing one
+    """
+    if not files:
+        raise HTTPException(status_code=400, detail="No files provided")
+
+    if not db_name or not db_name.strip():
+        raise HTTPException(status_code=400, detail="Database name is required")
+
+    # Validate file extensions
+    allowed_extensions = {'.csv', '.xlsx', '.xls'}
+    file_tuples = []
+    for f in files:
+        ext = os.path.splitext(f.filename)[1].lower()
+        if ext not in allowed_extensions:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Unsupported file type: {f.filename}. Allowed: .csv, .xlsx, .xls"
+            )
+        content = await f.read()
+        if len(content) > 100 * 1024 * 1024:
+            raise HTTPException(status_code=400, detail=f"File '{f.filename}' too large. Max 100MB.")
+        file_tuples.append((f.filename, content))
+
+    try:
+        service = UploadService()
+        result = service.process_csv_upload(
+            files=file_tuples,
+            db_name=db_name,
+            user_id=current_user["user_id"],
+            is_new_db=is_new_db,
+            auto_visible=auto_visible
+        )
+
+        return UploadResponse(
+            success=result.success,
+            upload_id=result.upload_id,
+            dialect=result.dialect,
+            databases_created=result.databases_created,
+            total_tables=result.total_tables,
+            total_rows=result.total_rows,
+            errors=result.errors,
+            warnings=result.warnings
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"CSV upload failed: {str(e)}")
 
 
 @router.get("/list", response_model=DatabaseListResponse)

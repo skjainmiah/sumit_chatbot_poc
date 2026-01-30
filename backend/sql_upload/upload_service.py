@@ -1,12 +1,15 @@
 """Upload service - orchestrates the full SQL upload flow."""
 import os
+import re
 import json
 import sqlite3
 from datetime import datetime
-from typing import Dict, List, Optional, Any
+from typing import Dict, List, Optional, Any, Tuple
 from dataclasses import dataclass, field, asdict
+from pathlib import Path
 
 import logging
+import pandas as pd
 
 from backend.config import settings
 from backend.sql_upload.pg_parser import PgDumpParser
@@ -190,6 +193,167 @@ class UploadService:
                 warnings=warnings
             )
 
+    def process_csv_upload(
+        self,
+        files: List[Tuple[str, bytes]],
+        db_name: str,
+        user_id: int,
+        is_new_db: bool = True,
+        auto_visible: bool = True
+    ) -> UploadResult:
+        """Process uploaded CSV/Excel files into a SQLite database.
+
+        Args:
+            files: List of (filename, file_bytes) tuples
+            db_name: Target database name
+            user_id: ID of uploading user
+            is_new_db: Whether to create a new database or add to existing
+            auto_visible: Whether to make the database visible after upload
+
+        Returns:
+            UploadResult with details of created tables
+        """
+        errors = []
+        warnings = []
+        tables_created_list = []
+        total_tables = 0
+        total_rows = 0
+
+        # Sanitize db_name
+        db_name_clean = re.sub(r'[^a-z0-9_]', '_', db_name.lower().strip())
+        db_name_clean = re.sub(r'_+', '_', db_name_clean).strip('_')
+        if not db_name_clean:
+            return UploadResult(success=False, errors=["Invalid database name"])
+
+        db_path = os.path.join(settings.DATABASE_DIR, f"{db_name_clean}.db")
+        Path(settings.DATABASE_DIR).mkdir(parents=True, exist_ok=True)
+
+        # Validate target
+        if is_new_db and os.path.exists(db_path):
+            return UploadResult(
+                success=False,
+                errors=[f"Database '{db_name_clean}' already exists. Use 'Add to existing' instead."]
+            )
+        if not is_new_db and not os.path.exists(db_path):
+            return UploadResult(
+                success=False,
+                errors=[f"Database '{db_name_clean}' not found. Use 'Create new' instead."]
+            )
+
+        # Create upload history record
+        combined_filenames = ", ".join(f[0] for f in files)
+        upload_id = self._create_upload_record(user_id, combined_filenames)
+
+        try:
+            conn = sqlite3.connect(db_path)
+
+            for filename, file_bytes in files:
+                try:
+                    # Read into DataFrame
+                    ext = os.path.splitext(filename)[1].lower()
+                    if ext == '.csv':
+                        import io
+                        df = pd.read_csv(io.BytesIO(file_bytes))
+                    elif ext in ('.xlsx', '.xls'):
+                        import io
+                        df = pd.read_excel(io.BytesIO(file_bytes))
+                    else:
+                        warnings.append(f"Skipped '{filename}': unsupported format ({ext})")
+                        continue
+
+                    # Sanitize table name from filename
+                    table_name = os.path.splitext(filename)[0]
+                    table_name = re.sub(r'[^a-z0-9_]', '_', table_name.lower().strip())
+                    table_name = re.sub(r'_+', '_', table_name).strip('_')
+                    if not table_name:
+                        table_name = f"table_{total_tables + 1}"
+
+                    # Write to SQLite
+                    row_count = len(df)
+                    df.to_sql(table_name, conn, if_exists='replace', index=False)
+
+                    tables_created_list.append({
+                        "table_name": table_name,
+                        "row_count": row_count,
+                        "columns": len(df.columns)
+                    })
+                    total_tables += 1
+                    total_rows += row_count
+
+                except Exception as e:
+                    errors.append(f"Failed to process '{filename}': {str(e)}")
+
+            conn.close()
+
+            if total_tables == 0:
+                self._update_upload_record(upload_id, "failed", error_message="No tables created")
+                return UploadResult(
+                    success=False,
+                    upload_id=upload_id,
+                    dialect="csv",
+                    errors=errors if errors else ["No valid files to process"],
+                    warnings=warnings
+                )
+
+            # Register or update in database registry
+            db_info = {
+                "db_name": db_name_clean,
+                "db_path": db_path,
+                "tables_created": total_tables,
+                "rows_inserted": total_rows
+            }
+
+            if is_new_db:
+                self.registry.register_database(
+                    db_name=db_name_clean,
+                    db_path=db_path,
+                    display_name=db_name_clean.replace("_", " ").title(),
+                    description=f"Uploaded from CSV/Excel files ({total_tables} tables)",
+                    source_type="uploaded",
+                    is_visible=auto_visible,
+                    upload_filename=combined_filenames,
+                    uploaded_by=user_id,
+                    table_count=total_tables
+                )
+            else:
+                # Update table count for existing DB
+                existing_info = self.registry.get_database_info(db_name_clean)
+                old_count = existing_info.get("table_count", 0) if existing_info else 0
+                self.registry.update_database(db_name_clean, table_count=old_count + total_tables)
+
+            # Update upload history
+            self._update_upload_record(
+                upload_id,
+                "completed",
+                databases_created=json.dumps([db_name_clean]),
+                tables_created=total_tables
+            )
+
+            # Run schema setup
+            self._run_schema_setup([db_info])
+
+            return UploadResult(
+                success=True,
+                upload_id=upload_id,
+                dialect="csv",
+                databases_created=[db_info],
+                total_tables=total_tables,
+                total_rows=total_rows,
+                errors=errors,
+                warnings=warnings
+            )
+
+        except Exception as e:
+            error_msg = f"CSV upload failed: {str(e)}"
+            errors.append(error_msg)
+            self._update_upload_record(upload_id, "failed", error_message=error_msg)
+            return UploadResult(
+                success=False,
+                upload_id=upload_id,
+                errors=errors,
+                warnings=warnings
+            )
+
     def _create_upload_record(self, user_id: int, filename: str) -> int:
         """Create upload history record."""
         conn = sqlite3.connect(settings.app_db_path)
@@ -242,11 +406,118 @@ class UploadService:
         # Step 1: Populate schema metadata for new databases
         self._populate_schema_for_databases(databases)
 
-        # Step 2: Rebuild FAISS index (for V1 old chat)
+        # Step 2: Detect FK relationships from matching column names
+        self._detect_foreign_keys(databases)
+
+        # Step 3: Rebuild FAISS index (for V1 old chat)
         self._rebuild_faiss_index()
 
-        # Step 3: Reload V2 schema (for V2 new chat)
+        # Step 4: Reload V2 schema (for V2 new chat)
         self._reload_v2_schema()
+
+    def _detect_foreign_keys(self, databases: List[Dict]) -> None:
+        """Detect likely FK relationships by scanning matching column names across tables.
+
+        For each database, builds a map of column_name → list of tables that have it.
+        Columns ending in '_id' (or named 'id') that appear in multiple tables are
+        treated as foreign key links. The table with fewer rows is assumed to reference
+        the table with more rows (detail → master).
+
+        Results are stored as JSON in schema_metadata.detected_foreign_keys.
+        """
+        app_conn = sqlite3.connect(settings.app_db_path)
+        app_cursor = app_conn.cursor()
+
+        # Ensure column exists (for databases created before migration)
+        try:
+            app_cursor.execute("ALTER TABLE schema_metadata ADD COLUMN detected_foreign_keys TEXT")
+            app_conn.commit()
+        except sqlite3.OperationalError:
+            pass  # Column already exists
+
+        for db_info in databases:
+            db_name = db_info["db_name"]
+            db_path = db_info["db_path"]
+
+            try:
+                db_conn = sqlite3.connect(db_path)
+                db_conn.row_factory = sqlite3.Row
+                db_cursor = db_conn.cursor()
+
+                # Get all tables
+                db_cursor.execute(
+                    "SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'"
+                )
+                tables = [row["name"] for row in db_cursor.fetchall()]
+
+                if len(tables) < 2:
+                    db_conn.close()
+                    continue
+
+                # Build column → tables map and table → row_count map
+                col_to_tables: Dict[str, List[str]] = {}
+                table_row_counts: Dict[str, int] = {}
+
+                for table_name in tables:
+                    db_cursor.execute(f"PRAGMA table_info([{table_name}])")
+                    for col in db_cursor.fetchall():
+                        col_name = col["name"]
+                        if col_name not in col_to_tables:
+                            col_to_tables[col_name] = []
+                        col_to_tables[col_name].append(table_name)
+
+                    db_cursor.execute(f"SELECT COUNT(*) as cnt FROM [{table_name}]")
+                    table_row_counts[table_name] = db_cursor.fetchone()["cnt"]
+
+                db_conn.close()
+
+                # Find shared columns that look like join keys
+                # Heuristic: column appears in 2+ tables AND (ends with _id OR is named 'id')
+                shared_keys = {}
+                for col_name, owning_tables in col_to_tables.items():
+                    if len(owning_tables) < 2:
+                        continue
+                    is_id_col = col_name.lower().endswith("_id") or col_name.lower() == "id"
+                    if not is_id_col:
+                        continue
+                    shared_keys[col_name] = owning_tables
+
+                # Build FK relationships per table
+                # For each shared key, the table with more rows references the one with fewer
+                # (detail table → master/lookup table)
+                table_fks: Dict[str, List[Dict]] = {t: [] for t in tables}
+
+                for col_name, owning_tables in shared_keys.items():
+                    # Sort by row count ascending (smallest = likely master)
+                    sorted_tables = sorted(owning_tables, key=lambda t: table_row_counts.get(t, 0))
+                    master_table = sorted_tables[0]
+
+                    for detail_table in sorted_tables[1:]:
+                        table_fks[detail_table].append({
+                            "from_column": col_name,
+                            "to_table": master_table,
+                            "to_column": col_name
+                        })
+
+                # Write FK data into schema_metadata
+                for table_name, fks in table_fks.items():
+                    if not fks:
+                        continue
+                    fk_json = json.dumps(fks)
+                    app_cursor.execute("""
+                        UPDATE schema_metadata
+                        SET detected_foreign_keys = ?
+                        WHERE db_name = ? AND table_name = ?
+                    """, (fk_json, db_name, table_name))
+
+                logger.info(f"Detected FK relationships for {db_name}: "
+                           f"{sum(len(v) for v in table_fks.values())} links across {len(tables)} tables")
+
+            except Exception as e:
+                logger.warning(f"FK detection failed for {db_name}: {e}")
+
+        app_conn.commit()
+        app_conn.close()
 
     def _generate_llm_description(self, db_name: str, table_name: str,
                                    col_details: str, sample_str: str) -> Optional[str]:

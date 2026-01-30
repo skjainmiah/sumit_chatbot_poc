@@ -176,6 +176,46 @@ class APIClient:
         except httpx.RequestError as e:
             return {"error": True, "detail": f"Connection error: {str(e)}"}
 
+    def upload_csv_files(self, files, db_name: str, is_new_db: bool = True, auto_visible: bool = True) -> Dict[str, Any]:
+        """Upload CSV/Excel files to create tables in a database.
+
+        Args:
+            files: List of Streamlit UploadedFile objects
+            db_name: Target database name
+            is_new_db: True to create new DB, False to add to existing
+            auto_visible: Make database visible after upload
+        """
+        import httpx
+
+        url = f"{API_BASE}/database/upload-csv"
+        params = {}
+        if self.token:
+            params["token"] = self.token
+
+        try:
+            multipart_files = [
+                ("files", (f.name, f.getvalue(), "application/octet-stream"))
+                for f in files
+            ]
+            data = {
+                "db_name": db_name,
+                "is_new_db": str(is_new_db).lower(),
+                "auto_visible": str(auto_visible).lower(),
+            }
+            with httpx.Client(timeout=300.0) as client:
+                response = client.post(url, files=multipart_files, data=data, params=params)
+                response.raise_for_status()
+                return response.json()
+        except httpx.HTTPStatusError as e:
+            error_detail = "Unknown error"
+            try:
+                error_detail = e.response.json().get("detail", str(e))
+            except Exception:
+                error_detail = str(e)
+            return {"error": True, "detail": error_detail}
+        except httpx.RequestError as e:
+            return {"error": True, "detail": f"Connection error: {str(e)}"}
+
     def list_databases(self, include_hidden: bool = False) -> Dict[str, Any]:
         """List all registered databases."""
         return self._make_request(

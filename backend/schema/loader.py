@@ -116,7 +116,8 @@ class SchemaLoader:
             placeholders = ",".join("?" * len(missing_dbs))
             cursor.execute(f"""
                 SELECT db_name, table_name, column_details, row_count,
-                       sample_values, ddl_statement, llm_description
+                       sample_values, ddl_statement, llm_description,
+                       detected_foreign_keys
                 FROM schema_metadata
                 WHERE db_name IN ({placeholders})
             """, tuple(missing_dbs.keys()))
@@ -134,6 +135,19 @@ class SchemaLoader:
                 if db_name not in db_tables:
                     db_tables[db_name] = []
 
+                # Parse detected FK data
+                fk_list = []
+                fk_columns = set()
+                fk_ref_map = {}  # column_name -> "to_table.to_column"
+                if row["detected_foreign_keys"]:
+                    try:
+                        fk_list = json.loads(row["detected_foreign_keys"])
+                        for fk in fk_list:
+                            fk_columns.add(fk["from_column"])
+                            fk_ref_map[fk["from_column"]] = f"{fk['to_table']}.{fk['to_column']}"
+                    except (json.JSONDecodeError, KeyError):
+                        pass
+
                 # Parse columns from column_details (format: "col1 (TYPE), col2 (TYPE)")
                 columns = []
                 if row["column_details"]:
@@ -147,8 +161,19 @@ class SchemaLoader:
                                 "data_type": col_type,
                                 "is_primary_key": False,
                                 "is_nullable": True,
-                                "is_foreign_key": False,
+                                "is_foreign_key": col_name in fk_columns,
+                                "foreign_key_ref": fk_ref_map.get(col_name, ""),
                             })
+
+                # Build foreign_keys list for table-level relationships
+                table_fks = []
+                for fk in fk_list:
+                    table_fks.append({
+                        "from_column": fk["from_column"],
+                        "to_schema": db_name,
+                        "to_table": fk["to_table"],
+                        "to_column": fk["to_column"],
+                    })
 
                 db_tables[db_name].append({
                     "name": row["table_name"],
@@ -157,7 +182,7 @@ class SchemaLoader:
                     "row_count_estimate": row["row_count"] or 0,
                     "primary_keys": [],
                     "columns": columns,
-                    "foreign_keys": [],
+                    "foreign_keys": table_fks,
                 })
 
             # Add to schema_data
