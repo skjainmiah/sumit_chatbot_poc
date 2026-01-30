@@ -59,21 +59,47 @@ def _extract_name(text: str):
 
 
 def _is_name_change_request(text: str):
-    """Return (True, new_name) if the user wants to change their name, else (False, None)."""
+    """Return (True, new_name) if the user wants to change their name, else (False, None).
+
+    Uses keyword detection so phrases like "change my name to X",
+    "I want my name changed to X", "please call me Y" all work regardless
+    of exact word order.
+    """
+    import re
     lower = text.strip().lower()
-    patterns = [
+
+    # --- Prefix-based patterns (highest confidence) ---
+    prefix_patterns = [
         "change my name to ", "rename me to ",
         "please call me ", "update my name to ",
         "i want to be called ", "call me ",
         "my name is actually ", "actually my name is ",
         "actually i'm ", "actually i am ",
     ]
-    for pattern in patterns:
+    for pattern in prefix_patterns:
         if lower.startswith(pattern):
             raw = text.strip()[len(pattern):]
             name = _extract_name(raw)
             if name:
                 return True, name
+
+    # --- Keyword-based detection (catches "change my name" anywhere) ---
+    # Look for "change" + "name" together, then extract the name after "to"
+    if re.search(r'\bchange\b.*\bname\b', lower) or re.search(r'\bname\b.*\bchange\b', lower):
+        # Try to find "to <name>" at the end
+        m = re.search(r'\bto\s+(.+)$', lower)
+        if m:
+            name = _extract_name(m.group(1))
+            if name:
+                return True, name
+
+    # "call me <name>" anywhere in the sentence
+    m = re.search(r'\bcall\s+me\s+(.+?)(?:\s+from\s+now|\s+instead|\s*[.!?]?\s*$)', lower)
+    if m:
+        name = _extract_name(m.group(1))
+        if name:
+            return True, name
+
     return False, None
 
 
@@ -135,22 +161,25 @@ def render_chat():
     # Chat input
     if prompt := (pending or st.chat_input("Ask me anything about crew policies, schedules, or data...")):
 
-        # --- 1. Name-change request (only when a name is already stored) ---
-        if st.session_state.get("visitor_name"):
-            is_change, new_name = _is_name_change_request(prompt)
-            if is_change and new_name:
-                st.session_state["visitor_name"] = new_name
-                try:
-                    client.set_visitor_name(new_name)
-                except Exception:
-                    pass
-                st.session_state.messages.append({"role": "user", "content": prompt})
-                st.session_state.messages.append({
-                    "role": "assistant",
-                    "content": f"Sure! I'll call you {new_name} from now on.",
-                })
-                st.rerun()
-                return
+        # --- 1. Name-change / name-set request ---
+        is_change, new_name = _is_name_change_request(prompt)
+        if is_change and new_name:
+            old_name = st.session_state.get("visitor_name")
+            st.session_state["visitor_name"] = new_name
+            st.session_state.pop("needs_name", None)
+            st.session_state.pop("awaiting_name", None)
+            try:
+                client.set_visitor_name(new_name)
+            except Exception:
+                pass
+            st.session_state.messages.append({"role": "user", "content": prompt})
+            if old_name:
+                reply = f"Sure! I'll call you {new_name} from now on."
+            else:
+                reply = f"Nice to meet you, {new_name}! How can I help you today?"
+            st.session_state.messages.append({"role": "assistant", "content": reply})
+            st.rerun()
+            return
 
         # --- 2. Bot already asked for name — capture the reply ---
         if st.session_state.get("awaiting_name"):
@@ -220,11 +249,13 @@ def render_chat():
 
         # Send to backend with loading animation
         loading_placeholder = st.empty()
-        stop_event = show_loading_with_facts(loading_placeholder)
+        stop_event, min_shown_event = show_loading_with_facts(loading_placeholder)
         try:
             result = client.send_message(prompt, st.session_state.conversation_id)
         finally:
             stop_event.set()
+            # Wait until at least 2 facts have been shown (or no facts were shown)
+            min_shown_event.wait(timeout=15)
             loading_placeholder.empty()
 
         if result.get("error"):

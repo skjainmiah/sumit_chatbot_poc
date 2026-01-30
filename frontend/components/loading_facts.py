@@ -58,24 +58,51 @@ def _pick_facts(count: int = 10) -> list:
     return selected
 
 
+# Delay before facts appear (seconds). If the answer arrives before this,
+# no facts are shown at all.
+_INITIAL_DELAY = 2.0
+
+# Minimum number of facts to display once the animation starts.
+# The caller should wait for `min_shown_event` before clearing the placeholder.
+_MIN_FACTS = 2
+
+
 def show_loading_with_facts(placeholder):
     """Display animated AA facts in the given placeholder while a background task runs.
+
+    The animation waits for an initial delay before showing anything. If the
+    response arrives within that delay, no facts are displayed at all.
+
+    Once facts start showing, at least ``_MIN_FACTS`` full facts are displayed
+    before the ``min_shown_event`` fires.
 
     Args:
         placeholder: A streamlit st.empty() placeholder to render facts into.
 
     Returns:
-        A stop event (threading.Event) - call .set() on it when the task is done.
+        (stop_event, min_shown_event) – call ``stop_event.set()`` when the
+        backend response is ready, then wait on ``min_shown_event`` before
+        clearing the placeholder so the user sees at least 2 facts.
     """
     stop_event = threading.Event()
+    min_shown_event = threading.Event()
     facts = _pick_facts(10)
 
     # Capture Streamlit script-run context so the thread can write to the placeholder
     ctx = get_script_run_ctx() if get_script_run_ctx else None
 
     def _animate():
+        # --- Initial delay: wait before showing any facts ---
+        # If stop_event fires during the delay the answer was fast → skip facts.
+        if stop_event.wait(timeout=_INITIAL_DELAY):
+            # Answer arrived during the delay — no facts needed
+            min_shown_event.set()
+            return
+
         idx = 0
         dot_cycle = 0
+        facts_completed = 0  # counts full fact rotations
+
         while not stop_event.is_set():
             try:
                 fact = facts[idx % len(facts)]
@@ -113,14 +140,22 @@ def show_loading_with_facts(placeholder):
             except Exception:
                 # Context lost (e.g. user navigated away) — stop gracefully
                 break
+
             dot_cycle += 1
             if dot_cycle % 4 == 0:
                 idx += 1
+                facts_completed += 1
+                if facts_completed >= _MIN_FACTS:
+                    min_shown_event.set()
+
             # Wait ~0.75s per dot frame so a full fact cycle is ~3s
             stop_event.wait(timeout=0.75)
+
+        # If we never reached _MIN_FACTS (e.g. only 1 shown), still unblock
+        min_shown_event.set()
 
     thread = threading.Thread(target=_animate, daemon=True)
     if add_script_run_ctx and ctx:
         add_script_run_ctx(thread, ctx)
     thread.start()
-    return stop_event
+    return stop_event, min_shown_event

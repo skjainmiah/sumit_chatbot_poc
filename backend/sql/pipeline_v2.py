@@ -45,7 +45,7 @@ Response: {{"intent": "data", "response": {{"sql": "SELECT cm.first_name, cm.las
 
 Example 4 - Meta question:
 Q: "What databases are available?"
-Response: {{"intent": "meta", "response": {{"answer": "There are 4 databases available: crew_management, flight_operations, hr_payroll, compliance_training"}}}}
+Response: {{"intent": "meta", "response": {{"answer": "The available databases are listed dynamically from the registry. Use the meta handler to get the current list."}}}}
 
 Example 5 - Ambiguous question:
 Q: "Show me John's data"

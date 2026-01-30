@@ -14,7 +14,8 @@ from backend.sql.sql_pipeline import SQLPipeline
 from backend.pii.masker import mask_pii, unmask_pii
 from backend.llm.client import get_llm_client
 from backend.llm.prompts import GENERAL_CHAT_PROMPT
-from backend.db.session import execute_write, execute_query
+from backend.db.session import execute_write, execute_query, get_multi_db_connection
+from backend.db.registry import get_database_registry
 from backend.config import settings
 
 logger = logging.getLogger("chatbot.api.chat")
@@ -42,112 +43,74 @@ def check_meta_query(query: str) -> Tuple[bool, Optional[str]]:
 
 
 def get_meta_response(query_type: str) -> Tuple[str, dict]:
-    """Return predefined response for meta-queries about database structure."""
+    """Return a dynamic response for meta-queries about database structure.
 
-    if query_type == 'databases':
-        response = """We have **4 operational databases** in the system:
+    Reads from the database registry + actual table lists so the answer
+    stays correct as databases are uploaded or hidden.
+    """
+    try:
+        registry = get_database_registry()
+        all_dbs = registry.get_all_databases()
+        visible = {n: d for n, d in all_dbs.items() if d.get("is_visible") and n != "app"}
+    except Exception:
+        visible = {}
 
-**1. crew_management** - Crew member profiles, qualifications, assignments, rest records, documents, contacts, and roster data
+    # ---- databases ----
+    if query_type == "databases":
+        rows = []
+        parts = []
+        for idx, (name, info) in enumerate(visible.items(), 1):
+            display = info.get("display_name") or name
+            desc = info.get("description") or ""
+            tcount = info.get("table_count") or 0
+            rows.append({"database_name": name, "description": desc, "table_count": tcount})
+            parts.append(f"**{idx}. {name}** - {desc}")
 
-**2. flight_operations** - Flights, aircraft, airports, crew pairings, flight legs, disruptions, and layover hotels
-
-**3. hr_payroll** - Pay grades, payroll records, leave records/balances, benefits, performance reviews, and expense claims
-
-**4. compliance_training** - Training courses, training records, schedules, enrollments, compliance checks, safety incidents, and audit logs
-
-All databases are linked by **employee_id** (e.g., AA-10001) for cross-database queries.
-
-You can ask questions like:
-- "Show me all pilots"
-- "What is John's salary?"
-- "List expiring medical certificates"
-- "Show flights to Dallas"
-"""
+        response = (
+            f"We have **{len(visible)} operational databases** in the system:\n\n"
+            + "\n\n".join(parts)
+            + "\n\nAll crew-related databases are linked by **employee_id** (e.g., AA-10001) for cross-database queries."
+        )
         results = {
             "columns": ["database_name", "description", "table_count"],
-            "rows": [
-                {"database_name": "crew_management", "description": "Crew profiles, qualifications, assignments, roster", "table_count": 7},
-                {"database_name": "flight_operations", "description": "Flights, aircraft, airports, pairings, hotels", "table_count": 8},
-                {"database_name": "hr_payroll", "description": "Payroll, leave, benefits, performance, expenses", "table_count": 7},
-                {"database_name": "compliance_training", "description": "Training, compliance checks, safety incidents", "table_count": 7},
-            ],
-            "row_count": 4
+            "rows": rows,
+            "row_count": len(rows),
         }
 
-    else:  # tables
-        response = """Here are all **29 tables** across the 4 databases:
+    # ---- tables ----
+    else:
+        table_rows = []
+        response_parts = []
+        total_tables = 0
 
-**crew_management (7 tables):**
-- crew_members - Master crew records (name, role, base, status)
-- crew_qualifications - Licenses, ratings, medical certificates
-- crew_assignments - Flight assignments with duty times
-- crew_rest_records - FAR 117 rest compliance tracking
-- crew_documents - Passport, visa, license documents
-- crew_contacts - Emergency contact information
-- crew_roster - Monthly roster/bidding data
+        conn = get_multi_db_connection(visible_only=True)
+        try:
+            for db_name in visible:
+                try:
+                    cursor = conn.execute(
+                        f"SELECT name FROM [{db_name}].sqlite_master WHERE type='table' ORDER BY name"
+                    )
+                    tables = [r["name"] for r in cursor.fetchall()]
+                except Exception:
+                    tables = []
 
-**flight_operations (8 tables):**
-- flights - Flight schedule with times and status
-- aircraft - Fleet information (type, capacity, status)
-- airports - Airport codes, names, timezone, hub status
-- crew_pairings - Duty trip groupings
-- pairing_flights - Pairing-to-flight mappings
-- flight_legs - Multi-segment flight legs
-- disruptions - Delays, cancellations, diversions
-- hotels - Crew layover hotels
+                total_tables += len(tables)
+                table_list = "\n".join(f"- {t}" for t in tables)
+                response_parts.append(f"**{db_name} ({len(tables)} tables):**\n{table_list}")
 
-**hr_payroll (7 tables):**
-- pay_grades - Salary structure by role/seniority
-- payroll_records - Monthly payroll data
-- leave_records - Leave requests and approvals
-- leave_balances - Leave entitlements by type
-- benefits - Insurance, 401k enrollments
-- performance_reviews - Annual performance ratings
-- expense_claims - Expense reimbursements
+                for t in tables:
+                    table_rows.append({"database": db_name, "table_name": t})
+        finally:
+            conn.close()
 
-**compliance_training (7 tables):**
-- training_courses - Available training programs
-- training_records - Completed training with scores
-- training_schedules - Upcoming training sessions
-- training_enrollments - Session enrollments
-- compliance_checks - Regulatory compliance status
-- safety_incidents - Safety incident reports
-- audit_logs - System audit trail
-"""
+        response = (
+            f"Here are all **{total_tables} tables** across {len(visible)} databases:\n\n"
+            + "\n\n".join(response_parts)
+        )
         results = {
-            "columns": ["database", "table_name", "description"],
-            "rows": [
-                {"database": "crew_management", "table_name": "crew_members", "description": "Master crew records"},
-                {"database": "crew_management", "table_name": "crew_qualifications", "description": "Licenses, ratings, certifications"},
-                {"database": "crew_management", "table_name": "crew_assignments", "description": "Flight assignments"},
-                {"database": "crew_management", "table_name": "crew_rest_records", "description": "FAR 117 rest tracking"},
-                {"database": "crew_management", "table_name": "crew_documents", "description": "Passport, visa, licenses"},
-                {"database": "crew_management", "table_name": "crew_contacts", "description": "Emergency contacts"},
-                {"database": "crew_management", "table_name": "crew_roster", "description": "Monthly roster data"},
-                {"database": "flight_operations", "table_name": "flights", "description": "Flight schedule"},
-                {"database": "flight_operations", "table_name": "aircraft", "description": "Fleet information"},
-                {"database": "flight_operations", "table_name": "airports", "description": "Airport master data"},
-                {"database": "flight_operations", "table_name": "crew_pairings", "description": "Duty trip groupings"},
-                {"database": "flight_operations", "table_name": "pairing_flights", "description": "Pairing-flight junction"},
-                {"database": "flight_operations", "table_name": "flight_legs", "description": "Multi-segment legs"},
-                {"database": "flight_operations", "table_name": "disruptions", "description": "Delays, cancellations"},
-                {"database": "flight_operations", "table_name": "hotels", "description": "Layover hotels"},
-                {"database": "hr_payroll", "table_name": "pay_grades", "description": "Salary structures"},
-                {"database": "hr_payroll", "table_name": "payroll_records", "description": "Monthly payroll"},
-                {"database": "hr_payroll", "table_name": "leave_records", "description": "Leave requests"},
-                {"database": "hr_payroll", "table_name": "leave_balances", "description": "Leave entitlements"},
-                {"database": "hr_payroll", "table_name": "benefits", "description": "Insurance, 401k"},
-                {"database": "hr_payroll", "table_name": "performance_reviews", "description": "Performance ratings"},
-                {"database": "hr_payroll", "table_name": "expense_claims", "description": "Expense reimbursements"},
-                {"database": "compliance_training", "table_name": "training_courses", "description": "Training programs"},
-                {"database": "compliance_training", "table_name": "training_records", "description": "Completed training"},
-                {"database": "compliance_training", "table_name": "training_schedules", "description": "Training sessions"},
-                {"database": "compliance_training", "table_name": "training_enrollments", "description": "Session enrollments"},
-                {"database": "compliance_training", "table_name": "compliance_checks", "description": "Regulatory compliance"},
-                {"database": "compliance_training", "table_name": "safety_incidents", "description": "Safety reports"},
-                {"database": "compliance_training", "table_name": "audit_logs", "description": "Audit trail"},
-            ],
-            "row_count": 29
+            "columns": ["database", "table_name"],
+            "rows": table_rows,
+            "row_count": total_tables,
         }
 
     return response, results
