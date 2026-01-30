@@ -40,8 +40,12 @@ def render_dashboard(client: APIClient):
 
     stats = client.get_stats()
 
-    if stats.get("error"):
+    if isinstance(stats, dict) and stats.get("error"):
         st.error(f"Failed to load statistics: {stats.get('detail')}")
+        return
+
+    if not isinstance(stats, dict):
+        st.error("Unexpected response from server")
         return
 
     # Metrics row
@@ -115,13 +119,13 @@ def render_users(client: APIClient):
     """Render user management section."""
     st.subheader("User Management")
 
-    users = client.list_users()
+    result = client.list_users()
 
-    if users.get("error"):
-        st.error(f"Failed to load users: {users.get('detail')}")
+    if isinstance(result, dict) and result.get("error"):
+        st.error(f"Failed to load users: {result.get('detail')}")
         return
 
-    user_list = users.get("users", [])
+    user_list = result if isinstance(result, list) else []
     if not user_list:
         st.info("No users found")
         return
@@ -158,11 +162,11 @@ def render_feedback(client: APIClient):
     rating_param = None if rating_filter == "All" else rating_filter
     feedback_result = client.list_feedback(rating=rating_param, limit=100)
 
-    if feedback_result.get("error"):
+    if isinstance(feedback_result, dict) and feedback_result.get("error"):
         st.error(f"Failed to load feedback: {feedback_result.get('detail')}")
         return
 
-    feedback_list = feedback_result.get("feedback", [])
+    feedback_list = feedback_result if isinstance(feedback_result, list) else []
     if not feedback_list:
         st.info("No feedback found")
         return
