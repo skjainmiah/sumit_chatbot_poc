@@ -249,36 +249,42 @@ class UploadService:
 
             for filename, file_bytes in files:
                 try:
-                    # Read into DataFrame
+                    import io
                     ext = os.path.splitext(filename)[1].lower()
+
+                    # Build list of (table_name, dataframe) pairs
+                    sheets_to_load = []
+
                     if ext == '.csv':
-                        import io
                         df = pd.read_csv(io.BytesIO(file_bytes))
+                        base_name = os.path.splitext(filename)[0]
+                        table_name = re.sub(r'[^a-z0-9_]', '_', base_name.lower().strip())
+                        table_name = re.sub(r'_+', '_', table_name).strip('_') or f"table_{total_tables + 1}"
+                        sheets_to_load.append((table_name, df))
+
                     elif ext in ('.xlsx', '.xls'):
-                        import io
-                        df = pd.read_excel(io.BytesIO(file_bytes))
+                        # Read ALL sheets — each sheet becomes a separate table
+                        all_sheets = pd.read_excel(io.BytesIO(file_bytes), sheet_name=None)
+                        for sheet_name, df in all_sheets.items():
+                            table_name = re.sub(r'[^a-z0-9_]', '_', sheet_name.lower().strip())
+                            table_name = re.sub(r'_+', '_', table_name).strip('_') or f"table_{total_tables + 1}"
+                            sheets_to_load.append((table_name, df))
                     else:
                         warnings.append(f"Skipped '{filename}': unsupported format ({ext})")
                         continue
 
-                    # Sanitize table name from filename
-                    table_name = os.path.splitext(filename)[0]
-                    table_name = re.sub(r'[^a-z0-9_]', '_', table_name.lower().strip())
-                    table_name = re.sub(r'_+', '_', table_name).strip('_')
-                    if not table_name:
-                        table_name = f"table_{total_tables + 1}"
+                    # Write each sheet/dataframe to SQLite
+                    for table_name, df in sheets_to_load:
+                        row_count = len(df)
+                        df.to_sql(table_name, conn, if_exists='replace', index=False)
 
-                    # Write to SQLite
-                    row_count = len(df)
-                    df.to_sql(table_name, conn, if_exists='replace', index=False)
-
-                    tables_created_list.append({
-                        "table_name": table_name,
-                        "row_count": row_count,
-                        "columns": len(df.columns)
-                    })
-                    total_tables += 1
-                    total_rows += row_count
+                        tables_created_list.append({
+                            "table_name": table_name,
+                            "row_count": row_count,
+                            "columns": len(df.columns)
+                        })
+                        total_tables += 1
+                        total_rows += row_count
 
                 except Exception as e:
                     errors.append(f"Failed to process '{filename}': {str(e)}")
