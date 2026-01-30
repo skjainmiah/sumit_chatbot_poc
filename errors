@@ -1,7 +1,49 @@
-1.how many databases we have currently
-You currently have 4 databases.
+I want to find some details related to employee 101
 
-2.but we have 5 showing
-The query returned 0 rows, meaning there are no crew members in the data who meet this specific condition: having 5 or more roster entries with roster_status = 'Not Awarded' (as defined by the grouping on employee, month/year, and not-awarded reason).
-So if you’re “seeing 5 showing” somewhere else, it’s likely due to a different definition—e.g., total “Not Awarded” rows overall, or 5 in a specific month/year, or 5 without grouping by month/year and reason, etc. This query only shows crew who hit the threshold of at least 5 records per grouped combination, and none do.
+No records were found for employee 101 (or AA-101) in the crew members table, so there’s nothing to report for their profile details, training records, benefits, or emergency contacts. This usually means the employee ID doesn’t exist in the system, is stored under a different identifier/format, or the crew member record is inactive/archived in a way that isn’t returned by this query.
 
+Intent: DATA | Confidence: 78%
+
+🔍 View SQL Query & Results
+
+Generated SQL:
+
+SELECT
+  cm.employee_id,
+  cm.first_name,
+  cm.last_name,
+  cm.email,
+  cm.phone,
+  cm.crew_role,
+  cm.base_airport,
+  cm.status,
+  cm.hire_date,
+  cm.seniority_number,
+  tr.record_id AS training_record_id,
+  tr.course_id,
+  tr.training_date,
+  tr.completion_date,
+  tr.result,
+  tr.score,
+  tr.expiry_date,
+  b.benefit_id,
+  b.benefit_type,
+  b.plan_name,
+  b.status AS benefit_status,
+  b.coverage_start,
+  b.coverage_end,
+  cc.contact_id AS emergency_contact_id,
+  cc.contact_name AS emergency_contact_name,
+  cc.relationship AS emergency_contact_relationship,
+  cc.phone_primary AS emergency_contact_phone,
+  cc.is_primary AS emergency_contact_is_primary
+FROM crew_management.crew_members cm
+LEFT JOIN compliance_training.training_records tr
+  ON tr.crew_id = cm.crew_id
+LEFT JOIN hr_payroll.benefits b
+  ON b.crew_id = cm.crew_id
+LEFT JOIN crew_management.crew_contacts cc
+  ON cc.crew_id = cm.crew_id
+WHERE cm.employee_id IN ('101', 'AA-101')
+ORDER BY tr.completion_date DESC, b.coverage_start DESC, cc.is_primary DESC
+LIMIT 100;
