@@ -43,11 +43,11 @@ SQL_GENERATION_PROMPT = """You are a SQL expert for an American Airlines crew ma
 Generate a SQLite SELECT query to answer the user's question.
 
 IMPORTANT DATABASE INFORMATION:
-- There are 4 separate SQLite databases attached together: crew_management, flight_operations, hr_payroll, compliance_training
+- Multiple SQLite databases are attached together. The schemas below show which databases and tables are available.
 - You MUST ALWAYS prefix table names with the database name: db_name.table_name
   Example: crew_management.crew_members, hr_payroll.payroll_records
 - Cross-database JOINs ARE fully supported. You can freely join tables across different databases.
-- All crew-related tables use employee_id (TEXT) as the universal join key across ALL databases.
+- Many tables use employee_id (TEXT) as a join key across databases. Check the schemas below for the actual column names in each table.
 
 CRITICAL DATA VALUE REFERENCE:
 - crew_roster.roster_month is TEXT with full month names: 'January', 'February', 'March', 'April', 'May', 'June', etc.

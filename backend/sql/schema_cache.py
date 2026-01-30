@@ -199,8 +199,54 @@ def _parse_columns(column_details: str, ddl: str) -> List[Dict]:
     return columns
 
 
+def _match_uploaded_schemas(query_lower: str, cache: Dict[str, Dict]) -> set:
+    """Match query keywords against uploaded/dynamic database schemas.
+
+    Scans table names, column names, and descriptions of databases that are
+    NOT in the hardcoded KEYWORD_TABLE_MAP.  This ensures uploaded databases
+    are discoverable without manual keyword mapping.
+    """
+    hardcoded_dbs = {"crew_management", "flight_operations", "hr_payroll", "compliance_training"}
+    matched = set()
+
+    query_words = set(re.findall(r'[a-z0-9]+', query_lower))
+
+    for full_name, schema in cache.items():
+        db_name = schema.get("db_name", "")
+        if db_name in hardcoded_dbs or db_name == "app":
+            continue
+
+        table_name = schema.get("table_name", "").lower()
+        description = (schema.get("description") or "").lower()
+
+        # Match against table name (split underscores)
+        table_words = set(table_name.replace("_", " ").split())
+        if query_words & table_words:
+            matched.add(full_name)
+            continue
+
+        # Match against column names
+        for col in schema.get("columns", []):
+            col_name = col.get("name", "").lower()
+            col_words = set(col_name.replace("_", " ").split())
+            if query_words & col_words:
+                matched.add(full_name)
+                break
+
+        # Match against LLM-generated description
+        if any(w in description for w in query_words if len(w) > 2):
+            matched.add(full_name)
+
+    return matched
+
+
 def get_schemas_by_keywords(query: str, max_tables: int = 6) -> List[Dict]:
-    """Get relevant schemas using keyword matching - NO API CALLS."""
+    """Get relevant schemas using keyword matching - NO API CALLS.
+
+    Uses the hardcoded KEYWORD_TABLE_MAP for the 4 internal databases,
+    then dynamically matches uploaded database schemas by table/column
+    names and descriptions.
+    """
     cache = _load_schema_cache()
     if not cache:
         return []
@@ -208,18 +254,31 @@ def get_schemas_by_keywords(query: str, max_tables: int = 6) -> List[Dict]:
     query_lower = query.lower()
     matched_tables = set()
 
-    # Match keywords to tables
+    # Stage 1: Hardcoded keyword matching (fast, for internal DBs)
     for keyword, tables in KEYWORD_TABLE_MAP.items():
         if keyword in query_lower:
             matched_tables.update(tables)
 
-    # If no keyword matches, return most common tables for general queries
+    # Stage 2: Dynamic matching for uploaded databases
+    uploaded_matches = _match_uploaded_schemas(query_lower, cache)
+    matched_tables.update(uploaded_matches)
+
+    # If no keyword matches at all, return most common internal tables
+    # PLUS any uploaded tables that have employee-like columns
     if not matched_tables:
         matched_tables = {
             "crew_management.crew_members",
             "crew_management.crew_assignments",
             "flight_operations.flights"
         }
+        # Also include uploaded tables with employee_id columns
+        for full_name, schema in cache.items():
+            if schema.get("db_name") in {"crew_management", "flight_operations",
+                                          "hr_payroll", "compliance_training", "app"}:
+                continue
+            col_names = [c.get("name", "").lower() for c in schema.get("columns", [])]
+            if "employee_id" in col_names or "emp_id" in col_names or "id" in col_names:
+                matched_tables.add(full_name)
 
     # Build result list
     results = []
