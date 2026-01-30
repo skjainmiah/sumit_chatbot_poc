@@ -76,6 +76,8 @@ RULES:
 10. When the question mentions "unawarded" or "not awarded", filter crew_roster.roster_status = 'Not Awarded'
 11. For multi-database questions, use JOINs across databases freely via shared columns
 12. IMPORTANT: Search ALL provided schemas for the requested data. Do NOT assume data only exists in one database. If looking for an employee by ID, search across all tables that have an employee/ID column using UNION ALL if needed.
+13. When choosing which table to query, carefully read the column names in the schemas. Pick the table whose columns best match what the user is asking for. For employee lookups, start from the table that has the most person-related columns (name, ID, role, status, etc.), not auxiliary/lookup tables.
+14. Do NOT invent or guess table names or column names. Only use tables and columns that appear in the schemas provided below.
 
 User question: {query}
 
@@ -109,6 +111,8 @@ Rules:
 6. No markdown, just raw SQL
 7. When asking about people, include name columns if available in the schemas provided
 8. Search ALL provided schemas for the requested data - do NOT assume data only exists in one database. Use UNION ALL across tables if needed.
+9. Pick the table whose columns best match the user's request. For employee lookups, start from the table with the most person-related columns.
+10. Do NOT invent or guess table/column names. Only use what appears in the schemas provided.
 
 SQL:"""
 

@@ -74,6 +74,8 @@ CRITICAL RULES:
 10. When the question mentions "unawarded" or "not awarded", filter crew_roster.roster_status = 'Not Awarded'
 11. For multi-database questions, use JOINs across databases freely via shared columns.
 12. IMPORTANT: Search ALL provided schemas for the requested data. Do NOT assume data only exists in one database. If looking for an employee by ID, search across all tables that have an employee/ID column using UNION ALL if needed.
+13. When choosing which table to query, carefully read the column names in the schemas. Pick the table whose columns best match what the user is asking for. For employee lookups, start from the table with the most person-related columns (name, ID, role, status, etc.), not auxiliary/lookup tables.
+14. Do NOT invent or guess table names or column names. Only use tables and columns that appear in the schema provided below.
 
 CRITICAL DATA VALUE REFERENCE:
 - crew_roster.roster_month is TEXT with full month names: 'January', 'February', 'March', 'April', 'May', 'June', etc.
