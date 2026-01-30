@@ -69,7 +69,7 @@ CRITICAL RULES:
 5. Use meaningful column aliases for readability
 6. For JOINs, always specify the join condition clearly
 7. Cross-database JOINs are supported: JOIN other_db.table_name ON ...
-8. All crew-related tables use employee_id (TEXT, e.g. 'AA-10001') as the universal join key across ALL databases.
+8. All crew-related tables use employee_id (TEXT) as the universal join key across ALL databases.
 9. When asking about crew names, ALWAYS include first_name and last_name from crew_management.crew_members
 10. When the question mentions "unawarded" or "not awarded", filter crew_roster.roster_status = 'Not Awarded'
 11. For multi-database questions, use JOINs across databases freely - they work perfectly via employee_id

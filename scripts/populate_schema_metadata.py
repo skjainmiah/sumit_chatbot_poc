@@ -56,7 +56,7 @@ def get_db_mapping():
 # Hand-written descriptions for each table (used by vector search)
 TABLE_DESCRIPTIONS = {
     "crew_management": {
-        "crew_members": "Master crew records with employee_id (e.g. AA-10001), name, email, phone, date of birth, passport, hire date, seniority, crew role (Captain, First Officer, Purser, Cabin Crew), base airport, and status. Use this to find crew by name, role, base, status. The employee_id column links to all other databases.",
+        "crew_members": "Master crew records with employee_id, name, email, phone, date of birth, passport, hire date, seniority, crew role (Captain, First Officer, Purser, Cabin Crew), base airport, and status. Use this to find crew by name, role, base, status. The employee_id column links to all other databases.",
         "crew_qualifications": "Crew licenses, type ratings, medical certificates, language proficiency, security clearances, dangerous goods and first aid certifications. Linked by employee_id. Use this to check expiring qualifications or find crew with specific ratings.",
         "crew_assignments": "Crew-to-flight assignments with duty start/end times, report/release times, assignment role and status. Linked by employee_id. Use this to find who is assigned to which flight and duty schedules.",
         "crew_rest_records": "Rest period tracking for FAR 117 compliance. Records rest start/end, location, type (minimum/reduced/extended/weekly/split/layover), duration, and whether it meets FAR 117. Linked by employee_id. Use for rest compliance queries.",

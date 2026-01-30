@@ -18,7 +18,7 @@ class PIIMasker:
             'SSN': r'\b\d{3}-\d{2}-\d{4}\b',
             'PASSPORT': r'\b[A-Z]{1,2}[0-9]{6,9}\b',
             'CREDIT_CARD': r'\b(?:\d{4}[-\s]?){3}\d{4}\b',
-            'EMPLOYEE_ID': r'\bAA-\d{5,6}\b',
+            'EMPLOYEE_ID': r'\b[A-Z]{1,4}-\d{3,6}\b',
         }
 
         self.counters = {}

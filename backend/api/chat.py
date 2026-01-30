@@ -69,7 +69,7 @@ def get_meta_response(query_type: str) -> Tuple[str, dict]:
         response = (
             f"We have **{len(visible)} operational databases** in the system:\n\n"
             + "\n\n".join(parts)
-            + "\n\nAll crew-related databases are linked by **employee_id** (e.g., AA-10001) for cross-database queries."
+            + "\n\nAll crew-related databases are linked by **employee_id** for cross-database queries."
         )
         results = {
             "columns": ["database_name", "description", "table_count"],

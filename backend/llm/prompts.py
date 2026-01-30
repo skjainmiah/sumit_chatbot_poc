@@ -47,7 +47,7 @@ IMPORTANT DATABASE INFORMATION:
 - You MUST ALWAYS prefix table names with the database name: db_name.table_name
   Example: crew_management.crew_members, hr_payroll.payroll_records
 - Cross-database JOINs ARE fully supported. You can freely join tables across different databases.
-- All crew-related tables use employee_id (TEXT, e.g. 'AA-10001') as the universal join key across ALL databases.
+- All crew-related tables use employee_id (TEXT) as the universal join key across ALL databases.
 
 CRITICAL DATA VALUE REFERENCE:
 - crew_roster.roster_month is TEXT with full month names: 'January', 'February', 'March', 'April', 'May', 'June', etc.
@@ -98,7 +98,7 @@ CRITICAL DATA VALUE REFERENCE:
 - crew_roster.roster_month is TEXT: 'January', 'February', 'March', etc.
 - crew_roster.roster_status values: 'Awarded', 'Reserve', 'Standby', 'Not Awarded', 'Training', 'Leave', 'Mixed'
 - crew_members.crew_role values: 'Captain', 'First Officer', 'Purser', 'Senior Cabin Crew', 'Cabin Crew'
-- All crew tables use employee_id (TEXT, e.g. 'AA-10001') as universal join key across databases
+- All crew tables use employee_id (TEXT) as universal join key across databases
 
 Rules:
 1. Only SELECT statements
