@@ -313,13 +313,38 @@ class SchemaLoader:
         """Get raw schema data."""
         return self._schema_data
 
-    def get_stats(self) -> SchemaStats:
-        """Get schema statistics."""
+    def get_stats(self, visible_only: bool = True) -> SchemaStats:
+        """Get schema statistics.
+
+        Args:
+            visible_only: If True, only count visible databases.
+        """
+        if not visible_only:
+            return SchemaStats(
+                total_databases=self._schema_data.get("total_databases", 0),
+                total_tables=self._schema_data.get("total_tables", 0),
+                total_columns=self._schema_data.get("total_columns", 0),
+                estimated_tokens=self._schema_data.get("total_columns", 0) * 15
+            )
+
+        # Compute stats from visible databases only
+        visible_dbs = _get_visible_db_names()
+        databases = self._schema_data.get("databases", [])
+        if visible_dbs is not None:
+            databases = [db for db in databases if db["name"] in visible_dbs]
+
+        total_tables = sum(len(db.get("tables", [])) for db in databases)
+        total_columns = sum(
+            len(col)
+            for db in databases
+            for t in db.get("tables", [])
+            for col in [t.get("columns", [])]
+        )
         return SchemaStats(
-            total_databases=self._schema_data.get("total_databases", 0),
-            total_tables=self._schema_data.get("total_tables", 0),
-            total_columns=self._schema_data.get("total_columns", 0),
-            estimated_tokens=self._schema_data.get("total_columns", 0) * 15
+            total_databases=len(databases),
+            total_tables=total_tables,
+            total_columns=total_columns,
+            estimated_tokens=total_columns * 15
         )
 
     def get_database_names(self, visible_only: bool = True) -> List[str]:
@@ -385,22 +410,37 @@ class SchemaLoader:
                     })
         return relationships
 
-    def get_meta_info(self) -> str:
-        """Get meta information for answering questions about the database structure."""
+    def get_meta_info(self, visible_only: bool = True) -> str:
+        """Get meta information for answering questions about the database structure.
+
+        Args:
+            visible_only: If True, only include visible databases.
+        """
+        visible_dbs = _get_visible_db_names() if visible_only else None
+        databases = self._schema_data.get("databases", [])
+        if visible_dbs is not None:
+            databases = [db for db in databases if db["name"] in visible_dbs]
+
+        total_tables = sum(len(db.get("tables", [])) for db in databases)
+        total_columns = sum(
+            len(t.get("columns", []))
+            for db in databases
+            for t in db.get("tables", [])
+        )
+
         lines = [
             "DATABASE STRUCTURE INFORMATION:",
             f"",
-            f"Available Databases ({self._schema_data['total_databases']}):",
+            f"Available Databases ({len(databases)}):",
         ]
 
-        for db in self._schema_data["databases"]:
+        for db in databases:
             lines.append(f"  • {db['name']} ({len(db['tables'])} tables)")
             for table in db["tables"]:
                 col_count = len(table["columns"])
                 lines.append(f"      - {table['full_name']} ({col_count} columns)")
 
-        lines.append(f"\nTotal: {self._schema_data['total_tables']} tables, "
-                     f"{self._schema_data['total_columns']} columns")
+        lines.append(f"\nTotal: {total_tables} tables, {total_columns} columns")
 
         return "\n".join(lines)
 

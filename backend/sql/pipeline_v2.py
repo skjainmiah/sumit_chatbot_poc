@@ -164,8 +164,8 @@ class SQLPipelineV2:
         schema_data = schema_loader.get_schema_data()
         visible_db_names = set(schema_loader.get_database_names(visible_only=True))
 
-        # List databases
-        if re.search(r'\b(list|show|what|which|get|display|available)\b.*\bdatabase', question_lower):
+        # List databases (including "how many databases" questions)
+        if re.search(r'\b(list|show|what|which|get|display|available|how many|count|number of)\b.*\bdatabase', question_lower):
             db_names = list(visible_db_names)
             # Also get table counts per database (only visible ones)
             db_details = []
@@ -182,7 +182,7 @@ class SQLPipelineV2:
             }
 
         # List tables (check for specific database first)
-        if re.search(r'\b(list|show|what|which|get|display|available)\b.*\btable', question_lower):
+        if re.search(r'\b(list|show|what|which|get|display|available|how many|count|number of)\b.*\btable', question_lower):
             # Check if specific database mentioned
             db_match = None
             for db in schema_loader.get_database_names():
@@ -247,9 +247,9 @@ class SQLPipelineV2:
                 "results": None
             }
 
-        # Count tables/databases/columns
+        # Count tables/databases/columns (visibility-aware)
         if re.search(r'\b(how many|count|number of)\b', question_lower):
-            stats = schema_loader.get_stats()
+            stats = schema_loader.get_stats(visible_only=True)
             return {
                 "success": True,
                 "intent": "meta",
@@ -262,11 +262,11 @@ class SQLPipelineV2:
                 "results": None
             }
 
-        # General structure question - return full meta info
+        # General structure question - return full meta info (visibility-aware)
         return {
             "success": True,
             "intent": "meta",
-            "answer": schema_loader.get_meta_info(),
+            "answer": schema_loader.get_meta_info(visible_only=True),
             "sql": None,
             "results": None
         }

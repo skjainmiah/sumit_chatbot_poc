@@ -25,8 +25,14 @@ router = APIRouter()
 
 # Meta-query patterns (questions about database structure, not data)
 META_QUERY_PATTERNS = [
-    (r'\b(list|show|what|which)\b.*\b(database|databases|dbs)\b', 'databases'),
-    (r'\b(list|show|what|which)\b.*\b(table|tables)\b', 'tables'),
+    # Database questions
+    (r'\b(list|show|what|which|get|display)\b.*\b(database|databases|dbs|db)\b', 'databases'),
+    (r'\b(how many|count|number of)\b.*\b(database|databases|dbs|db)\b', 'databases'),
+    (r'\bdatabases?\s*(available|exist|do (we|you) have)', 'databases'),
+    (r'\bavailable\b.*\bdatabases?\b', 'databases'),
+    # Table questions
+    (r'\b(list|show|what|which|get|display)\b.*\b(table|tables)\b', 'tables'),
+    (r'\b(how many|count|number of)\b.*\b(table|tables)\b', 'tables'),
     (r'\b(what|which)\b.*\b(schema|schemas)\b', 'tables'),
     (r'\bdescribe\b.*\b(database|databases|table|tables)\b', 'tables'),
     (r'\b(database|db)\s*(structure|schema|info|information)\b', 'tables'),
