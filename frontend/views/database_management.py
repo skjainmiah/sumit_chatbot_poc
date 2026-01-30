@@ -289,59 +289,46 @@ def render_visibility_section(client: APIClient):
 
 
 def render_database_row(client: APIClient, db: dict, can_delete: bool = False):
-    """Render a single database row with visibility toggle."""
+    """Render a single database row."""
     db_name = db.get("db_name", "Unknown")
     display_name = db.get("display_name") or db_name
     description = db.get("description", "")
     table_count = db.get("table_count", 0)
-    is_visible = db.get("is_visible", True)
     source_type = db.get("source_type", "unknown")
 
     col1, col2, col3 = st.columns([3, 1, 1])
 
     with col1:
-        # Database info
         source_badge = ":package:" if source_type == "mock" else ":arrow_up:"
-        visibility_status = ":eye:" if is_visible else ":no_entry_sign:"
-
+        desc_text = f"{description[:80]}..." if len(description) > 80 else description
         st.markdown(
-            f"{visibility_status} **{display_name}** {source_badge}\n\n"
-            f"<small>{description[:80]}...</small>" if len(description) > 80 else f"{visibility_status} **{display_name}** {source_badge}\n\n<small>{description}</small>",
+            f":eye: **{display_name}** {source_badge}\n\n<small>{desc_text}</small>",
             unsafe_allow_html=True
         )
 
     with col2:
         st.caption(f"{table_count} tables")
 
-        # Visibility toggle
-        new_visibility = st.checkbox(
-            "Visible",
-            value=is_visible,
-            key=f"vis_{db_name}",
-            help="Include in chat queries"
-        )
-
-        if new_visibility != is_visible:
-            result = client.set_database_visibility(db_name, new_visibility)
-            if result.get("error"):
-                st.error(result.get("detail", "Failed to update"))
-            else:
-                st.rerun()
-
     with col3:
         if can_delete:
-            if st.button(":wastebasket:", key=f"del_{db_name}", help="Delete database"):
-                # Confirmation in session state
-                if st.session_state.get(f"confirm_delete_{db_name}"):
-                    result = client.delete_database(db_name)
-                    if result.get("error"):
-                        st.error(result.get("detail"))
-                    else:
-                        st.success(f"Deleted {db_name}")
-                        st.session_state.pop(f"confirm_delete_{db_name}", None)
+            confirm_key = f"confirm_delete_{db_name}"
+            if st.button("Delete", key=f"del_{db_name}", help="Delete database"):
+                st.session_state[confirm_key] = True
+
+            if st.session_state.get(confirm_key):
+                col_y, col_n = st.columns(2)
+                with col_y:
+                    if st.button("Yes", key=f"yes_{db_name}"):
+                        result = client.delete_database(db_name)
+                        if isinstance(result, dict) and result.get("error"):
+                            st.error(result.get("detail"))
+                        else:
+                            st.success(f"Deleted {db_name}")
+                        st.session_state.pop(confirm_key, None)
                         st.rerun()
-                else:
-                    st.session_state[f"confirm_delete_{db_name}"] = True
-                    st.warning("Click again to confirm deletion")
+                with col_n:
+                    if st.button("No", key=f"no_{db_name}"):
+                        st.session_state.pop(confirm_key, None)
+                        st.rerun()
         else:
-            st.caption("(protected)")
+            st.caption("(built-in)")
