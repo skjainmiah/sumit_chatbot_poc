@@ -241,8 +241,8 @@ def render_visibility_section(client: APIClient):
     """Render the database visibility management section."""
     st.markdown("### Database Visibility")
     st.caption(
-        "Control which databases are included in chat queries. "
-        "Unchecked databases will be hidden from the chatbot but still accessible in the Database Explorer."
+        "Control which databases are visible. "
+        "Unchecked databases will be hidden from Chat, Database Explorer, and LLM schema context."
     )
 
     # Fetch database list
@@ -288,26 +288,47 @@ def render_visibility_section(client: APIClient):
     )
 
 
+def _toggle_visibility(client: APIClient, db_name: str, key: str):
+    """Callback for visibility checkbox — updates backend without st.rerun()."""
+    new_val = st.session_state[key]
+    client.set_database_visibility(db_name, new_val)
+
+
 def render_database_row(client: APIClient, db: dict, can_delete: bool = False):
-    """Render a single database row."""
+    """Render a single database row with visibility toggle."""
     db_name = db.get("db_name", "Unknown")
     display_name = db.get("display_name") or db_name
     description = db.get("description", "")
     table_count = db.get("table_count", 0)
+    is_visible = db.get("is_visible", True)
     source_type = db.get("source_type", "unknown")
 
     col1, col2, col3 = st.columns([3, 1, 1])
 
     with col1:
         source_badge = ":package:" if source_type == "mock" else ":arrow_up:"
+        visibility_icon = ":eye:" if is_visible else ":no_entry_sign:"
         desc_text = f"{description[:80]}..." if len(description) > 80 else description
         st.markdown(
-            f":eye: **{display_name}** {source_badge}\n\n<small>{desc_text}</small>",
+            f"{visibility_icon} **{display_name}** {source_badge}\n\n<small>{desc_text}</small>",
             unsafe_allow_html=True
         )
 
     with col2:
         st.caption(f"{table_count} tables")
+
+        checkbox_key = f"vis_{db_name}"
+        # Initialize session state from API value to avoid mismatch
+        if checkbox_key not in st.session_state:
+            st.session_state[checkbox_key] = is_visible
+
+        st.checkbox(
+            "Visible",
+            key=checkbox_key,
+            on_change=_toggle_visibility,
+            args=(client, db_name, checkbox_key),
+            help="Include in Chat, Explorer, and LLM context"
+        )
 
     with col3:
         if can_delete:

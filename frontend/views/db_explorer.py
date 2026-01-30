@@ -7,30 +7,47 @@ from backend.config import settings
 
 
 def get_databases():
-    """Get all databases directly from config paths."""
-    databases = {
-        "crew_management": {
-            "path": settings.crew_db_path,
-            "display_name": "Crew Management",
-            "description": "Crew members, qualifications, assignments, rest records, documents, contacts"
-        },
-        "flight_operations": {
-            "path": settings.flight_db_path,
-            "display_name": "Flight Operations",
-            "description": "Airports, aircraft, flights, pairings, disruptions, hotels"
-        },
-        "hr_payroll": {
-            "path": settings.hr_db_path,
-            "display_name": "HR Payroll",
-            "description": "Pay grades, payroll records, leave, benefits, performance reviews, expenses"
-        },
-        "compliance_training": {
-            "path": settings.compliance_db_path,
-            "display_name": "Compliance Training",
-            "description": "Training courses/records, schedules, compliance checks, safety incidents, audit logs"
-        },
-    }
-    return databases
+    """Get visible databases from the registry."""
+    try:
+        from backend.db.registry import get_database_registry
+        registry = get_database_registry()
+        all_dbs = registry.get_all_databases()
+        databases = {}
+        for db_name, info in all_dbs.items():
+            if db_name == "app":
+                continue
+            if not info.get("is_visible", True):
+                continue
+            databases[db_name] = {
+                "path": info["db_path"],
+                "display_name": info.get("display_name") or db_name.replace("_", " ").title(),
+                "description": info.get("description", ""),
+            }
+        return databases
+    except Exception:
+        # Fallback to hardcoded if registry unavailable
+        return {
+            "crew_management": {
+                "path": settings.crew_db_path,
+                "display_name": "Crew Management",
+                "description": "Crew members, qualifications, assignments, rest records, documents, contacts"
+            },
+            "flight_operations": {
+                "path": settings.flight_db_path,
+                "display_name": "Flight Operations",
+                "description": "Airports, aircraft, flights, pairings, disruptions, hotels"
+            },
+            "hr_payroll": {
+                "path": settings.hr_db_path,
+                "display_name": "HR Payroll",
+                "description": "Pay grades, payroll records, leave, benefits, performance reviews, expenses"
+            },
+            "compliance_training": {
+                "path": settings.compliance_db_path,
+                "display_name": "Compliance Training",
+                "description": "Training courses/records, schedules, compliance checks, safety incidents, audit logs"
+            },
+        }
 
 
 def get_table_list(db_path):

@@ -15,14 +15,13 @@ class SchemaStats:
     estimated_tokens: int
 
 
-def _get_all_db_names() -> Set[str]:
-    """Get set of all database names from registry."""
+def _get_visible_db_names() -> Set[str]:
+    """Get set of visible database names from registry."""
     try:
         from backend.db.registry import get_database_registry
         registry = get_database_registry()
-        return set(registry.get_all_db_mapping().keys())
+        return set(registry.get_visible_databases().keys())
     except Exception:
-        # Fallback - empty set means use all
         return set()
 
 
@@ -297,7 +296,7 @@ class SchemaLoader:
             return self._schema_text
 
         # Generate filtered schema text based on visibility
-        all_dbs = _get_all_db_names()
+        all_dbs = _get_visible_db_names()
         if not all_dbs:
             # No registry or all visible
             return self._schema_text
@@ -328,7 +327,7 @@ class SchemaLoader:
         if not visible_only:
             return all_names
 
-        all_dbs = _get_all_db_names()
+        all_dbs = _get_visible_db_names()
         if not all_dbs:
             return all_names
 
@@ -341,7 +340,7 @@ class SchemaLoader:
             database: Filter to specific database name.
             visible_only: If True, only include tables from visible databases.
         """
-        all_dbs = _get_all_db_names() if visible_only else set()
+        all_dbs = _get_visible_db_names() if visible_only else set()
 
         tables = []
         for db in self._schema_data["databases"]:

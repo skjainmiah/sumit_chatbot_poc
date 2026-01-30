@@ -205,7 +205,7 @@ async def list_databases(
             display_name=info.get("display_name"),
             description=info.get("description"),
             source_type=info.get("source_type", "unknown"),
-            is_visible=True,  # All databases are now visible
+            is_visible=bool(info.get("is_visible", True)),
             is_system=bool(info.get("is_system")),
             table_count=info.get("table_count", 0),
             upload_filename=info.get("upload_filename"),
@@ -213,10 +213,11 @@ async def list_databases(
             created_at=info.get("created_at")
         ))
 
+    visible_count = sum(1 for db in databases if db.is_visible)
     return DatabaseListResponse(
         databases=databases,
         total=len(databases),
-        visible_count=len(databases)
+        visible_count=visible_count
     )
 
 
@@ -226,22 +227,21 @@ async def set_database_visibility(
     request: VisibilityRequest,
     current_user: dict = Depends(require_admin)
 ):
-    """Deprecated: All databases are now always visible.
-
-    This endpoint is kept for backward compatibility but no longer changes visibility.
-    """
+    """Toggle database visibility for chat queries and Database Explorer."""
     registry = get_database_registry()
 
-    # Check if database exists
     db_info = registry.get_database_info(db_name)
     if not db_info:
         raise HTTPException(status_code=404, detail=f"Database '{db_name}' not found")
 
+    success = registry.set_visibility(db_name, request.is_visible)
+    if not success:
+        raise HTTPException(status_code=500, detail="Failed to update visibility")
+
     return {
         "success": True,
         "db_name": db_name,
-        "is_visible": True,
-        "message": "Visibility feature has been removed. All databases are always visible."
+        "is_visible": request.is_visible,
     }
 
 
@@ -332,7 +332,7 @@ async def get_database_info(
         display_name=db_info.get("display_name"),
         description=db_info.get("description"),
         source_type=db_info.get("source_type", "unknown"),
-        is_visible=True,  # All databases are now visible
+        is_visible=bool(db_info.get("is_visible", True)),
         is_system=bool(db_info.get("is_system")),
         table_count=db_info.get("table_count", 0),
         upload_filename=db_info.get("upload_filename"),

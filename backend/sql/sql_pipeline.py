@@ -15,12 +15,12 @@ from backend.db.session import get_multi_db_connection
 logger = logging.getLogger("chatbot.sql.pipeline_v1")
 
 
-def _get_all_db_names() -> Set[str]:
-    """Get set of all database names from registry."""
+def _get_visible_db_names() -> Set[str]:
+    """Get set of visible database names from registry."""
     try:
         from backend.db.registry import get_database_registry
         registry = get_database_registry()
-        return set(registry.get_all_db_mapping().keys())
+        return set(registry.get_visible_databases().keys())
     except Exception:
         return set()
 
@@ -45,7 +45,7 @@ class SQLPipeline:
         top_k = top_k or settings.SCHEMA_TOP_K
 
         # Get all databases
-        all_dbs = _get_all_db_names()
+        all_dbs = _get_visible_db_names()
         logger.info(f"[retrieve_schemas] query=\"{query[:80]}\" top_k={top_k} registry_dbs={all_dbs or 'EMPTY'}")
 
         # --- Stage 1: Keyword-based retrieval (fast, no API calls) ---
