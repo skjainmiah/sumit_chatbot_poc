@@ -7,8 +7,78 @@ from frontend.components.visualization import reset_key_counts
 from frontend.components.loading_facts import show_loading_with_facts
 
 
+# ==========================================
+# Visitor-name helpers
+# ==========================================
+
+def _is_greeting(text: str) -> bool:
+    """Return True when the message is purely a greeting."""
+    lower = text.strip().lower().rstrip(".,!?")
+    greetings = {
+        "hi", "hello", "hey", "howdy", "greetings", "good morning",
+        "good afternoon", "good evening", "sup", "yo", "hi there",
+        "hello there", "hey there", "hola", "namaste",
+    }
+    return lower in greetings
+
+
+def _extract_name(text: str):
+    """Extract just the first name from input like 'I'm Jainmiah' or 'My name is John Smith'.
+
+    Returns the capitalised first name, or None if the input doesn't look like a name.
+    """
+    text = text.strip()
+    lower = text.lower()
+
+    prefixes = [
+        "my name is ", "i'm ", "i am ", "it's ", "its ",
+        "call me ", "they call me ", "you can call me ",
+        "this is ", "hi i'm ", "hello i'm ", "hey i'm ",
+        "hi i am ", "hello i am ", "hey i am ", "i'm called ",
+        "people call me ", "just call me ", "please call me ",
+        "hi, i'm ", "hello, i'm ", "hey, i'm ",
+        "hi, i am ", "hello, i am ", "hey, i am ",
+    ]
+
+    for prefix in prefixes:
+        if lower.startswith(prefix):
+            text = text[len(prefix):]
+            break
+
+    text = text.strip().rstrip(".,!?")
+
+    # Too many words or contains '?' → probably not a name
+    words = text.split()
+    if len(words) > 3 or "?" in text:
+        return None
+
+    if words:
+        name = words[0]
+        return name[0].upper() + name[1:] if len(name) > 1 else name.upper()
+    return None
+
+
+def _is_name_change_request(text: str):
+    """Return (True, new_name) if the user wants to change their name, else (False, None)."""
+    lower = text.strip().lower()
+    patterns = [
+        "change my name to ", "rename me to ",
+        "please call me ", "update my name to ",
+        "i want to be called ", "call me ",
+        "my name is actually ", "actually my name is ",
+        "actually i'm ", "actually i am ",
+    ]
+    for pattern in patterns:
+        if lower.startswith(pattern):
+            raw = text.strip()[len(pattern):]
+            name = _extract_name(raw)
+            if name:
+                return True, name
+    return False, None
+
+
 def _init_visitor_name(client: APIClient):
-    """Check for visitor name on first load. Sets session state flags."""
+    """Check DB for a stored visitor name on first page load."""
     if "visitor_name_checked" in st.session_state:
         return
     st.session_state["visitor_name_checked"] = True
@@ -17,11 +87,14 @@ def _init_visitor_name(client: APIClient):
         if result.get("name"):
             st.session_state["visitor_name"] = result["name"]
         else:
-            st.session_state["awaiting_name"] = True
+            st.session_state["needs_name"] = True
     except Exception:
-        # Don't block chat if visitor name lookup fails
-        st.session_state["visitor_name_checked"] = True
+        pass
 
+
+# ==========================================
+# Main page
+# ==========================================
 
 def render_chat():
     """Main V1 chat page - displays messages, handles user input, shows conversation history."""
@@ -39,15 +112,12 @@ def render_chat():
     reset_key_counts()
 
     with chat_container:
-        # Show greeting or name prompt as first message when conversation is empty
+        # Welcome back for returning users (empty conversation only)
         if not st.session_state.messages:
             visitor_name = st.session_state.get("visitor_name")
             if visitor_name:
                 with st.chat_message("assistant", avatar=None):
                     st.write(f"Welcome back, {visitor_name}!")
-            elif st.session_state.get("awaiting_name"):
-                with st.chat_message("assistant", avatar=None):
-                    st.write("Hi! What should I call you?")
 
         for i, msg in enumerate(st.session_state.messages):
             # Get the user query that preceded this assistant message
@@ -64,16 +134,72 @@ def render_chat():
 
     # Chat input
     if prompt := (pending or st.chat_input("Ask me anything about crew policies, schedules, or data...")):
-        # If awaiting visitor name, capture it instead of sending to LLM
+
+        # --- 1. Name-change request (only when a name is already stored) ---
+        if st.session_state.get("visitor_name"):
+            is_change, new_name = _is_name_change_request(prompt)
+            if is_change and new_name:
+                st.session_state["visitor_name"] = new_name
+                try:
+                    client.set_visitor_name(new_name)
+                except Exception:
+                    pass
+                st.session_state.messages.append({"role": "user", "content": prompt})
+                st.session_state.messages.append({
+                    "role": "assistant",
+                    "content": f"Sure! I'll call you {new_name} from now on.",
+                })
+                st.rerun()
+                return
+
+        # --- 2. Bot already asked for name — capture the reply ---
         if st.session_state.get("awaiting_name"):
-            st.session_state["visitor_name"] = prompt.strip()
-            st.session_state["awaiting_name"] = False
-            try:
-                client.set_visitor_name(prompt.strip())
-            except Exception:
-                pass
-            st.rerun()
-            return
+            name = _extract_name(prompt)
+            if name:
+                st.session_state["visitor_name"] = name
+                st.session_state.pop("awaiting_name", None)
+                st.session_state.pop("needs_name", None)
+                try:
+                    client.set_visitor_name(name)
+                except Exception:
+                    pass
+                st.session_state.messages.append({"role": "user", "content": prompt})
+                if st.session_state.pop("greeting_name_ask", False):
+                    st.session_state.messages.append({
+                        "role": "assistant",
+                        "content": f"Hello, {name}! How can I help you today?",
+                    })
+                else:
+                    st.session_state.messages.append({
+                        "role": "assistant",
+                        "content": f"Thanks, {name}! Feel free to ask me anything.",
+                    })
+                st.rerun()
+                return
+            else:
+                # Doesn't look like a name — clear flag and process normally
+                st.session_state.pop("awaiting_name", None)
+                st.session_state.pop("greeting_name_ask", None)
+
+        # --- 3. First message & we still need a name ---
+        has_user_msgs = any(m.get("role") == "user" for m in st.session_state.messages)
+        if st.session_state.get("needs_name") and not has_user_msgs:
+            if _is_greeting(prompt):
+                # Pure greeting → ask for name instead of sending to LLM
+                st.session_state.messages.append({"role": "user", "content": prompt})
+                st.session_state.messages.append({
+                    "role": "assistant",
+                    "content": "Hello! Can I know your good name?",
+                })
+                st.session_state["awaiting_name"] = True
+                st.session_state["greeting_name_ask"] = True
+                st.rerun()
+                return
+            else:
+                # It's a real question — flag so we ask for name after the LLM reply
+                st.session_state["ask_name_after_response"] = True
+
+        # --- Normal message flow ---
         # Track message count for suggestion randomization
         st.session_state["v1_msg_count"] = st.session_state.get("v1_msg_count", 0) + 1
 
@@ -107,10 +233,17 @@ def render_chat():
             # Update conversation ID
             st.session_state.conversation_id = result.get("conversation_id")
 
+            content = result.get("response", "")
+
+            # Append name question if this was the first question and we need a name
+            if st.session_state.pop("ask_name_after_response", False):
+                content += "\n\nBy the way, can I know your good name?"
+                st.session_state["awaiting_name"] = True
+
             # Create assistant message (store user_query for visualization suggestions)
             assistant_msg = {
                 "role": "assistant",
-                "content": result.get("response", ""),
+                "content": content,
                 "message_id": result.get("message_id"),
                 "intent": result.get("intent"),
                 "confidence": result.get("confidence"),

@@ -5,6 +5,18 @@ import threading
 from pathlib import Path
 import streamlit as st
 
+try:
+    from streamlit.runtime.scriptrunner import add_script_run_ctx, get_script_run_ctx
+except ImportError:
+    try:
+        from streamlit.runtime.scriptrunner_utils.script_run_context import (
+            add_script_run_ctx,
+            get_script_run_ctx,
+        )
+    except ImportError:
+        add_script_run_ctx = None
+        get_script_run_ctx = None
+
 
 # Load facts from external file with hardcoded fallback
 _FACTS_FILE = Path(__file__).resolve().parent.parent.parent / "data" / "loading_facts.txt"
@@ -58,42 +70,49 @@ def show_loading_with_facts(placeholder):
     stop_event = threading.Event()
     facts = _pick_facts(10)
 
+    # Capture Streamlit script-run context so the thread can write to the placeholder
+    ctx = get_script_run_ctx() if get_script_run_ctx else None
+
     def _animate():
         idx = 0
         dot_cycle = 0
         while not stop_event.is_set():
-            fact = facts[idx % len(facts)]
-            dots = "." * (dot_cycle % 4)
-            footer = f"Processing your query{dots}"
-            placeholder.markdown(
-                f"""
-                <div style="
-                    padding: 16px 20px;
-                    background: linear-gradient(135deg, #0078d2 0%, #003366 100%);
-                    border-radius: 10px;
-                    color: white;
-                    font-size: 15px;
-                    line-height: 1.5;
-                    margin: 8px 0;
-                    animation: slideIn 0.5s ease-out;
-                ">
-                    <div style="font-size: 12px; opacity: 0.8; margin-bottom: 6px;">
-                        ✈️ Did you know?
+            try:
+                fact = facts[idx % len(facts)]
+                dots = "." * (dot_cycle % 4)
+                footer = f"Processing your query{dots}"
+                placeholder.markdown(
+                    f"""
+                    <div style="
+                        padding: 16px 20px;
+                        background: linear-gradient(135deg, #0078d2 0%, #003366 100%);
+                        border-radius: 10px;
+                        color: white;
+                        font-size: 15px;
+                        line-height: 1.5;
+                        margin: 8px 0;
+                        animation: slideIn 0.5s ease-out;
+                    ">
+                        <div style="font-size: 12px; opacity: 0.8; margin-bottom: 6px;">
+                            ✈️ Did you know?
+                        </div>
+                        <div>{fact}</div>
+                        <div style="margin-top: 8px; font-size: 12px; opacity: 0.6;">
+                            {footer}
+                        </div>
                     </div>
-                    <div>{fact}</div>
-                    <div style="margin-top: 8px; font-size: 12px; opacity: 0.6;">
-                        {footer}
-                    </div>
-                </div>
-                <style>
-                    @keyframes slideIn {{
-                        from {{ opacity: 0; transform: translateY(-10px); }}
-                        to {{ opacity: 1; transform: translateY(0); }}
-                    }}
-                </style>
-                """,
-                unsafe_allow_html=True
-            )
+                    <style>
+                        @keyframes slideIn {{
+                            from {{ opacity: 0; transform: translateY(-10px); }}
+                            to {{ opacity: 1; transform: translateY(0); }}
+                        }}
+                    </style>
+                    """,
+                    unsafe_allow_html=True
+                )
+            except Exception:
+                # Context lost (e.g. user navigated away) — stop gracefully
+                break
             dot_cycle += 1
             if dot_cycle % 4 == 0:
                 idx += 1
@@ -101,5 +120,7 @@ def show_loading_with_facts(placeholder):
             stop_event.wait(timeout=0.75)
 
     thread = threading.Thread(target=_animate, daemon=True)
+    if add_script_run_ctx and ctx:
+        add_script_run_ctx(thread, ctx)
     thread.start()
     return stop_event
