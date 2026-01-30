@@ -113,11 +113,26 @@ class UploadService:
                 if result.success:
                     # Register in database registry
                     try:
+                        # Read actual table names from the created DB for description
+                        table_names = []
+                        try:
+                            tmp_conn = sqlite3.connect(result.db_path)
+                            tmp_cur = tmp_conn.cursor()
+                            tmp_cur.execute("SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'")
+                            table_names = [r[0] for r in tmp_cur.fetchall()]
+                            tmp_conn.close()
+                        except Exception:
+                            pass
+
+                        db_description = self._generate_db_description(result.db_name, table_names) if table_names else (
+                            f"Database with {result.tables_created} tables"
+                        )
+
                         db_id = self.registry.register_database(
                             db_name=result.db_name,
                             db_path=result.db_path,
                             display_name=result.db_name.replace("_", " ").title(),
-                            description=f"Uploaded from {filename} ({dialect_str})",
+                            description=db_description,
                             source_type="uploaded",
                             is_visible=auto_visible,
                             upload_filename=filename,
@@ -310,11 +325,15 @@ class UploadService:
             }
 
             if is_new_db:
+                # Generate a meaningful description from table names
+                created_table_names = [t["table_name"] for t in tables_created_list]
+                db_description = self._generate_db_description(db_name_clean, created_table_names)
+
                 self.registry.register_database(
                     db_name=db_name_clean,
                     db_path=db_path,
                     display_name=db_name_clean.replace("_", " ").title(),
-                    description=f"Uploaded from CSV/Excel files ({total_tables} tables)",
+                    description=db_description,
                     source_type="uploaded",
                     is_visible=auto_visible,
                     upload_filename=combined_filenames,
@@ -524,6 +543,42 @@ class UploadService:
 
         app_conn.commit()
         app_conn.close()
+
+    def _generate_db_description(self, db_name: str, table_names: List[str]) -> str:
+        """Generate a meaningful database-level description from table names.
+
+        Builds a concise summary listing the tables and uses LLM if available
+        to produce a richer description. Falls back to table-name-based text.
+        """
+        # Build a readable table list
+        table_list = ", ".join(table_names[:10])
+        if len(table_names) > 10:
+            table_list += f" and {len(table_names) - 10} more"
+
+        # Try LLM for a richer description
+        try:
+            from backend.llm.client import get_llm_client
+            client = get_llm_client()
+
+            prompt = (
+                f"Write a 1-sentence description of a database named '{db_name}' "
+                f"that contains {len(table_names)} tables: {table_list}.\n"
+                f"Focus on what domain/business area this database covers based on the table names. "
+                f"Do not mention 'uploaded' or file formats. Just describe the data content."
+            )
+            desc = client.chat_completion(
+                messages=[{"role": "user", "content": prompt}],
+                temperature=0.3,
+                max_tokens=150,
+                use_fast_model=True,
+            )
+            if desc and desc.strip():
+                return desc.strip()
+        except Exception as e:
+            logger.warning(f"LLM DB description failed for {db_name}: {e}")
+
+        # Fallback: table-name-based description
+        return f"Database with {len(table_names)} tables: {table_list}"
 
     def _generate_llm_description(self, db_name: str, table_name: str,
                                    col_details: str, sample_str: str) -> Optional[str]:
