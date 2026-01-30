@@ -50,7 +50,11 @@ def render_login_form():
             else:
                 st.session_state.authenticated = True
                 st.session_state.token = result.get("access_token")
-                st.session_state.user = result.get("user")
+                st.session_state.user = {
+                    "user_id": result.get("user_id"),
+                    "username": result.get("username"),
+                    "role": result.get("role"),
+                }
                 st.success("Login successful!")
                 st.rerun()
 
