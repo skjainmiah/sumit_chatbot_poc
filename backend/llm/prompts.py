@@ -84,37 +84,52 @@ User question: {query}
 Respond with ONLY the SQL query. No explanations, no markdown, just the raw SQL."""
 
 SQL_GENERATION_WITH_CONTEXT_PROMPT = """You are a SQL expert for an American Airlines crew management database system.
+Generate a SQLite SELECT query to answer the user's current question.
 
-Previous conversation context:
+Previous conversation context (use ONLY to resolve pronouns like "that", "they", "those", or implicit references):
 {conversation_context}
 
-Available schemas:
+IMPORTANT DATABASE INFORMATION:
+- Multiple SQLite databases are attached together. The schemas below show which databases and tables are available.
+- You MUST ALWAYS prefix table names with the database name: db_name.table_name
+  Example: crew_management.crew_members, hr_payroll.payroll_records
+- Cross-database JOINs ARE fully supported. You can freely join tables across different databases.
+- Many tables use employee_id (TEXT) as a join key across databases. Check the schemas below for the actual column names in each table.
+
+CRITICAL DATA VALUE REFERENCE:
+- crew_roster.roster_month is TEXT with full month names: 'January', 'February', 'March', 'April', 'May', 'June', etc.
+- crew_roster.roster_year is INTEGER: 2025
+- crew_roster.roster_status values: 'Awarded', 'Reserve', 'Standby', 'Not Awarded', 'Training', 'Leave', 'Mixed'
+- crew_roster.not_awarded_reason values: 'Seniority', 'Qualification Gap', 'Schedule Conflict', 'Base Mismatch', 'Medical Hold', 'Training Conflict', 'Visa Issue', 'Staffing Requirement', 'Bid Not Submitted', 'Pairing Unavailable', 'Rest Requirement', 'Disciplinary Action', 'Probation Period', 'Union Dispute', 'Crew Complement Full', 'Aircraft Type Mismatch', 'Insufficient Flight Hours', 'Administrative Error', 'Voluntary Withdrawal', 'FAA Restriction', 'Fatigue Risk Flag'
+- crew_roster.duty_type values: 'Line Flying', 'Reserve', 'Standby', 'Training', 'Leave', 'Admin', 'Mixed'
+- crew_members.crew_role values: 'Captain', 'First Officer', 'Senior First Officer', 'Flight Engineer', 'Purser', 'Senior Cabin Crew', 'Cabin Crew', 'Trainee'
+- crew_members.status values: 'Active', 'On Leave', 'Suspended', 'Inactive', 'Retired'
+- flights.flight_status values: 'Scheduled', 'Boarding', 'Departed', 'In Air', 'Landed', 'Arrived', 'Cancelled', 'Diverted', 'Delayed'
+- leave_records.leave_type values: 'Annual Leave', 'Sick Leave', 'Emergency Leave', 'Training Leave'
+
+Available schemas and tables:
 {schema_descriptions}
+
+RULES:
+1. Only generate SELECT statements - no INSERT, UPDATE, DELETE, DROP, etc.
+2. ALWAYS use db_name.table_name syntax (e.g. crew_management.crew_members, NOT just crew_members)
+3. Add LIMIT 100 unless the user asks for a specific count or all records
+4. Use meaningful column aliases for readability
+5. For date comparisons, use SQLite date functions: date(), datetime(), strftime()
+6. Use LIKE with % for partial text matching
+7. Handle NULL values appropriately
+8. For cross-database queries, JOIN on common columns like employee_id across databases
+9. When asking about people/crew, include name columns if available in the schemas provided
+10. When the question mentions "unawarded" or "not awarded", filter crew_roster.roster_status = 'Not Awarded'
+11. For multi-database questions, use JOINs across databases freely via shared columns
+12. IMPORTANT: Search ALL provided schemas for the requested data. Do NOT assume data only exists in one database. If looking for an employee by ID, search across all tables that have an employee/ID column using UNION ALL if needed.
+13. When choosing which table to query, carefully read the column names in the schemas. Pick the table whose columns best match what the user is asking for. For employee lookups, start from the table that has the most person-related columns (name, ID, role, status, etc.), not auxiliary/lookup tables.
+14. Do NOT invent or guess table names or column names. Only use tables and columns that appear in the schemas provided below.
+15. Focus on the CURRENT question. Use conversation context only to resolve references like "that employee" or "those results", not to change the query strategy.
 
 Current question: {query}
 
-Generate a SQLite SELECT query to answer the question.
-Consider the conversation context for any referenced entities.
-
-CRITICAL DATA VALUE REFERENCE:
-- crew_roster.roster_month is TEXT: 'January', 'February', 'March', etc.
-- crew_roster.roster_status values: 'Awarded', 'Reserve', 'Standby', 'Not Awarded', 'Training', 'Leave', 'Mixed'
-- crew_members.crew_role values: 'Captain', 'First Officer', 'Purser', 'Senior Cabin Crew', 'Cabin Crew'
-- All crew tables use employee_id (TEXT) as universal join key across databases
-
-Rules:
-1. Only SELECT statements
-2. ALWAYS use db_name.table_name syntax (e.g. crew_management.crew_members)
-3. Cross-database JOINs are fully supported - JOIN on shared columns across databases
-4. Add LIMIT 100 unless counting
-5. Use proper date functions for SQLite
-6. No markdown, just raw SQL
-7. When asking about people, include name columns if available in the schemas provided
-8. Search ALL provided schemas for the requested data - do NOT assume data only exists in one database. Use UNION ALL across tables if needed.
-9. Pick the table whose columns best match the user's request. For employee lookups, start from the table with the most person-related columns.
-10. Do NOT invent or guess table/column names. Only use what appears in the schemas provided.
-
-SQL:"""
+Respond with ONLY the SQL query. No explanations, no markdown, just the raw SQL."""
 
 # ============================================================
 # SQL SELF-CORRECTION

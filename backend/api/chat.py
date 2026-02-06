@@ -226,14 +226,21 @@ async def send_message(request: ChatRequest, token: str):
         intent_result.intent = "DATA"  # Mark as DATA for UI display
 
     elif intent_result.intent == "DATA":
-        # SQL Pipeline — build conversation context for follow-up handling
+        # SQL Pipeline — build concise conversation context for follow-up handling
+        # Only include user questions fully; keep assistant responses very brief
+        # to avoid SQL column names / data values misleading the SQL generator
         conversation_context = ""
         if history:
             context_parts = []
-            for msg in history[-5:]:
-                role = msg.get("role", "user").capitalize()
-                content = msg.get("content", "")[:200]
-                context_parts.append(f"{role}: {content}")
+            for msg in history[-4:]:
+                role = msg.get("role", "user")
+                content = msg.get("content", "")
+                if role == "user":
+                    context_parts.append(f"User: {content[:150]}")
+                else:
+                    # Truncate assistant responses aggressively — the LLM only
+                    # needs to know WHAT was answered, not the full data
+                    context_parts.append(f"Assistant: {content[:80]}")
             conversation_context = "\n".join(context_parts)
 
         try:
