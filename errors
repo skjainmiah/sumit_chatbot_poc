@@ -1,217 +1,183 @@
-hey I want to know about 101 employee
+For LAX base and processing date 1/29/2026, why was employeed id 502370 not legal for any sequence
 
-What information do you need about employee 101 (e.g., schedule, contact info, training/compliance status, payroll, or something else)?
+Query returned 100 row(s).
 
-Intent: CLARIFICATION | Confidence: 62%
+Intent: DATA | Confidence: 93%
 
-Response time: 4046ms
-
-
-
-show me all possible information in a compact way
-
-No records were found for employee AA-101 (or roster EmployeeID 101) across the joined systems. That means there’s no matching crew member profile in crew_management.crew_members and/or no matching roster record in crew_roster.reservescrewmember for that identifier, so the query also returns no linked payroll, leave, training, compliance, or safety incident information for this person.
-
-Intent: DATA | Confidence: 86%
-
-🔍 View SQL Query & Results
-
-Generated SQL:
-
-SELECT
-  cm.employee_id,
-  cm.crew_id,
-  cm.first_name,
-  cm.last_name,
-  cm.email,
-  cm.phone,
-  cm.date_of_birth,
-  cm.nationality,
-  cm.passport_number,
-  cm.passport_expiry,
-  cm.hire_date,
-  cm.seniority_number,
-  cm.crew_role,
-  cm.base_airport,
-  cm.status,
-  rcm.EmployeeID AS roster_employee_numeric_id,
-  rcm.ReservesCrewMemberID,
-  rcm.FirstName AS roster_first_name,
-  rcm.LastName AS roster_last_name,
-  rcm.SeniorityNumber AS roster_seniority_number,
-  rcm.BaseDateID,
-  rcm.AVLDays,
-  rcm.AVLDaysWithFT,
-  rcm.ASGDays,
-  rcm.ASGDaysWithFT,
-  rcm.ASGSequence,
-  rcm.ASGStandby,
-  rcm.ETBonFD,
-  rcm.IsVolunteer,
-  rcm.IsSick,
-  rcm.IsCompletelyAvailableReserve,
-  pr.payroll_id,
-  pr.pay_period_start,
-  pr.pay_period_end,
-  pr.base_pay,
-  pr.flight_hours,
-  pr.flight_hour_pay,
-  pr.per_diem_days,
-  pr.per_diem_pay,
-  pr.overtime_hours,
-  pr.overtime_pay,
-  pr.deductions,
-  pr.tax_withheld,
-  pr.net_pay,
-  pr.payment_date,
-  pr.payment_status,
-  lb.balance_id,
-  lb.leave_type,
-  lb.year AS leave_year,
-  lb.entitled_days,
-  lb.used_days,
-  lb.pending_days,
-  lb.carried_over,
-  tr.record_id AS training_record_id,
-  tr.course_id,
-  tr.training_date,
-  tr.completion_date,
-  tr.score,
-  tr.result AS training_result,
-  tr.instructor_name,
-  tr.facility,
-  tr.certificate_number,
-  tr.expiry_date AS training_expiry_date,
-  tr.notes AS training_notes,
-  cc.check_id AS compliance_check_id,
-  cc.check_type,
-  cc.check_date,
-  cc.result AS compliance_result,
-  cc.next_due_date,
-  cc.examiner_name,
-  cc.remarks AS compliance_remarks,
-  cc.is_overdue,
-  si.incident_id,
-  si.flight_id AS incident_flight_id,
-  si.incident_date,
-  si.incident_type,
-  si.severity,
-  si.description AS incident_description,
-  si.corrective_action,
-  si.investigation_status,
-  si.resolution_date
-FROM crew_management.crew_members cm
-LEFT JOIN crew_roster.reservescrewmember rcm
-  ON CAST(rcm.EmployeeID AS TEXT) = REPLACE(cm.employee_id, 'AA-', '')
-LEFT JOIN hr_payroll.payroll_records pr
-  ON pr.crew_id = cm.crew_id
-LEFT JOIN hr_payroll.leave_balances lb
-  ON lb.crew_id = cm.crew_id
-LEFT JOIN compliance_training.training_records tr
-  ON tr.crew_id = cm.crew_id
-LEFT JOIN compliance_training.compliance_checks cc
-  ON cc.crew_id = cm.crew_id
-LEFT JOIN compliance_training.safety_incidents si
-  ON si.reported_by_crew_id = cm.crew_id
-WHERE cm.employee_id = 'AA-101'
-   OR CAST(rcm.EmployeeID AS TEXT) = '101'
-LIMIT 100;
-
-Query returned no results
-
-Response time: 17904ms
-
-You might also want to ask:
+🔍 View SQL Query & Result
 
 
+PS C:\Users\Shaik.Jainmaih\Chat_v1_v2\sumit_chatbot_poc> uvicorn backend.main:app --reload
+INFO:     Will watch for changes in these directories: ['C:\\Users\\Shaik.Jainmaih\\Chat_v1_v2\\sumit_chatbot_poc']
+INFO:     Uvicorn running on http://127.0.0.1:8000 (Press CTRL+C to quit)
+INFO:     Started reloader process [38420] using WatchFiles
+INFO:     Started server process [20840]
+INFO:     Waiting for application startup.
+2026-02-06 19:13:05,359 [INFO] chatbot: Starting Crew Chatbot API...
+2026-02-06 19:13:05,360 [INFO] chatbot: LLM Model: gpt-5-2
+2026-02-06 19:13:05,361 [INFO] chatbot: Mode: SQLite (v1 API)
+2026-02-06 19:13:05,362 [INFO] chatbot: Database Dir: C:\Users\Shaik.Jainmaih\Chat_v1_v2\sumit_chatbot_poc\data\databases
+[OK] database_registry seeded with mock databases (DB_DIR=C:\Users\Shaik.Jainmaih\Chat_v1_v2\sumit_chatbot_poc\data\databases)
+2026-02-06 19:13:05,393 [INFO] chatbot: Database registry paths verified
+INFO:     Application startup complete.
+2026-02-06 19:13:24,363 [INFO] chatbot: POST /api/auth/login -> 200 (657ms)
+INFO:     127.0.0.1:52266 - "POST /api/auth/login HTTP/1.1" 200 OK
+2026-02-06 19:13:29,341 [INFO] chatbot: GET /api/auth/visitor-name -> 200 (11ms)
+INFO:     127.0.0.1:62838 - "GET /api/auth/visitor-name?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhZG1pbiIsInVzZXJfaWQiOjEsInJvbGUiOiJhZG1pbiIsImV4cCI6MTc3MDM4OTAwNH0.uWDmD-_CEO-OSZt6dCkGYOvrmBd-ZueIb_uKtX097fY HTTP/1.1" 200 OK
+2026-02-06 19:13:30,179 [INFO] chatbot: GET /api/chat/conversations -> 200 (7ms)
+INFO:     127.0.0.1:62840 - "GET /api/chat/conversations?limit=10&token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhZG1pbiIsInVzZXJfaWQiOjEsInJvbGUiOiJhZG1pbiIsImV4cCI6MTc3MDM4OTAwNH0.uWDmD-_CEO-OSZt6dCkGYOvrmBd-ZueIb_uKtX097fY HTTP/1.1" 200 OK
+2026-02-06 19:13:37,897 [INFO] chatbot: GET /api/admin/stats -> 200 (28ms)
+INFO:     127.0.0.1:65075 - "GET /api/admin/stats?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhZG1pbiIsInVzZXJfaWQiOjEsInJvbGUiOiJhZG1pbiIsImV4cCI6MTc3MDM4OTAwNH0.uWDmD-_CEO-OSZt6dCkGYOvrmBd-ZueIb_uKtX097fY HTTP/1.1" 200 OK
+2026-02-06 19:13:38,811 [INFO] chatbot: GET /api/admin/users -> 200 (50ms)
+INFO:     127.0.0.1:65076 - "GET /api/admin/users?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhZG1pbiIsInVzZXJfaWQiOjEsInJvbGUiOiJhZG1pbiIsImV4cCI6MTc3MDM4OTAwNH0.uWDmD-_CEO-OSZt6dCkGYOvrmBd-ZueIb_uKtX097fY HTTP/1.1" 200 OK
+2026-02-06 19:13:39,779 [INFO] chatbot: GET /api/admin/feedback -> 200 (50ms)
+INFO:     127.0.0.1:65077 - "GET /api/admin/feedback?limit=100&token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhZG1pbiIsInVzZXJfaWQiOjEsInJvbGUiOiJhZG1pbiIsImV4cCI6MTc3MDM4OTAwNH0.uWDmD-_CEO-OSZt6dCkGYOvrmBd-ZueIb_uKtX097fY HTTP/1.1" 200 OK
+2026-02-06 19:13:40,669 [INFO] chatbot: GET /api/database/upload-history -> 200 (8ms)
+INFO:     127.0.0.1:65079 - "GET /api/database/upload-history?limit=10&token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhZG1pbiIsInVzZXJfaWQiOjEsInJvbGUiOiJhZG1pbiIsImV4cCI6MTc3MDM4OTAwNH0.uWDmD-_CEO-OSZt6dCkGYOvrmBd-ZueIb_uKtX097fY HTTP/1.1" 200 OK
+2026-02-06 19:13:41,562 [INFO] chatbot: GET /api/database/list -> 200 (6ms)
+INFO:     127.0.0.1:65080 - "GET /api/database/list?include_hidden=true&token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhZG1pbiIsInVzZXJfaWQiOjEsInJvbGUiOiJhZG1pbiIsImV4cCI6MTc3MDM4OTAwNH0.uWDmD-_CEO-OSZt6dCkGYOvrmBd-ZueIb_uKtX097fY HTTP/1.1" 200 OK
+2026-02-06 19:13:59,783 [INFO] chatbot: PUT /api/database/crew_management/visibility -> 200 (77ms)
+INFO:     127.0.0.1:63453 - "PUT /api/database/crew_management/visibility?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhZG1pbiIsInVzZXJfaWQiOjEsInJvbGUiOiJhZG1pbiIsImV4cCI6MTc3MDM4OTAwNH0.uWDmD-_CEO-OSZt6dCkGYOvrmBd-ZueIb_uKtX097fY HTTP/1.1" 200 OK
+2026-02-06 19:14:00,747 [INFO] chatbot: PUT /api/database/flight_operations/visibility -> 200 (103ms)
+INFO:     127.0.0.1:63455 - "PUT /api/database/flight_operations/visibility?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhZG1pbiIsInVzZXJfaWQiOjEsInJvbGUiOiJhZG1pbiIsImV4cCI6MTc3MDM4OTAwNH0.uWDmD-_CEO-OSZt6dCkGYOvrmBd-ZueIb_uKtX097fY HTTP/1.1" 200 OK
+2026-02-06 19:14:01,604 [INFO] chatbot: PUT /api/database/hr_payroll/visibility -> 200 (43ms)
+INFO:     127.0.0.1:63456 - "PUT /api/database/hr_payroll/visibility?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhZG1pbiIsInVzZXJfaWQiOjEsInJvbGUiOiJhZG1pbiIsImV4cCI6MTc3MDM4OTAwNH0.uWDmD-_CEO-OSZt6dCkGYOvrmBd-ZueIb_uKtX097fY HTTP/1.1" 200 OK
+2026-02-06 19:14:02,619 [INFO] chatbot: GET /api/admin/stats -> 200 (12ms)
+INFO:     127.0.0.1:63457 - "GET /api/admin/stats?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhZG1pbiIsInVzZXJfaWQiOjEsInJvbGUiOiJhZG1pbiIsImV4cCI6MTc3MDM4OTAwNH0.uWDmD-_CEO-OSZt6dCkGYOvrmBd-ZueIb_uKtX097fY HTTP/1.1" 200 OK
+2026-02-06 19:14:02,827 [INFO] chatbot: PUT /api/database/compliance_training/visibility -> 200 (64ms)
+INFO:     127.0.0.1:63458 - "PUT /api/database/compliance_training/visibility?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhZG1pbiIsInVzZXJfaWQiOjEsInJvbGUiOiJhZG1pbiIsImV4cCI6MTc3MDM4OTAwNH0.uWDmD-_CEO-OSZt6dCkGYOvrmBd-ZueIb_uKtX097fY HTTP/1.1" 200 OK
+2026-02-06 19:14:03,650 [INFO] chatbot: GET /api/admin/stats -> 200 (12ms)
+INFO:     127.0.0.1:63459 - "GET /api/admin/stats?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhZG1pbiIsInVzZXJfaWQiOjEsInJvbGUiOiJhZG1pbiIsImV4cCI6MTc3MDM4OTAwNH0.uWDmD-_CEO-OSZt6dCkGYOvrmBd-ZueIb_uKtX097fY HTTP/1.1" 200 OK
+2026-02-06 19:14:04,526 [INFO] chatbot: GET /api/admin/users -> 200 (9ms)
+INFO:     127.0.0.1:50803 - "GET /api/admin/users?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhZG1pbiIsInVzZXJfaWQiOjEsInJvbGUiOiJhZG1pbiIsImV4cCI6MTc3MDM4OTAwNH0.uWDmD-_CEO-OSZt6dCkGYOvrmBd-ZueIb_uKtX097fY HTTP/1.1" 200 OK
+2026-02-06 19:14:05,449 [INFO] chatbot: GET /api/admin/feedback -> 200 (4ms)
+INFO:     127.0.0.1:59448 - "GET /api/admin/feedback?limit=100&token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhZG1pbiIsInVzZXJfaWQiOjEsInJvbGUiOiJhZG1pbiIsImV4cCI6MTc3MDM4OTAwNH0.uWDmD-_CEO-OSZt6dCkGYOvrmBd-ZueIb_uKtX097fY HTTP/1.1" 200 OK
+2026-02-06 19:14:05,910 [INFO] chatbot: GET /api/chat/conversations -> 200 (5ms)
+INFO:     127.0.0.1:59450 - "GET /api/chat/conversations?limit=10&token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhZG1pbiIsInVzZXJfaWQiOjEsInJvbGUiOiJhZG1pbiIsImV4cCI6MTc3MDM4OTAwNH0.uWDmD-_CEO-OSZt6dCkGYOvrmBd-ZueIb_uKtX097fY HTTP/1.1" 200 OK
+2026-02-06 19:14:10,115 [INFO] chatbot.api.chat: V1 request: conv=55 query="For LAX base and processing date 1/29/2026, why was employeed id 502370 not legal for any sequence"
+LLM Client: Chat API at https://quasarmarket.coforge.com/qag/llmrouter-api/v2/chat/completions
+LLM Client: Embedding API at https://quasarmarket.coforge.com/qag/llmrouter-api/v2/text/embeddings
+LLM Client: Chat fallback at https://quasarmarket.coforge.com/qag/llmrouter-api/v3/chat/completions        
+LLM Client: Embedding fallback at https://quasarmarket.coforge.com/qag/llmrouter-api/v3/text/embeddings    
+  SSL verification: disabled
+2026-02-06 19:14:10,125 [INFO] chatbot.llm.client: [chat_completion] model=gpt-5-2 json_mode=True sys_prompt_chars=0 user_preview="You are an intent classifier for an American Airlines crew management chatbot.     
+
+Classify the user's query into exactly o..."
+2026-02-06 19:14:10,127 [INFO] chatbot.llm.client: [chat_completion] POST https://quasarmarket.coforge.com/qag/llmrouter-api/v2/chat/completions | model=gpt-5-2
+2026-02-06 19:14:13,925 [INFO] chatbot.llm.client: [chat_completion] Response status=200 | 3798ms
+2026-02-06 19:14:13,971 [INFO] chatbot.llm.client: [chat_completion] OK 3844ms | response_chars=416
+2026-02-06 19:14:13,987 [INFO] chatbot.api.chat: V1 intent: DATA confidence=0.93
+2026-02-06 19:14:14,024 [INFO] chatbot.sql.pipeline_v1: [pipeline] START query="For LAX base and processing date 1/29/2026, why was employeed id 502370 not legal for any sequence" context_len=0
+2026-02-06 19:14:14,027 [INFO] chatbot.sql.pipeline_v1: [retrieve_schemas] query="For LAX base and processing date 1/29/2026, why was employeed id 502370 not lega" top_k=5 registry_dbs={'crew_roster'}
+2026-02-06 19:14:14,031 [INFO] chatbot.sql.schema_cache: Schema cache loaded: 42 tables from C:\Users\Shaik.Jainmaih\Chat_v1_v2\sumit_chatbot_poc\data\databases\app.db
+2026-02-06 19:14:14,031 [INFO] chatbot.sql.schema_cache: Schema cache databases: {'hr_payroll', 'compliance_training', 'flight_operations', 'crew_roster', 'crew_management', 'fleet_maintenance'}
+2026-02-06 19:14:14,033 [INFO] chatbot.sql.pipeline_v1: [retrieve_schemas] Keyword match returned 9 schemas: ['crew_roster.reserveslegalitycontextdetails', 'crew_roster.basedate', 'fleet_maintenance.aircraft_inspections', 'fleet_maintenance.maintenance_staff', 'crew_management.crew_members']
+2026-02-06 19:14:14,033 [WARNING] chatbot.sql.pipeline_v1: [retrieve_schemas] Registry filter removed 4 schemas (registry has: {'crew_roster'})
+2026-02-06 19:14:14,035 [INFO] chatbot.sql.pipeline_v1: [pipeline] Using 5 schemas: ['crew_roster.reserveslegalitycontextdetails', 'crew_roster.basedate', 'crew_roster.base', 'crew_roster.reservescrewmember', 'crew_roster.reserveslegality']
+2026-02-06 19:14:14,037 [INFO] chatbot.sql.pipeline_v1: [generate_sql] Sending query to LLM with 5 schemas, prompt_len=7357
+2026-02-06 19:14:14,037 [INFO] chatbot.llm.client: [chat_completion] model=gpt-5-2 json_mode=False sys_prompt_chars=0 user_preview="You are a SQL expert for an American Airlines crew management database system.    
+Generate a SQLite SELECT query to answer ..."
+2026-02-06 19:14:14,038 [INFO] chatbot.llm.client: [chat_completion] POST https://quasarmarket.coforge.com/qag/llmrouter-api/v2/chat/completions | model=gpt-5-2
+2026-02-06 19:14:21,088 [INFO] chatbot.llm.client: [chat_completion] Response status=200 | 7050ms
+2026-02-06 19:14:21,091 [INFO] chatbot.llm.client: [chat_completion] OK 7053ms | response_chars=1140
+2026-02-06 19:14:21,092 [INFO] chatbot.sql.pipeline_v1: [generate_sql] LLM responded in 7054ms | sql="SELECT
+  b.BaseCD AS base_code,
+  bd.ProcessingDate AS processing_date,
+  rc.EmployeeID AS employee_id,
+  rc.FirstName AS first_name,
+  rc.LastName AS"
+2026-02-06 19:14:21,094 [INFO] chatbot.sql.pipeline_v1: [pipeline] Execute attempt 1/3
+2026-02-06 19:14:21,096 [INFO] chatbot.sql.pipeline_v1: [execute_sql] Executing: SELECT
+  b.BaseCD AS base_code,
+  bd.ProcessingDate AS processing_date,
+  rc.EmployeeID AS employee_id,
+  rc.FirstName AS first_name,
+  rc.LastName AS last_name,
+  rl.ReservesLegalityID AS reserves_le
+2026-02-06 19:14:21,224 [INFO] chatbot.sql.pipeline_v1: [execute_sql] OK 127ms | 100 rows, 13 columns
+2026-02-06 19:14:21,225 [INFO] chatbot.sql.pipeline_v1: [pipeline] SQL executed OK | 100 rows
+2026-02-06 19:14:21,226 [INFO] chatbot.llm.client: [chat_completion] model=gpt-5-2 json_mode=False sys_prompt_chars=0 user_preview="You are a helpful assistant summarizing database query results for airline crew staff.
+
+User's original question: For LA..."
+2026-02-06 19:14:21,227 [INFO] chatbot.llm.client: [chat_completion] POST https://quasarmarket.coforge.com/qag/llmrouter-api/v2/chat/completions | model=gpt-5-2
+2026-02-06 19:15:01,834 [INFO] chatbot.llm.client: [chat_completion] Response status=200 | 40607ms
+2026-02-06 19:15:01,837 [INFO] chatbot.llm.client: [chat_completion] OK 40610ms | response_chars=0
+2026-02-06 19:15:01,838 [WARNING] chatbot.sql.pipeline_v1: [pipeline] LLM returned empty summary, using fallback
+2026-02-06 19:15:01,839 [INFO] chatbot.sql.pipeline_v1: [pipeline] DONE success | attempts=1 | 47814ms | 100 rows
+2026-02-06 19:15:01,839 [INFO] chatbot.api.chat: V1 response: intent=DATA has_sql=True has_results=True suggestions=0 time=51764ms
+2026-02-06 19:15:01,927 [INFO] chatbot: POST /api/chat/message -> 200 (51854ms)
+INFO:     127.0.0.1:57877 - "POST /api/chat/message?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhZG1pbiIsInVzZXJfaWQiOjEsInJvbGUiOiJhZG1pbiIsImV4cCI6MTc3MDM4OTAwNH0.uWDmD-_CEO-OSZt6dCkGYOvrmBd-ZueIb_uKtX097fY HTTP/1.1" 200 OK
+2026-02-06 19:15:02,963 [INFO] chatbot: GET /api/chat/conversations -> 200 (3ms)
+INFO:     127.0.0.1:64347 - "GET /api/chat/conversations?limit=10&token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhZG1pbiIsInVzZXJfaWQiOjEsInJvbGUiOiJhZG1pbiIsImV4cCI6MTc3MDM4OTAwNH0.uWDmD-_CEO-OSZt6dCkGYOvrmBd-ZueIb_uKtX097fY HTTP/1.1" 200 OK
 
 
+2026-02-06 19:13:05,359 [INFO] chatbot: Starting Crew Chatbot API...
+2026-02-06 19:13:05,360 [INFO] chatbot: LLM Model: gpt-5-2
+2026-02-06 19:13:05,361 [INFO] chatbot: Mode: SQLite (v1 API)
+2026-02-06 19:13:05,362 [INFO] chatbot: Database Dir: C:\Users\Shaik.Jainmaih\Chat_v1_v2\sumit_chatbot_poc\data\databases
+2026-02-06 19:13:05,393 [INFO] chatbot: Database registry paths verified
+2026-02-06 19:13:24,363 [INFO] chatbot: POST /api/auth/login -> 200 (657ms)
+2026-02-06 19:13:29,341 [INFO] chatbot: GET /api/auth/visitor-name -> 200 (11ms)
+2026-02-06 19:13:30,179 [INFO] chatbot: GET /api/chat/conversations -> 200 (7ms)
+2026-02-06 19:13:37,897 [INFO] chatbot: GET /api/admin/stats -> 200 (28ms)
+2026-02-06 19:13:38,811 [INFO] chatbot: GET /api/admin/users -> 200 (50ms)
+2026-02-06 19:13:39,779 [INFO] chatbot: GET /api/admin/feedback -> 200 (50ms)
+2026-02-06 19:13:40,669 [INFO] chatbot: GET /api/database/upload-history -> 200 (8ms)
+2026-02-06 19:13:41,562 [INFO] chatbot: GET /api/database/list -> 200 (6ms)
+2026-02-06 19:13:59,783 [INFO] chatbot: PUT /api/database/crew_management/visibility -> 200 (77ms)
+2026-02-06 19:14:00,747 [INFO] chatbot: PUT /api/database/flight_operations/visibility -> 200 (103ms)
+2026-02-06 19:14:01,604 [INFO] chatbot: PUT /api/database/hr_payroll/visibility -> 200 (43ms)
+2026-02-06 19:14:02,619 [INFO] chatbot: GET /api/admin/stats -> 200 (12ms)
+2026-02-06 19:14:02,827 [INFO] chatbot: PUT /api/database/compliance_training/visibility -> 200 (64ms)
+2026-02-06 19:14:03,650 [INFO] chatbot: GET /api/admin/stats -> 200 (12ms)
+2026-02-06 19:14:04,526 [INFO] chatbot: GET /api/admin/users -> 200 (9ms)
+2026-02-06 19:14:05,449 [INFO] chatbot: GET /api/admin/feedback -> 200 (4ms)
+2026-02-06 19:14:05,910 [INFO] chatbot: GET /api/chat/conversations -> 200 (5ms)
+2026-02-06 19:14:10,115 [INFO] chatbot.api.chat: V1 request: conv=55 query="For LAX base and processing date 1/29/2026, why was employeed id 502370 not legal for any sequence"
+2026-02-06 19:14:10,125 [INFO] chatbot.llm.client: [chat_completion] model=gpt-5-2 json_mode=True sys_prompt_chars=0 user_preview="You are an intent classifier for an American Airlines crew management chatbot.
 
+Classify the user's query into exactly o..."
+2026-02-06 19:14:10,127 [INFO] chatbot.llm.client: [chat_completion] POST https://quasarmarket.coforge.com/qag/llmrouter-api/v2/chat/completions | model=gpt-5-2
+2026-02-06 19:14:13,925 [INFO] chatbot.llm.client: [chat_completion] Response status=200 | 3798ms
+2026-02-06 19:14:13,971 [INFO] chatbot.llm.client: [chat_completion] OK 3844ms | response_chars=416
+2026-02-06 19:14:13,987 [INFO] chatbot.api.chat: V1 intent: DATA confidence=0.93
+2026-02-06 19:14:14,024 [INFO] chatbot.sql.pipeline_v1: [pipeline] START query="For LAX base and processing date 1/29/2026, why was employeed id 502370 not legal for any sequence" context_len=0
+2026-02-06 19:14:14,027 [INFO] chatbot.sql.pipeline_v1: [retrieve_schemas] query="For LAX base and processing date 1/29/2026, why was employeed id 502370 not lega" top_k=5 registry_dbs={'crew_roster'}
+2026-02-06 19:14:14,031 [INFO] chatbot.sql.schema_cache: Schema cache loaded: 42 tables from C:\Users\Shaik.Jainmaih\Chat_v1_v2\sumit_chatbot_poc\data\databases\app.db
+2026-02-06 19:14:14,031 [INFO] chatbot.sql.schema_cache: Schema cache databases: {'hr_payroll', 'compliance_training', 'flight_operations', 'crew_roster', 'crew_management', 'fleet_maintenance'}
+2026-02-06 19:14:14,033 [INFO] chatbot.sql.pipeline_v1: [retrieve_schemas] Keyword match returned 9 schemas: ['crew_roster.reserveslegalitycontextdetails', 'crew_roster.basedate', 'fleet_maintenance.aircraft_inspections', 'fleet_maintenance.maintenance_staff', 'crew_management.crew_members']
+2026-02-06 19:14:14,033 [WARNING] chatbot.sql.pipeline_v1: [retrieve_schemas] Registry filter removed 4 schemas (registry has: {'crew_roster'})
+2026-02-06 19:14:14,035 [INFO] chatbot.sql.pipeline_v1: [pipeline] Using 5 schemas: ['crew_roster.reserveslegalitycontextdetails', 'crew_roster.basedate', 'crew_roster.base', 'crew_roster.reservescrewmember', 'crew_roster.reserveslegality']
+2026-02-06 19:14:14,037 [INFO] chatbot.sql.pipeline_v1: [generate_sql] Sending query to LLM with 5 schemas, prompt_len=7357
+2026-02-06 19:14:14,037 [INFO] chatbot.llm.client: [chat_completion] model=gpt-5-2 json_mode=False sys_prompt_chars=0 user_preview="You are a SQL expert for an American Airlines crew management database system.
+Generate a SQLite SELECT query to answer ..."
+2026-02-06 19:14:14,038 [INFO] chatbot.llm.client: [chat_completion] POST https://quasarmarket.coforge.com/qag/llmrouter-api/v2/chat/completions | model=gpt-5-2
+2026-02-06 19:14:21,088 [INFO] chatbot.llm.client: [chat_completion] Response status=200 | 7050ms
+2026-02-06 19:14:21,091 [INFO] chatbot.llm.client: [chat_completion] OK 7053ms | response_chars=1140
+2026-02-06 19:14:21,092 [INFO] chatbot.sql.pipeline_v1: [generate_sql] LLM responded in 7054ms | sql="SELECT
+  b.BaseCD AS base_code,
+  bd.ProcessingDate AS processing_date,
+  rc.EmployeeID AS employee_id,
+  rc.FirstName AS first_name,
+  rc.LastName AS"
+2026-02-06 19:14:21,094 [INFO] chatbot.sql.pipeline_v1: [pipeline] Execute attempt 1/3
+2026-02-06 19:14:21,096 [INFO] chatbot.sql.pipeline_v1: [execute_sql] Executing: SELECT
+  b.BaseCD AS base_code,
+  bd.ProcessingDate AS processing_date,
+  rc.EmployeeID AS employee_id,
+  rc.FirstName AS first_name,
+  rc.LastName AS last_name,
+  rl.ReservesLegalityID AS reserves_le
+2026-02-06 19:14:21,224 [INFO] chatbot.sql.pipeline_v1: [execute_sql] OK 127ms | 100 rows, 13 columns
+2026-02-06 19:14:21,225 [INFO] chatbot.sql.pipeline_v1: [pipeline] SQL executed OK | 100 rows
+2026-02-06 19:14:21,226 [INFO] chatbot.llm.client: [chat_completion] model=gpt-5-2 json_mode=False sys_prompt_chars=0 user_preview="You are a helpful assistant summarizing database query results for airline crew staff.
 
-can you check in entire dbs
-
-No matching records were found anywhere in the tables checked for employee IDs “101” or “AA-101”. Specifically, the query returned 0 rows, meaning there were no entries for those IDs in:
-
-crew_roster.reserveslegality (reserve legality records)
-compliance_training.compliance_checks (training/compliance checks)
-crew_management.crew_documents (uploaded/verified crew documents)
-compliance_training.audit_logs (audit log entries referencing those IDs, including in old/new values)
-In context of “check in entire dbs,” this indicates that within the specific tables searched, the database contains no records linked to those crew identifiers (or they may exist under a different ID format).
-
-Intent: DATA | Confidence: 88%
-
-🔍 View SQL Query & Results
-
-Generated SQL:
-
-SELECT *
-FROM (
-  SELECT 'crew_roster.reserveslegality' AS source_table,
-         CAST(rl.ReservesCrewMemberID AS TEXT) AS employee_id,
-         NULL AS first_name,
-         NULL AS last_name,
-         'ReservesLegalityID=' || rl.ReservesLegalityID ||
-         ', BaseDateID=' || rl.BaseDateID ||
-         ', SequencePositionDetailsID=' || rl.SequencePositionDetailsID ||
-         ', StandByID=' || rl.StandByID ||
-         ', MovableDays=' || rl.MovableDays ||
-         ', LineHolderDays=' || rl.LineHolderDays AS details
-  FROM crew_roster.reserveslegality rl
-  WHERE CAST(rl.ReservesCrewMemberID AS TEXT) IN ('101','AA-101')
-
-  UNION ALL
-
-  SELECT 'compliance_training.compliance_checks' AS source_table,
-         CAST(cc.crew_id AS TEXT) AS employee_id,
-         NULL AS first_name,
-         NULL AS last_name,
-         'check_id=' || cc.check_id ||
-         ', check_type=' || cc.check_type ||
-         ', check_date=' || cc.check_date ||
-         ', result=' || cc.result ||
-         ', next_due_date=' || cc.next_due_date ||
-         ', examiner_name=' || cc.examiner_name ||
-         ', is_overdue=' || cc.is_overdue ||
-         ', remarks=' || COALESCE(cc.remarks,'') AS details
-  FROM compliance_training.compliance_checks cc
-  WHERE CAST(cc.crew_id AS TEXT) IN ('101','AA-101')
-
-  UNION ALL
-
-  SELECT 'crew_management.crew_documents' AS source_table,
-         CAST(cd.crew_id AS TEXT) AS employee_id,
-         NULL AS first_name,
-         NULL AS last_name,
-         'document_id=' || cd.document_id ||
-         ', document_type=' || cd.document_type ||
-         ', document_name=' || cd.document_name ||
-         ', upload_date=' || cd.upload_date ||
-         ', expiry_date=' || cd.expiry_date ||
-         ', verified=' || cd.verified ||
-         ', verified_by=' || COALESCE(cd.verified_by,'') ||
-         ', file_path=' || COALESCE(cd.file_path,'') AS details
-  FROM crew_management.crew_documents cd
-  WHERE CAST(cd.crew_id AS TEXT) IN ('101','AA-101')
-
-  UNION ALL
-
-  SELECT 'compliance_training.audit_logs' AS source_table,
-         CAST(al.entity_id AS TEXT) AS employee_id,
-         NULL AS first_name,
-         NULL AS last_name,
-         'log_id=' || al.log_id ||
-         ', entity_type=' || al.entity_type ||
-         ', action=' || al.action ||
-         ', performed_by=' || al.performed_by ||
-         ', ip_address=' || COALESCE(al.ip_address,'') ||
-         ', performed_at=' || al.performed_at ||
-         ', old_value=' || COALESCE(al.old_value,'') ||
-         ', new_value=' || COALESCE(al.new_value,'') AS details
-  FROM compliance_training.audit_logs al
-  WHERE CAST(al.entity_id AS TEXT) IN ('101','AA-101')
-     OR al.old_value LIKE '%101%'
-     OR al.new_value LIKE '%101%'
-) x
-LIMIT 100;
-
-Query returned no results
+User's original question: For LA..."
+2026-02-06 19:14:21,227 [INFO] chatbot.llm.client: [chat_completion] POST https://quasarmarket.coforge.com/qag/llmrouter-api/v2/chat/completions | model=gpt-5-2
+2026-02-06 19:15:01,834 [INFO] chatbot.llm.client: [chat_completion] Response status=200 | 40607ms
+2026-02-06 19:15:01,837 [INFO] chatbot.llm.client: [chat_completion] OK 40610ms | response_chars=0
+2026-02-06 19:15:01,838 [WARNING] chatbot.sql.pipeline_v1: [pipeline] LLM returned empty summary, using fallback
+2026-02-06 19:15:01,839 [INFO] chatbot.sql.pipeline_v1: [pipeline] DONE success | attempts=1 | 47814ms | 100 rows
+2026-02-06 19:15:01,839 [INFO] chatbot.api.chat: V1 response: intent=DATA has_sql=True has_results=True suggestions=0 time=51764ms
+2026-02-06 19:15:01,927 [INFO] chatbot: POST /api/chat/message -> 200 (51854ms)
+2026-02-06 19:15:02,963 [INFO] chatbot: GET /api/chat/conversations -> 200 (3ms)
