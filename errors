@@ -1,914 +1,316 @@
-2026-02-06 21:01:15,418 [INFO] chatbot: Starting Crew Chatbot API...
-2026-02-06 21:01:15,418 [INFO] chatbot: LLM Model: gpt-5-2
-2026-02-06 21:01:15,418 [INFO] chatbot: Mode: SQLite (v1 API)
-2026-02-06 21:01:15,418 [INFO] chatbot: Database Dir: C:\Users\Shaik.Jainmaih\Chat_v1_v2\sumit_chatbot_poc\data\databases
-2026-02-06 21:01:15,428 [INFO] chatbot: Database registry paths verified
-2026-02-06 21:01:28,899 [INFO] chatbot: POST /api/auth/login -> 200 (532ms)
-2026-02-06 21:01:31,392 [INFO] chatbot: GET /api/auth/visitor-name -> 200 (1ms)
-2026-02-06 21:01:31,822 [INFO] chatbot: GET /api/chat/conversations -> 200 (2ms)
-2026-02-06 21:01:36,693 [INFO] chatbot: GET /api/admin/stats -> 200 (14ms)
-2026-02-06 21:01:37,038 [INFO] chatbot: GET /api/admin/users -> 200 (1ms)
-2026-02-06 21:01:37,475 [INFO] chatbot: GET /api/admin/feedback -> 200 (4ms)
-2026-02-06 21:01:38,046 [INFO] chatbot: GET /api/database/upload-history -> 200 (5ms)
-2026-02-06 21:01:38,776 [INFO] chatbot: GET /api/database/list -> 200 (5ms)
-2026-02-06 21:01:42,998 [INFO] chatbot: PUT /api/database/crew_management/visibility -> 200 (23ms)
-2026-02-06 21:01:43,544 [INFO] chatbot: GET /api/admin/stats -> 200 (7ms)
-2026-02-06 21:01:44,014 [INFO] chatbot: PUT /api/database/flight_operations/visibility -> 200 (18ms)
-2026-02-06 21:01:44,581 [INFO] chatbot: GET /api/admin/stats -> 200 (10ms)
-2026-02-06 21:01:45,176 [INFO] chatbot: GET /api/admin/users -> 200 (3ms)
-2026-02-06 21:01:45,322 [INFO] chatbot: PUT /api/database/hr_payroll/visibility -> 200 (20ms)
-2026-02-06 21:01:45,734 [INFO] chatbot: GET /api/admin/stats -> 200 (5ms)
-2026-02-06 21:01:46,118 [INFO] chatbot: PUT /api/database/compliance_training/visibility -> 200 (58ms)
-2026-02-06 21:01:46,612 [INFO] chatbot: GET /api/admin/stats -> 200 (9ms)
-2026-02-06 21:01:47,104 [INFO] chatbot: GET /api/admin/users -> 200 (3ms)
-2026-02-06 21:01:47,668 [INFO] chatbot: GET /api/admin/feedback -> 200 (3ms)
-2026-02-06 21:01:48,201 [INFO] chatbot: GET /api/database/upload-history -> 200 (3ms)
-2026-02-06 21:01:48,446 [INFO] chatbot: GET /api/chat/conversations -> 200 (2ms)
-2026-02-06 21:01:50,941 [INFO] chatbot.api.chat: V1 request: conv=60 query="Hi"
-2026-02-06 21:01:50,945 [INFO] chatbot.api.chat: V1 intent: GENERAL confidence=0.99
-2026-02-06 21:01:50,974 [INFO] chatbot.api.chat: V1 response: intent=GENERAL has_sql=False has_results=False suggestions=0 time=55ms
-2026-02-06 21:01:51,008 [INFO] chatbot: POST /api/chat/message -> 200 (90ms)
-2026-02-06 21:01:51,705 [INFO] chatbot: GET /api/chat/conversations -> 200 (3ms)
-2026-02-06 21:02:28,048 [INFO] chatbot.api.chat: V1 request: conv=60 query="For LAX base and processing date 1/29/2026, why was employee id 502370 not legal for any sequence"
-2026-02-06 21:02:28,050 [INFO] chatbot.llm.client: [chat_completion] model=gpt-5-2 json_mode=True sys_prompt_chars=0 user_preview="You are an intent classifier for an American Airlines crew management chatbot.
+2026-02-06 21:15:53,649 [INFO] chatbot: Starting Crew Chatbot API...
+2026-02-06 21:15:53,650 [INFO] chatbot: LLM Model: gpt-5-2
+2026-02-06 21:15:53,650 [INFO] chatbot: Mode: SQLite (v1 API)
+2026-02-06 21:15:53,651 [INFO] chatbot: Database Dir: C:\Users\Shaik.Jainmaih\Chat_v1_v2\sumit_chatbot_poc\data\databases
+2026-02-06 21:15:53,715 [INFO] chatbot: Database registry paths verified
+2026-02-06 21:16:07,712 [INFO] chatbot: POST /api/auth/login -> 200 (589ms)
+2026-02-06 21:16:11,253 [INFO] chatbot: GET /api/auth/visitor-name -> 200 (4ms)
+2026-02-06 21:16:12,087 [INFO] chatbot: GET /api/chat/conversations -> 200 (6ms)
+2026-02-06 21:16:20,358 [INFO] chatbot.api.chat: V1 request: conv=61 query="Hi"
+2026-02-06 21:16:20,362 [INFO] chatbot.api.chat: V1 intent: GENERAL confidence=0.99
+2026-02-06 21:16:20,406 [INFO] chatbot.api.chat: V1 response: intent=GENERAL has_sql=False has_results=False suggestions=0 time=73ms
+2026-02-06 21:16:20,450 [INFO] chatbot: POST /api/chat/message -> 200 (119ms)
+2026-02-06 21:16:21,370 [INFO] chatbot: GET /api/chat/conversations -> 200 (5ms)
+2026-02-06 21:16:32,303 [INFO] chatbot.api.chat: V1 request: conv=61 query="For LAX base and processing date 1/29/2026, why was employeed id 502370 not legal for any sequence"
+2026-02-06 21:16:32,305 [INFO] chatbot.llm.client: [chat_completion] model=gpt-5-2 json_mode=True sys_prompt_chars=0 user_preview="You are an intent classifier for an American Airlines crew management chatbot.
 
 Classify the user's query into exactly o..."
-2026-02-06 21:02:28,051 [INFO] chatbot.llm.client: [chat_completion] POST https://quasarmarket.coforge.com/qag/llmrouter-api/v2/chat/completions | model=gpt-5-2
-2026-02-06 21:02:31,741 [INFO] chatbot.llm.client: [chat_completion] Response status=200 | 3690ms
-2026-02-06 21:02:31,743 [INFO] chatbot.llm.client: [chat_completion] OK 3692ms | response_chars=394
-2026-02-06 21:02:31,744 [INFO] chatbot.api.chat: V1 intent: DATA confidence=0.93
-2026-02-06 21:02:31,776 [INFO] chatbot.sql.pipeline_v1: [pipeline] START query="For LAX base and processing date 1/29/2026, why was employee id 502370 not legal for any sequence" context_len=174
-2026-02-06 21:02:31,779 [INFO] chatbot.sql.pipeline_v1: [retrieve_schemas] query="For LAX base and processing date 1/29/2026, why was employee id 502370 not legal" top_k=5 registry_dbs={'crew_roster'}
-2026-02-06 21:02:31,782 [INFO] chatbot.sql.schema_cache: Schema cache loaded: 42 tables from C:\Users\Shaik.Jainmaih\Chat_v1_v2\sumit_chatbot_poc\data\databases\app.db
-2026-02-06 21:02:31,782 [INFO] chatbot.sql.schema_cache: Schema cache databases: {'flight_operations', 'crew_roster', 'compliance_training', 'hr_payroll', 'fleet_maintenance', 'crew_management'}
-2026-02-06 21:02:31,784 [INFO] chatbot.sql.pipeline_v1: [retrieve_schemas] Keyword match returned 9 schemas: ['flight_operations.airports', 'crew_management.crew_members', 'crew_roster.sequencepositiondetails', 'fleet_maintenance.spare_parts_inventory', 'crew_roster.reserveslegalitycontextdetails']
-2026-02-06 21:02:31,785 [WARNING] chatbot.sql.pipeline_v1: [retrieve_schemas] Registry filter removed 5 schemas (registry has: {'crew_roster'})
-2026-02-06 21:02:31,788 [INFO] chatbot.llm.client: [embedding] Single text, chars=97
-2026-02-06 21:02:31,789 [INFO] chatbot.llm.client: [embedding_batch] 1 texts, total_chars=97
-2026-02-06 21:02:31,790 [INFO] chatbot.llm.client: [embedding] POST https://quasarmarket.coforge.com/qag/llmrouter-api/v2/text/embeddings | model=text-embeddings
-2026-02-06 21:02:33,060 [INFO] chatbot.llm.client: [embedding] Response status=200 | 1270ms
-2026-02-06 21:02:33,063 [INFO] chatbot.llm.client: [embedding] OK 1273ms | 1 embeddings, dims=746
-2026-02-06 21:02:33,064 [INFO] chatbot.sql.pipeline_v1: [pipeline] Using 7 schemas: ['crew_roster.sequencepositiondetails', 'crew_roster.reserveslegalitycontextdetails', 'crew_roster.reservescrewmember', 'crew_roster.base', 'crew_roster.basedate']
-2026-02-06 21:02:33,064 [INFO] chatbot.sql.pipeline_v1: [generate_sql] Sending query to LLM with 7 schemas, prompt_len=7206
-2026-02-06 21:02:33,070 [INFO] chatbot.llm.client: [chat_completion] model=gpt-5-2 json_mode=False sys_prompt_chars=0 user_preview="You are a SQL expert for an American Airlines crew management database system.
-
-Previous conversation context:
-User: Hi
-..."
-2026-02-06 21:02:33,071 [INFO] chatbot.llm.client: [chat_completion] POST https://quasarmarket.coforge.com/qag/llmrouter-api/v2/chat/completions | model=gpt-5-2
-2026-02-06 21:02:43,070 [INFO] chatbot.llm.client: [chat_completion] Response status=200 | 9999ms
-2026-02-06 21:02:43,072 [INFO] chatbot.llm.client: [chat_completion] OK 10001ms | response_chars=1305
-2026-02-06 21:02:43,073 [INFO] chatbot.sql.pipeline_v1: [generate_sql] LLM responded in 10003ms | sql="SELECT
-  b.BaseCD,
-  bd.ProcessingDate,
-  rcm.EmployeeID,
-  rcm.FirstName,
-  rcm.LastName,
-  rcm.IsSick,
-  rcm.IsVolunteer,
-  rcm.IsCompletelyAvailabl"
-2026-02-06 21:02:43,075 [INFO] chatbot.sql.pipeline_v1: [pipeline] Execute attempt 1/3
-2026-02-06 21:02:43,077 [INFO] chatbot.sql.pipeline_v1: [execute_sql] Executing: SELECT
-  b.BaseCD,
-  bd.ProcessingDate,
-  rcm.EmployeeID,
-  rcm.FirstName,
-  rcm.LastName,
-  rcm.IsSick,
-  rcm.IsVolunteer,
-  rcm.IsCompletelyAvailableReserve,
-  rcm.ASGDays,
-  rcm.ASGStandby,
-  rcm.A
-2026-02-06 21:02:43,090 [INFO] chatbot.sql.pipeline_v1: [execute_sql] OK 13ms | 100 rows, 21 columns
-2026-02-06 21:02:43,091 [INFO] chatbot.sql.pipeline_v1: [pipeline] SQL executed OK | 100 rows
-2026-02-06 21:02:43,093 [INFO] chatbot.sql.pipeline_v1: [summarize] Prompt length: 15431 chars, rows sent: 25/100
-2026-02-06 21:02:43,093 [INFO] chatbot.llm.client: [chat_completion] model=gpt-5-2 json_mode=False sys_prompt_chars=0 user_preview="You are a helpful assistant summarizing database query results for airline crew staff.
+2026-02-06 21:16:32,306 [INFO] chatbot.llm.client: [chat_completion] POST https://quasarmarket.coforge.com/qag/llmrouter-api/v2/chat/completions | model=gpt-5-2
+2026-02-06 21:16:35,786 [INFO] chatbot.llm.client: [chat_completion] Response status=200 | 3480ms
+2026-02-06 21:16:35,789 [INFO] chatbot.llm.client: [chat_completion] OK 3483ms | response_chars=424
+2026-02-06 21:16:35,791 [INFO] chatbot.api.chat: V1 intent: DATA confidence=0.93
+2026-02-06 21:16:35,879 [INFO] chatbot.sql.pipeline_v1: [pipeline] START query="For LAX base and processing date 1/29/2026, why was employeed id 502370 not legal for any sequence" context_len=100
+2026-02-06 21:16:35,884 [INFO] chatbot.sql.pipeline_v1: [retrieve_schemas] query="For LAX base and processing date 1/29/2026, why was employeed id 502370 not lega" top_k=5 registry_dbs={'hr_payroll', 'flight_operations', 'crew_roster', 'compliance_training', 'crew_management'}
+2026-02-06 21:16:35,892 [INFO] chatbot.sql.schema_cache: Schema cache loaded: 42 tables from C:\Users\Shaik.Jainmaih\Chat_v1_v2\sumit_chatbot_poc\data\databases\app.db
+2026-02-06 21:16:35,893 [INFO] chatbot.sql.schema_cache: Schema cache databases: {'hr_payroll', 'flight_operations', 'fleet_maintenance', 'crew_roster', 'compliance_training', 'crew_management'}
+2026-02-06 21:16:35,894 [INFO] chatbot.sql.pipeline_v1: [retrieve_schemas] Keyword match returned 9 schemas: ['crew_roster.reservescrewmember', 'fleet_maintenance.maintenance_staff', 'crew_roster.sequence', 'flight_operations.flight_legs', 'fleet_maintenance.spare_parts_inventory']
+2026-02-06 21:16:35,895 [WARNING] chatbot.sql.pipeline_v1: [retrieve_schemas] Registry filter removed 3 schemas (registry has: {'hr_payroll', 'flight_operations', 'crew_roster', 'compliance_training', 'crew_management'})
+2026-02-06 21:16:35,900 [INFO] chatbot.llm.client: [embedding] Single text, chars=98
+2026-02-06 21:16:35,901 [INFO] chatbot.llm.client: [embedding_batch] 1 texts, total_chars=98
+2026-02-06 21:16:35,902 [INFO] chatbot.llm.client: [embedding] POST https://quasarmarket.coforge.com/qag/llmrouter-api/v2/text/embeddings | model=text-embeddings
+2026-02-06 21:16:37,299 [INFO] chatbot.llm.client: [embedding] Response status=200 | 1397ms
+2026-02-06 21:16:37,303 [INFO] chatbot.llm.client: [embedding] OK 1401ms | 1 embeddings, dims=746
+2026-02-06 21:16:37,305 [INFO] chatbot.sql.pipeline_v1: [pipeline] Using 9 schemas: ['crew_roster.reservescrewmember', 'crew_roster.reservescrewmember', 'crew_roster.sequence', 'flight_operations.flight_legs', 'crew_roster.sequencepositiondetails']
+2026-02-06 21:16:37,306 [INFO] chatbot.sql.pipeline_v1: [generate_sql] Sending query to LLM with 9 schemas, prompt_len=11046
+2026-02-06 21:16:37,309 [INFO] chatbot.llm.client: [chat_completion] model=gpt-5-2 json_mode=False sys_prompt_chars=0 user_preview="You are a SQL expert for an American Airlines crew management database system.
+Generate a SQLite SELECT query to answer ..."
+2026-02-06 21:16:37,311 [INFO] chatbot.llm.client: [chat_completion] POST https://quasarmarket.coforge.com/qag/llmrouter-api/v2/chat/completions | model=gpt-5-2
+2026-02-06 21:16:44,364 [INFO] chatbot.llm.client: [chat_completion] Response status=200 | 7053ms
+2026-02-06 21:16:44,368 [INFO] chatbot.llm.client: [chat_completion] OK 7057ms | response_chars=1155
+2026-02-06 21:16:44,370 [INFO] chatbot.sql.pipeline_v1: [generate_sql] LLM responded in 7060ms | sql="SELECT
+  b.BaseCD AS base_code,
+  bd.ProcessingDate AS processing_date,
+  r.EmployeeID AS employee_id,
+  r.FirstName AS first_name,
+  r.LastName AS la"
+2026-02-06 21:16:44,376 [INFO] chatbot.sql.pipeline_v1: [pipeline] Execute attempt 1/3
+2026-02-06 21:16:44,376 [INFO] chatbot.sql.pipeline_v1: [execute_sql] Executing: SELECT
+  b.BaseCD AS base_code,
+  bd.ProcessingDate AS processing_date,
+  r.EmployeeID AS employee_id,
+  r.FirstName AS first_name,
+  r.LastName AS last_name,
+  ld.LegalityPhaseID AS legality_phase_id
+2026-02-06 21:16:44,393 [INFO] chatbot.sql.pipeline_v1: [execute_sql] OK 17ms | 0 rows, 15 columns
+2026-02-06 21:16:44,394 [INFO] chatbot.sql.pipeline_v1: [pipeline] SQL executed OK | 0 rows
+2026-02-06 21:16:44,395 [INFO] chatbot.sql.pipeline_v1: [pipeline] Zero rows with context, retrying without context
+2026-02-06 21:16:44,396 [INFO] chatbot.sql.pipeline_v1: [generate_sql] Sending query to LLM with 9 schemas, prompt_len=10656
+2026-02-06 21:16:44,397 [INFO] chatbot.llm.client: [chat_completion] model=gpt-5-2 json_mode=False sys_prompt_chars=0 user_preview="You are a SQL expert for an American Airlines crew management database system.
+Generate a SQLite SELECT query to answer ..."
+2026-02-06 21:16:44,398 [INFO] chatbot.llm.client: [chat_completion] POST https://quasarmarket.coforge.com/qag/llmrouter-api/v2/chat/completions | model=gpt-5-2
+2026-02-06 21:16:52,076 [INFO] chatbot.llm.client: [chat_completion] Response status=200 | 7677ms
+2026-02-06 21:16:52,080 [INFO] chatbot.llm.client: [chat_completion] OK 7681ms | response_chars=1316
+2026-02-06 21:16:52,082 [INFO] chatbot.sql.pipeline_v1: [generate_sql] LLM responded in 7684ms | sql="SELECT
+  rcm.EmployeeID AS employee_id,
+  rcm.FirstName AS first_name,
+  rcm.LastName AS last_name,
+  b.BaseCD AS base_code,
+  bd.ProcessingDate AS pr"
+2026-02-06 21:16:52,085 [INFO] chatbot.sql.pipeline_v1: [execute_sql] Executing: SELECT
+  rcm.EmployeeID AS employee_id,
+  rcm.FirstName AS first_name,
+  rcm.LastName AS last_name,
+  b.BaseCD AS base_code,
+  bd.ProcessingDate AS processing_date,
+  bd.BaseDateID AS base_date_id,
+  
+2026-02-06 21:16:52,102 [INFO] chatbot.sql.pipeline_v1: [execute_sql] OK 16ms | 100 rows, 17 columns
+2026-02-06 21:16:52,102 [INFO] chatbot.sql.pipeline_v1: [pipeline] Context-free retry returned 100 rows
+2026-02-06 21:16:52,104 [INFO] chatbot.sql.pipeline_v1: [summarize] Prompt length: 14793 chars, rows sent: 25/100
+2026-02-06 21:16:52,106 [INFO] chatbot.llm.client: [chat_completion] model=gpt-5-2 json_mode=False sys_prompt_chars=0 user_preview="You are a helpful assistant summarizing database query results for airline crew staff.
 
 User's original question: For LA..."
-2026-02-06 21:02:43,094 [INFO] chatbot.llm.client: [chat_completion] POST https://quasarmarket.coforge.com/qag/llmrouter-api/v2/chat/completions | model=gpt-5-2
-2026-02-06 21:02:54,515 [INFO] chatbot.llm.client: [chat_completion] Response status=200 | 11420ms
-2026-02-06 21:02:54,518 [INFO] chatbot.llm.client: [chat_completion] OK 11423ms | response_chars=1327
-2026-02-06 21:02:54,519 [INFO] chatbot.sql.pipeline_v1: [pipeline] DONE success | attempts=1 | 22742ms | 100 rows
-2026-02-06 21:02:54,519 [INFO] chatbot.api.chat: V1 response: intent=DATA has_sql=True has_results=True suggestions=3 time=26473ms
-2026-02-06 21:02:54,568 [INFO] chatbot: POST /api/chat/message -> 200 (26523ms)
-2026-02-06 21:02:55,558 [INFO] chatbot: GET /api/chat/conversations -> 200 (4ms)
-2026-02-06 21:03:47,664 [INFO] chatbot.api.chat: V1 request: conv=60 query="Which other LAX reserves on 01/29/2026 are missing legality QLA/context records (NULL legality fields)?"
-2026-02-06 21:03:47,665 [INFO] chatbot.api.chat: V1 intent: DATA confidence=0.95
-2026-02-06 21:03:47,693 [INFO] chatbot.sql.pipeline_v1: [pipeline] START query="Which other LAX reserves on 01/29/2026 are missing legality QLA/context records (NULL legality fields)?" context_len=490
-2026-02-06 21:03:47,695 [INFO] chatbot.sql.pipeline_v1: [retrieve_schemas] query="Which other LAX reserves on 01/29/2026 are missing legality QLA/context records " top_k=5 registry_dbs={'crew_roster'}
-2026-02-06 21:03:47,696 [INFO] chatbot.sql.pipeline_v1: [retrieve_schemas] Keyword match returned 9 schemas: ['fleet_maintenance.aircraft_inspections', 'crew_roster.reserveslegality', 'crew_roster.basedate', 'crew_management.crew_members', 'crew_roster.legalitypostqlastatus']
-2026-02-06 21:03:47,696 [WARNING] chatbot.sql.pipeline_v1: [retrieve_schemas] Registry filter removed 3 schemas (registry has: {'crew_roster'})
-2026-02-06 21:03:47,696 [INFO] chatbot.llm.client: [embedding] Single text, chars=103
-2026-02-06 21:03:47,696 [INFO] chatbot.llm.client: [embedding_batch] 1 texts, total_chars=103
-2026-02-06 21:03:47,696 [INFO] chatbot.llm.client: [embedding] POST https://quasarmarket.coforge.com/qag/llmrouter-api/v2/text/embeddings | model=text-embeddings
-2026-02-06 21:03:49,121 [INFO] chatbot.llm.client: [embedding] Response status=200 | 1424ms
-2026-02-06 21:03:49,123 [INFO] chatbot.llm.client: [embedding] OK 1426ms | 1 embeddings, dims=746
-2026-02-06 21:03:49,124 [INFO] chatbot.sql.pipeline_v1: [pipeline] Using 7 schemas: ['crew_roster.reserveslegality', 'crew_roster.basedate', 'crew_roster.legalitypostqlastatus', 'crew_roster.legalityqladetails', 'crew_roster.sequence']
-2026-02-06 21:03:49,125 [INFO] chatbot.sql.pipeline_v1: [generate_sql] Sending query to LLM with 7 schemas, prompt_len=6890
-2026-02-06 21:03:49,125 [INFO] chatbot.llm.client: [chat_completion] model=gpt-5-2 json_mode=False sys_prompt_chars=0 user_preview="You are a SQL expert for an American Airlines crew management database system.
-
-Previous conversation context:
-User: Hi
-..."
-2026-02-06 21:03:49,125 [INFO] chatbot.llm.client: [chat_completion] POST https://quasarmarket.coforge.com/qag/llmrouter-api/v2/chat/completions | model=gpt-5-2
-2026-02-06 21:03:56,531 [INFO] chatbot.llm.client: [chat_completion] Response status=200 | 7405ms
-2026-02-06 21:03:56,533 [INFO] chatbot.llm.client: [chat_completion] OK 7408ms | response_chars=1227
-2026-02-06 21:03:56,534 [INFO] chatbot.sql.pipeline_v1: [generate_sql] LLM responded in 7409ms | sql="SELECT
-  b.BaseCD,
-  bd.ProcessingDate,
-  rl.ReservesCrewMemberID AS employee_id,
-  rl.ReservesLegalityID,
-  rl.BaseDateID,
-  rl.SequencePositionDetai"
-2026-02-06 21:03:56,535 [INFO] chatbot.sql.pipeline_v1: [pipeline] Execute attempt 1/3
-2026-02-06 21:03:56,536 [INFO] chatbot.sql.pipeline_v1: [execute_sql] Executing: SELECT
-  b.BaseCD,
-  bd.ProcessingDate,
-  rl.ReservesCrewMemberID AS employee_id,
-  rl.ReservesLegalityID,
-  rl.BaseDateID,
-  rl.SequencePositionDetailsID,
-  qla.LegalityQLADetailsID,
-  qla.IsLegal AS
-2026-02-06 21:03:56,707 [INFO] chatbot.sql.pipeline_v1: [execute_sql] OK 170ms | 0 rows, 14 columns
-2026-02-06 21:03:56,708 [INFO] chatbot.sql.pipeline_v1: [pipeline] SQL executed OK | 0 rows
-2026-02-06 21:03:56,708 [INFO] chatbot.sql.pipeline_v1: [pipeline] Zero rows returned, skipping summarization
-2026-02-06 21:03:56,709 [INFO] chatbot.sql.pipeline_v1: [pipeline] DONE success | attempts=1 | 9015ms | 0 rows
-2026-02-06 21:03:56,709 [INFO] chatbot.api.chat: V1 response: intent=DATA has_sql=True has_results=True suggestions=0 time=9049ms
-2026-02-06 21:03:56,750 [INFO] chatbot: POST /api/chat/message -> 200 (9090ms)
-2026-02-06 21:03:57,302 [INFO] chatbot: GET /api/chat/conversations -> 200 (2ms)
-2026-02-06 21:04:39,946 [INFO] chatbot.api.chat: V1 request: conv=60 query="how many crew do we have?"
-2026-02-06 21:04:39,946 [INFO] chatbot.api.chat: V1 intent: DATA confidence=0.95
-2026-02-06 21:04:39,973 [INFO] chatbot.sql.pipeline_v1: [pipeline] START query="how many crew do we have?" context_len=736
-2026-02-06 21:04:39,976 [INFO] chatbot.sql.pipeline_v1: [retrieve_schemas] query="how many crew do we have?" top_k=5 registry_dbs={'crew_roster'}
-2026-02-06 21:04:39,977 [INFO] chatbot.sql.pipeline_v1: [retrieve_schemas] Keyword match returned 9 schemas: ['crew_management.crew_members', 'crew_roster.sequencepositiondetails', 'fleet_maintenance.spare_parts_inventory', 'crew_roster.reserveslegalitycontextdetails', 'crew_roster.reservescrewmember']
-2026-02-06 21:04:39,977 [WARNING] chatbot.sql.pipeline_v1: [retrieve_schemas] Registry filter removed 4 schemas (registry has: {'crew_roster'})
-2026-02-06 21:04:39,978 [INFO] chatbot.llm.client: [embedding] Single text, chars=25
-2026-02-06 21:04:39,978 [INFO] chatbot.llm.client: [embedding_batch] 1 texts, total_chars=25
-2026-02-06 21:04:39,978 [INFO] chatbot.llm.client: [embedding] POST https://quasarmarket.coforge.com/qag/llmrouter-api/v2/text/embeddings | model=text-embeddings
-2026-02-06 21:04:41,281 [INFO] chatbot.llm.client: [embedding] Response status=200 | 1302ms
-2026-02-06 21:04:41,283 [INFO] chatbot.llm.client: [embedding] OK 1304ms | 1 embeddings, dims=746
-2026-02-06 21:04:41,284 [INFO] chatbot.sql.pipeline_v1: [pipeline] Using 5 schemas: ['crew_roster.sequencepositiondetails', 'crew_roster.reserveslegalitycontextdetails', 'crew_roster.reservescrewmember', 'crew_roster.base', 'crew_roster.reserveslegality']
-2026-02-06 21:04:41,285 [INFO] chatbot.sql.pipeline_v1: [generate_sql] Sending query to LLM with 5 schemas, prompt_len=6124
-2026-02-06 21:04:41,285 [INFO] chatbot.llm.client: [chat_completion] model=gpt-5-2 json_mode=False sys_prompt_chars=0 user_preview="You are a SQL expert for an American Airlines crew management database system.
-
-Previous conversation context:
-Assistant..."
-2026-02-06 21:04:41,286 [INFO] chatbot.llm.client: [chat_completion] POST https://quasarmarket.coforge.com/qag/llmrouter-api/v2/chat/completions | model=gpt-5-2
-2026-02-06 21:04:43,648 [INFO] chatbot.llm.client: [chat_completion] Response status=200 | 2362ms
-2026-02-06 21:04:43,650 [INFO] chatbot.llm.client: [chat_completion] OK 2364ms | response_chars=115
-2026-02-06 21:04:43,651 [INFO] chatbot.sql.pipeline_v1: [generate_sql] LLM responded in 2365ms | sql="SELECT COUNT(DISTINCT crew_roster.reservescrewmember.EmployeeID) AS crew_count
-FROM crew_roster.reservescrewmember;"
-2026-02-06 21:04:43,651 [INFO] chatbot.sql.pipeline_v1: [pipeline] Execute attempt 1/3
-2026-02-06 21:04:43,652 [INFO] chatbot.sql.pipeline_v1: [execute_sql] Executing: SELECT COUNT(DISTINCT crew_roster.reservescrewmember.EmployeeID) AS crew_count
-FROM crew_roster.reservescrewmember;
-2026-02-06 21:04:43,654 [INFO] chatbot.sql.pipeline_v1: [execute_sql] OK 2ms | 1 rows, 1 columns
-2026-02-06 21:04:43,655 [INFO] chatbot.sql.pipeline_v1: [pipeline] SQL executed OK | 1 rows
-2026-02-06 21:04:43,656 [INFO] chatbot.sql.pipeline_v1: [summarize] Prompt length: 2336 chars, rows sent: 1/1
-2026-02-06 21:04:43,656 [INFO] chatbot.llm.client: [chat_completion] model=gpt-5-2 json_mode=False sys_prompt_chars=0 user_preview="You are a helpful assistant summarizing database query results for airline crew staff.
-
-User's original question: how ma..."
-2026-02-06 21:04:43,657 [INFO] chatbot.llm.client: [chat_completion] POST https://quasarmarket.coforge.com/qag/llmrouter-api/v2/chat/completions | model=gpt-5-2
-2026-02-06 21:04:47,411 [INFO] chatbot.llm.client: [chat_completion] Response status=200 | 3753ms
-2026-02-06 21:04:47,413 [INFO] chatbot.llm.client: [chat_completion] OK 3755ms | response_chars=407
-2026-02-06 21:04:47,414 [INFO] chatbot.sql.pipeline_v1: [pipeline] DONE success | attempts=1 | 7440ms | 1 rows
-2026-02-06 21:04:47,414 [INFO] chatbot.api.chat: V1 response: intent=DATA has_sql=True has_results=True suggestions=3 time=7470ms
-2026-02-06 21:04:47,460 [INFO] chatbot: POST /api/chat/message -> 200 (7517ms)
-2026-02-06 21:04:48,298 [INFO] chatbot: GET /api/chat/conversations -> 200 (2ms)
-2026-02-06 21:04:55,189 [INFO] chatbot.api.chat: V1 request: conv=60 query="I need that crew information"
-2026-02-06 21:04:55,190 [INFO] chatbot.llm.client: [chat_completion] model=gpt-5-2 json_mode=False sys_prompt_chars=0 user_preview="You are a query rewriter. Your job is to rewrite follow-up questions into standalone questions.
-
-Conversation history:
-A..."
-2026-02-06 21:04:55,190 [INFO] chatbot.llm.client: [chat_completion] POST https://quasarmarket.coforge.com/qag/llmrouter-api/v2/chat/completions | model=gpt-5-2
-2026-02-06 21:04:59,085 [INFO] chatbot.llm.client: [chat_completion] Response status=200 | 3894ms
-2026-02-06 21:04:59,087 [INFO] chatbot.llm.client: [chat_completion] OK 3896ms | response_chars=414
-2026-02-06 21:04:59,087 [INFO] chatbot.api.chat: V1 rewritten query: "Can you provide the detailed information for the single distinct crew member (EmployeeID 502370, JOHN BURT MARCUS) recor"
-2026-02-06 21:04:59,088 [INFO] chatbot.api.chat: V1 intent: DATA confidence=0.95
-2026-02-06 21:04:59,115 [INFO] chatbot.sql.pipeline_v1: [pipeline] START query="Can you provide the detailed information for the single distinct crew member (EmployeeID 502370, JOHN BURT MARCUS) recor" context_len=644
-2026-02-06 21:04:59,118 [INFO] chatbot.sql.pipeline_v1: [retrieve_schemas] query="Can you provide the detailed information for the single distinct crew member (Em" top_k=5 registry_dbs={'crew_roster'}
-2026-02-06 21:04:59,120 [INFO] chatbot.sql.pipeline_v1: [retrieve_schemas] Keyword match returned 9 schemas: ['flight_operations.airports', 'crew_management.crew_members', 'crew_roster.sequencepositiondetails', 'fleet_maintenance.spare_parts_inventory', 'crew_roster.reserveslegalitycontextdetails']
-2026-02-06 21:04:59,120 [WARNING] chatbot.sql.pipeline_v1: [retrieve_schemas] Registry filter removed 5 schemas (registry has: {'crew_roster'})
-2026-02-06 21:04:59,121 [INFO] chatbot.llm.client: [embedding] Single text, chars=414
-2026-02-06 21:04:59,121 [INFO] chatbot.llm.client: [embedding_batch] 1 texts, total_chars=414
-2026-02-06 21:04:59,122 [INFO] chatbot.llm.client: [embedding] POST https://quasarmarket.coforge.com/qag/llmrouter-api/v2/text/embeddings | model=text-embeddings
-2026-02-06 21:05:00,410 [INFO] chatbot.llm.client: [embedding] Response status=200 | 1288ms
-2026-02-06 21:05:00,413 [INFO] chatbot.llm.client: [embedding] OK 1291ms | 1 embeddings, dims=746
-2026-02-06 21:05:00,414 [INFO] chatbot.sql.pipeline_v1: [pipeline] Using 6 schemas: ['crew_roster.sequencepositiondetails', 'crew_roster.reserveslegalitycontextdetails', 'crew_roster.reservescrewmember', 'crew_roster.base', 'crew_roster.reserveslegality']
-2026-02-06 21:05:00,415 [INFO] chatbot.sql.pipeline_v1: [generate_sql] Sending query to LLM with 6 schemas, prompt_len=7310
-2026-02-06 21:05:00,419 [INFO] chatbot.llm.client: [chat_completion] model=gpt-5-2 json_mode=False sys_prompt_chars=0 user_preview="You are a SQL expert for an American Airlines crew management database system.
-
-Previous conversation context:
-Assistant..."
-2026-02-06 21:05:00,421 [INFO] chatbot.llm.client: [chat_completion] POST https://quasarmarket.coforge.com/qag/llmrouter-api/v2/chat/completions | model=gpt-5-2
-2026-02-06 21:05:08,486 [INFO] chatbot.llm.client: [chat_completion] Response status=200 | 8064ms
-2026-02-06 21:05:08,489 [INFO] chatbot.llm.client: [chat_completion] OK 8067ms | response_chars=1436
-2026-02-06 21:05:08,490 [INFO] chatbot.sql.pipeline_v1: [generate_sql] LLM responded in 8070ms | sql="SELECT
-  b.BaseCD,
-  rcm.BaseDateID,
-  rcm.EmployeeID,
-  rcm.FirstName,
-  rcm.LastName,
-  rcm.SeniorityNumber,
-  rcm.IsSick,
-  rcm.IsVolunteer,
-  rcm."
-2026-02-06 21:05:08,491 [INFO] chatbot.sql.pipeline_v1: [pipeline] Execute attempt 1/3
-2026-02-06 21:05:08,491 [INFO] chatbot.sql.pipeline_v1: [execute_sql] Executing: SELECT
-  b.BaseCD,
-  rcm.BaseDateID,
-  rcm.EmployeeID,
-  rcm.FirstName,
-  rcm.LastName,
-  rcm.SeniorityNumber,
-  rcm.IsSick,
-  rcm.IsVolunteer,
-  rcm.IsCompletelyAvailableReserve,
-  rcm.AVLDays,
-  rcm
-2026-02-06 21:05:08,499 [INFO] chatbot.sql.pipeline_v1: [execute_sql] OK 7ms | 0 rows, 32 columns
-2026-02-06 21:05:08,501 [INFO] chatbot.sql.pipeline_v1: [pipeline] SQL executed OK | 0 rows
-2026-02-06 21:05:08,501 [INFO] chatbot.sql.pipeline_v1: [pipeline] Zero rows returned, skipping summarization
-2026-02-06 21:05:08,503 [INFO] chatbot.sql.pipeline_v1: [pipeline] DONE success | attempts=1 | 9387ms | 0 rows
-2026-02-06 21:05:08,503 [INFO] chatbot.api.chat: V1 response: intent=DATA has_sql=True has_results=True suggestions=0 time=13320ms
-2026-02-06 21:05:08,554 [INFO] chatbot: POST /api/chat/message -> 200 (13372ms)
-2026-02-06 21:05:09,289 [INFO] chatbot: GET /api/chat/conversations -> 200 (3ms)
-2026-02-06 21:05:13,110 [INFO] chatbot.api.chat: V1 request: conv=60 query="Can you list the crew member(s) and their details (name, role, base)?"
-2026-02-06 21:05:13,111 [INFO] chatbot.api.chat: V1 intent: DATA confidence=0.95
-2026-02-06 21:05:13,133 [INFO] chatbot.sql.pipeline_v1: [pipeline] START query="Can you list the crew member(s) and their details (name, role, base)?" context_len=502
-2026-02-06 21:05:13,133 [INFO] chatbot.sql.pipeline_v1: [retrieve_schemas] query="Can you list the crew member(s) and their details (name, role, base)?" top_k=5 registry_dbs={'crew_roster'}
-2026-02-06 21:05:13,134 [INFO] chatbot.sql.pipeline_v1: [retrieve_schemas] Keyword match returned 9 schemas: ['fleet_maintenance.aircraft_inspections', 'flight_operations.airports', 'fleet_maintenance.maintenance_work_orders', 'hr_payroll.pay_grades', 'crew_management.crew_members']
-2026-02-06 21:05:13,134 [WARNING] chatbot.sql.pipeline_v1: [retrieve_schemas] Registry filter removed 5 schemas (registry has: {'crew_roster'})
-2026-02-06 21:05:13,135 [INFO] chatbot.llm.client: [embedding] Single text, chars=69
-2026-02-06 21:05:13,135 [INFO] chatbot.llm.client: [embedding_batch] 1 texts, total_chars=69
-2026-02-06 21:05:13,135 [INFO] chatbot.llm.client: [embedding] POST https://quasarmarket.coforge.com/qag/llmrouter-api/v2/text/embeddings | model=text-embeddings
-2026-02-06 21:05:14,570 [INFO] chatbot.llm.client: [embedding] Response status=200 | 1435ms
-2026-02-06 21:05:14,573 [INFO] chatbot.llm.client: [embedding] OK 1437ms | 1 embeddings, dims=746
-2026-02-06 21:05:14,575 [INFO] chatbot.sql.pipeline_v1: [pipeline] Using 7 schemas: ['crew_roster.reserveslegality', 'crew_roster.basedate', 'crew_roster.legalityqladetails', 'crew_roster.legalitypostqlastatus', 'crew_roster.reservescrewmember']
-2026-02-06 21:05:14,575 [INFO] chatbot.sql.pipeline_v1: [generate_sql] Sending query to LLM with 7 schemas, prompt_len=7706
-2026-02-06 21:05:14,580 [INFO] chatbot.llm.client: [chat_completion] model=gpt-5-2 json_mode=False sys_prompt_chars=0 user_preview="You are a SQL expert for an American Airlines crew management database system.
-
-Previous conversation context:
-Assistant..."
-2026-02-06 21:05:14,580 [INFO] chatbot.llm.client: [chat_completion] POST https://quasarmarket.coforge.com/qag/llmrouter-api/v2/chat/completions | model=gpt-5-2
-2026-02-06 21:05:18,212 [INFO] chatbot.llm.client: [chat_completion] Response status=200 | 3631ms
-2026-02-06 21:05:18,214 [INFO] chatbot.llm.client: [chat_completion] OK 3633ms | response_chars=363
-2026-02-06 21:05:18,214 [INFO] chatbot.sql.pipeline_v1: [generate_sql] LLM responded in 3634ms | sql="SELECT
-  r.EmployeeID AS employee_id,
-  r.FirstName AS first_name,
-  r.LastName AS last_name,
-  b.BaseCD AS base_code,
-  b.BaseName AS base_name
-FROM "
-2026-02-06 21:05:18,215 [INFO] chatbot.sql.pipeline_v1: [pipeline] Execute attempt 1/3
-2026-02-06 21:05:18,216 [INFO] chatbot.sql.pipeline_v1: [execute_sql] Executing: SELECT
-  r.EmployeeID AS employee_id,
-  r.FirstName AS first_name,
-  r.LastName AS last_name,
-  b.BaseCD AS base_code,
-  b.BaseName AS base_name
-FROM crew_roster.reservescrewmember r
-LEFT JOIN crew_ro
-2026-02-06 21:05:18,222 [INFO] chatbot.sql.pipeline_v1: [execute_sql] OK 5ms | 100 rows, 5 columns
-2026-02-06 21:05:18,222 [INFO] chatbot.sql.pipeline_v1: [pipeline] SQL executed OK | 100 rows
-2026-02-06 21:05:18,223 [INFO] chatbot.sql.pipeline_v1: [summarize] Prompt length: 5686 chars, rows sent: 25/100
-2026-02-06 21:05:18,223 [INFO] chatbot.llm.client: [chat_completion] model=gpt-5-2 json_mode=False sys_prompt_chars=0 user_preview="You are a helpful assistant summarizing database query results for airline crew staff.
-
-User's original question: Can yo..."
-2026-02-06 21:05:18,224 [INFO] chatbot.llm.client: [chat_completion] POST https://quasarmarket.coforge.com/qag/llmrouter-api/v2/chat/completions | model=gpt-5-2
-2026-02-06 21:05:23,351 [INFO] chatbot.llm.client: [chat_completion] Response status=200 | 5127ms
-2026-02-06 21:05:23,353 [INFO] chatbot.llm.client: [chat_completion] OK 5129ms | response_chars=593
-2026-02-06 21:05:23,354 [INFO] chatbot.sql.pipeline_v1: [pipeline] DONE success | attempts=1 | 10221ms | 100 rows
-2026-02-06 21:05:23,355 [INFO] chatbot.api.chat: V1 response: intent=DATA has_sql=True has_results=True suggestions=3 time=10248ms
-2026-02-06 21:05:23,408 [INFO] chatbot: POST /api/chat/message -> 200 (10302ms)
-2026-02-06 21:05:24,525 [INFO] chatbot: GET /api/chat/conversations -> 200 (2ms)
-2026-02-06 21:06:20,420 [INFO] chatbot.api.chat: V1 request: conv=60 query="how many crew do we have ?"
-2026-02-06 21:06:20,421 [INFO] chatbot.api.chat: V1 intent: DATA confidence=0.95
-2026-02-06 21:06:20,508 [INFO] chatbot.sql.pipeline_v1: [pipeline] START query="how many crew do we have ?" context_len=613
-2026-02-06 21:06:20,514 [INFO] chatbot.sql.pipeline_v1: [retrieve_schemas] query="how many crew do we have ?" top_k=5 registry_dbs={'crew_roster'}
-2026-02-06 21:06:20,517 [INFO] chatbot.sql.pipeline_v1: [retrieve_schemas] Keyword match returned 9 schemas: ['crew_management.crew_members', 'crew_roster.sequencepositiondetails', 'fleet_maintenance.spare_parts_inventory', 'crew_roster.reserveslegalitycontextdetails', 'crew_roster.reservescrewmember']
-2026-02-06 21:06:20,519 [WARNING] chatbot.sql.pipeline_v1: [retrieve_schemas] Registry filter removed 4 schemas (registry has: {'crew_roster'})
-2026-02-06 21:06:20,519 [INFO] chatbot.llm.client: [embedding] Single text, chars=26
-2026-02-06 21:06:20,520 [INFO] chatbot.llm.client: [embedding_batch] 1 texts, total_chars=26
-2026-02-06 21:06:20,521 [INFO] chatbot.llm.client: [embedding] POST https://quasarmarket.coforge.com/qag/llmrouter-api/v2/text/embeddings | model=text-embeddings
-2026-02-06 21:06:21,929 [INFO] chatbot.llm.client: [embedding] Response status=200 | 1408ms
-2026-02-06 21:06:21,932 [INFO] chatbot.llm.client: [embedding] OK 1411ms | 1 embeddings, dims=746
-2026-02-06 21:06:21,933 [INFO] chatbot.sql.pipeline_v1: [pipeline] Using 5 schemas: ['crew_roster.sequencepositiondetails', 'crew_roster.reserveslegalitycontextdetails', 'crew_roster.reservescrewmember', 'crew_roster.base', 'crew_roster.reserveslegality']
-2026-02-06 21:06:21,934 [INFO] chatbot.sql.pipeline_v1: [generate_sql] Sending query to LLM with 5 schemas, prompt_len=6002
-2026-02-06 21:06:21,935 [INFO] chatbot.llm.client: [chat_completion] model=gpt-5-2 json_mode=False sys_prompt_chars=0 user_preview="You are a SQL expert for an American Airlines crew management database system.
-
-Previous conversation context:
-Assistant..."
-2026-02-06 21:06:21,935 [INFO] chatbot.llm.client: [chat_completion] POST https://quasarmarket.coforge.com/qag/llmrouter-api/v2/chat/completions | model=gpt-5-2
-2026-02-06 21:06:24,026 [INFO] chatbot.llm.client: [chat_completion] Response status=200 | 2090ms
-2026-02-06 21:06:24,028 [INFO] chatbot.llm.client: [chat_completion] OK 2092ms | response_chars=91
-2026-02-06 21:06:24,029 [INFO] chatbot.sql.pipeline_v1: [generate_sql] LLM responded in 2093ms | sql="SELECT COUNT(DISTINCT r.EmployeeID) AS crew_count
-FROM crew_roster.reservescrewmember AS r;"
-2026-02-06 21:06:24,029 [INFO] chatbot.sql.pipeline_v1: [pipeline] Execute attempt 1/3
-2026-02-06 21:06:24,030 [INFO] chatbot.sql.pipeline_v1: [execute_sql] Executing: SELECT COUNT(DISTINCT r.EmployeeID) AS crew_count
-FROM crew_roster.reservescrewmember AS r;
-2026-02-06 21:06:24,033 [INFO] chatbot.sql.pipeline_v1: [execute_sql] OK 2ms | 1 rows, 1 columns
-2026-02-06 21:06:24,033 [INFO] chatbot.sql.pipeline_v1: [pipeline] SQL executed OK | 1 rows
-2026-02-06 21:06:24,034 [INFO] chatbot.sql.pipeline_v1: [summarize] Prompt length: 2313 chars, rows sent: 1/1
-2026-02-06 21:06:24,035 [INFO] chatbot.llm.client: [chat_completion] model=gpt-5-2 json_mode=False sys_prompt_chars=0 user_preview="You are a helpful assistant summarizing database query results for airline crew staff.
-
-User's original question: how ma..."
-2026-02-06 21:06:24,036 [INFO] chatbot.llm.client: [chat_completion] POST https://quasarmarket.coforge.com/qag/llmrouter-api/v2/chat/completions | model=gpt-5-2
-2026-02-06 21:06:28,011 [INFO] chatbot.llm.client: [chat_completion] Response status=200 | 3974ms
-2026-02-06 21:06:28,014 [INFO] chatbot.llm.client: [chat_completion] OK 3977ms | response_chars=356
-2026-02-06 21:06:28,014 [INFO] chatbot.sql.pipeline_v1: [pipeline] DONE success | attempts=1 | 7505ms | 1 rows
-2026-02-06 21:06:28,016 [INFO] chatbot.api.chat: V1 response: intent=DATA has_sql=True has_results=True suggestions=3 time=7602ms
-2026-02-06 21:06:28,112 [INFO] chatbot: POST /api/chat/message -> 200 (7700ms)
-2026-02-06 21:06:29,397 [INFO] chatbot: GET /api/chat/conversations -> 200 (5ms)
-2026-02-06 21:06:33,930 [INFO] chatbot.api.chat: V1 request: conv=60 query="Can you list the crew member(s) (name and EmployeeID) in the reserves roster?"
-2026-02-06 21:06:33,931 [INFO] chatbot.api.chat: V1 intent: DATA confidence=0.95
-2026-02-06 21:06:34,022 [INFO] chatbot.sql.pipeline_v1: [pipeline] START query="Can you list the crew member(s) (name and EmployeeID) in the reserves roster?" context_len=591
-2026-02-06 21:06:34,026 [INFO] chatbot.sql.pipeline_v1: [retrieve_schemas] query="Can you list the crew member(s) (name and EmployeeID) in the reserves roster?" top_k=5 registry_dbs={'crew_roster'}
-2026-02-06 21:06:34,028 [INFO] chatbot.sql.pipeline_v1: [retrieve_schemas] Keyword match returned 9 schemas: ['crew_management.crew_members', 'crew_roster.sequencepositiondetails', 'fleet_maintenance.spare_parts_inventory', 'crew_roster.reserveslegalitycontextdetails', 'crew_roster.reservescrewmember']
-2026-02-06 21:06:34,029 [WARNING] chatbot.sql.pipeline_v1: [retrieve_schemas] Registry filter removed 4 schemas (registry has: {'crew_roster'})
-2026-02-06 21:06:34,031 [INFO] chatbot.llm.client: [embedding] Single text, chars=77
-2026-02-06 21:06:34,032 [INFO] chatbot.llm.client: [embedding_batch] 1 texts, total_chars=77
-2026-02-06 21:06:34,033 [INFO] chatbot.llm.client: [embedding] POST https://quasarmarket.coforge.com/qag/llmrouter-api/v2/text/embeddings | model=text-embeddings
-2026-02-06 21:06:35,457 [INFO] chatbot.llm.client: [embedding] Response status=200 | 1424ms
-2026-02-06 21:06:35,461 [INFO] chatbot.llm.client: [embedding] OK 1428ms | 1 embeddings, dims=746
-2026-02-06 21:06:35,464 [INFO] chatbot.sql.pipeline_v1: [pipeline] Using 5 schemas: ['crew_roster.sequencepositiondetails', 'crew_roster.reserveslegalitycontextdetails', 'crew_roster.reservescrewmember', 'crew_roster.base', 'crew_roster.reserveslegality']
-2026-02-06 21:06:35,468 [INFO] chatbot.sql.pipeline_v1: [generate_sql] Sending query to LLM with 5 schemas, prompt_len=6031
-2026-02-06 21:06:35,469 [INFO] chatbot.llm.client: [chat_completion] model=gpt-5-2 json_mode=False sys_prompt_chars=0 user_preview="You are a SQL expert for an American Airlines crew management database system.
-
-Previous conversation context:
-Assistant..."
-2026-02-06 21:06:35,470 [INFO] chatbot.llm.client: [chat_completion] POST https://quasarmarket.coforge.com/qag/llmrouter-api/v2/chat/completions | model=gpt-5-2
-2026-02-06 21:06:38,072 [INFO] chatbot.llm.client: [chat_completion] Response status=200 | 2602ms
-2026-02-06 21:06:38,076 [INFO] chatbot.llm.client: [chat_completion] OK 2605ms | response_chars=189
-2026-02-06 21:06:38,077 [INFO] chatbot.sql.pipeline_v1: [generate_sql] LLM responded in 2607ms | sql="SELECT DISTINCT
-  r.EmployeeID,
-  r.FirstName,
-  r.LastName
-FROM crew_roster.reservescrewmember AS r
-WHERE r.EmployeeID IS NOT NULL
-ORDER BY r.LastNam"
-2026-02-06 21:06:38,078 [INFO] chatbot.sql.pipeline_v1: [pipeline] Execute attempt 1/3
-2026-02-06 21:06:38,082 [INFO] chatbot.sql.pipeline_v1: [execute_sql] Executing: SELECT DISTINCT
-  r.EmployeeID,
-  r.FirstName,
-  r.LastName
-FROM crew_roster.reservescrewmember AS r
-WHERE r.EmployeeID IS NOT NULL
-ORDER BY r.LastName, r.FirstName, r.EmployeeID
-LIMIT 100;
-2026-02-06 21:06:38,087 [INFO] chatbot.sql.pipeline_v1: [execute_sql] OK 4ms | 1 rows, 3 columns
-2026-02-06 21:06:38,088 [INFO] chatbot.sql.pipeline_v1: [pipeline] SQL executed OK | 1 rows
-2026-02-06 21:06:38,089 [INFO] chatbot.sql.pipeline_v1: [summarize] Prompt length: 2515 chars, rows sent: 1/1
-2026-02-06 21:06:38,090 [INFO] chatbot.llm.client: [chat_completion] model=gpt-5-2 json_mode=False sys_prompt_chars=0 user_preview="You are a helpful assistant summarizing database query results for airline crew staff.
-
-User's original question: Can yo..."
-2026-02-06 21:06:38,092 [INFO] chatbot.llm.client: [chat_completion] POST https://quasarmarket.coforge.com/qag/llmrouter-api/v2/chat/completions | model=gpt-5-2
-2026-02-06 21:06:41,931 [INFO] chatbot.llm.client: [chat_completion] Response status=200 | 3838ms
-2026-02-06 21:06:41,934 [INFO] chatbot.llm.client: [chat_completion] OK 3841ms | response_chars=438
-2026-02-06 21:06:41,935 [INFO] chatbot.sql.pipeline_v1: [pipeline] DONE success | attempts=1 | 7913ms | 1 rows
-2026-02-06 21:06:41,937 [INFO] chatbot.api.chat: V1 response: intent=DATA has_sql=True has_results=True suggestions=3 time=8010ms
-2026-02-06 21:06:42,035 [INFO] chatbot: POST /api/chat/message -> 200 (8111ms)
-2026-02-06 21:06:43,559 [INFO] chatbot: GET /api/chat/conversations -> 200 (5ms)
-2026-02-06 21:07:12,861 [INFO] chatbot.api.chat: V1 request: conv=60 query="For LAX base and processing date 1/29/2026, why was employeed id 502370 not legal for any sequence"
-2026-02-06 21:07:12,862 [INFO] chatbot.llm.client: [chat_completion] model=gpt-5-2 json_mode=True sys_prompt_chars=0 user_preview="You are an intent classifier for an American Airlines crew management chatbot.
+2026-02-06 21:16:52,106 [INFO] chatbot.llm.client: [chat_completion] POST https://quasarmarket.coforge.com/qag/llmrouter-api/v2/chat/completions | model=gpt-5-2
+2026-02-06 21:17:04,297 [INFO] chatbot.llm.client: [chat_completion] Response status=200 | 12190ms
+2026-02-06 21:17:04,299 [INFO] chatbot.llm.client: [chat_completion] OK 12192ms | response_chars=1341
+2026-02-06 21:17:04,300 [INFO] chatbot.sql.pipeline_v1: [pipeline] DONE success | attempts=1 | 28421ms | 100 rows
+2026-02-06 21:17:04,301 [INFO] chatbot.api.chat: V1 response: intent=DATA has_sql=True has_results=True suggestions=3 time=32003ms
+2026-02-06 21:17:04,358 [INFO] chatbot: POST /api/chat/message -> 200 (32063ms)
+2026-02-06 21:17:04,368 [INFO] chatbot: GET /api/chat/conversations -> 200 (5ms)
+2026-02-06 21:17:04,962 [INFO] chatbot: GET /api/admin/stats -> 200 (12ms)
+2026-02-06 21:17:05,682 [INFO] chatbot: GET /api/admin/users -> 200 (4ms)
+2026-02-06 21:17:06,453 [INFO] chatbot: GET /api/admin/feedback -> 200 (4ms)
+2026-02-06 21:17:07,247 [INFO] chatbot: GET /api/database/upload-history -> 200 (4ms)
+2026-02-06 21:17:08,029 [INFO] chatbot: GET /api/database/list -> 200 (6ms)
+2026-02-06 21:17:17,283 [INFO] chatbot: PUT /api/database/crew_management/visibility -> 200 (70ms)
+2026-02-06 21:17:18,107 [INFO] chatbot: GET /api/admin/stats -> 200 (13ms)
+2026-02-06 21:17:18,332 [INFO] chatbot: PUT /api/database/flight_operations/visibility -> 200 (56ms)
+2026-02-06 21:17:19,113 [INFO] chatbot: GET /api/admin/stats -> 200 (14ms)
+2026-02-06 21:17:19,339 [INFO] chatbot: PUT /api/database/hr_payroll/visibility -> 200 (29ms)
+2026-02-06 21:17:20,156 [INFO] chatbot: GET /api/admin/stats -> 200 (14ms)
+2026-02-06 21:17:20,400 [INFO] chatbot: PUT /api/database/compliance_training/visibility -> 200 (69ms)
+2026-02-06 21:17:21,130 [INFO] chatbot: GET /api/admin/stats -> 200 (11ms)
+2026-02-06 21:17:21,807 [INFO] chatbot: GET /api/admin/users -> 200 (4ms)
+2026-02-06 21:17:22,531 [INFO] chatbot: GET /api/admin/feedback -> 200 (4ms)
+2026-02-06 21:17:23,323 [INFO] chatbot: GET /api/database/upload-history -> 200 (6ms)
+2026-02-06 21:17:23,757 [INFO] chatbot: GET /api/chat/conversations -> 200 (6ms)
+2026-02-06 21:17:28,916 [INFO] chatbot.api.chat: V1 request: conv=61 query="For LAX base and processing date 1/29/2026, why was employeed id 502370 not legal for any sequence"
+2026-02-06 21:17:28,917 [INFO] chatbot.llm.client: [chat_completion] model=gpt-5-2 json_mode=True sys_prompt_chars=0 user_preview="You are an intent classifier for an American Airlines crew management chatbot.
 
 Classify the user's query into exactly o..."
-2026-02-06 21:07:12,862 [INFO] chatbot.llm.client: [chat_completion] POST https://quasarmarket.coforge.com/qag/llmrouter-api/v2/chat/completions | model=gpt-5-2
-2026-02-06 21:07:16,894 [INFO] chatbot.llm.client: [chat_completion] Response status=200 | 4032ms
-2026-02-06 21:07:16,897 [INFO] chatbot.llm.client: [chat_completion] OK 4034ms | response_chars=421
-2026-02-06 21:07:16,898 [INFO] chatbot.api.chat: V1 intent: DATA confidence=0.93
-2026-02-06 21:07:16,944 [INFO] chatbot.sql.pipeline_v1: [pipeline] START query="For LAX base and processing date 1/29/2026, why was employeed id 502370 not legal for any sequence" context_len=571
-2026-02-06 21:07:16,947 [INFO] chatbot.sql.pipeline_v1: [retrieve_schemas] query="For LAX base and processing date 1/29/2026, why was employeed id 502370 not lega" top_k=5 registry_dbs={'crew_roster'}
-2026-02-06 21:07:16,949 [INFO] chatbot.sql.pipeline_v1: [retrieve_schemas] Keyword match returned 9 schemas: ['flight_operations.airports', 'crew_management.crew_members', 'crew_roster.sequencepositiondetails', 'fleet_maintenance.spare_parts_inventory', 'crew_roster.reserveslegalitycontextdetails']
-2026-02-06 21:07:16,949 [WARNING] chatbot.sql.pipeline_v1: [retrieve_schemas] Registry filter removed 5 schemas (registry has: {'crew_roster'})
-2026-02-06 21:07:16,950 [INFO] chatbot.llm.client: [embedding] Single text, chars=98
-2026-02-06 21:07:16,951 [INFO] chatbot.llm.client: [embedding_batch] 1 texts, total_chars=98
-2026-02-06 21:07:16,952 [INFO] chatbot.llm.client: [embedding] POST https://quasarmarket.coforge.com/qag/llmrouter-api/v2/text/embeddings | model=text-embeddings
-2026-02-06 21:07:20,032 [INFO] chatbot.llm.client: [embedding] Response status=200 | 3079ms
-2026-02-06 21:07:20,035 [INFO] chatbot.llm.client: [embedding] OK 3083ms | 1 embeddings, dims=746
-2026-02-06 21:07:20,037 [INFO] chatbot.sql.pipeline_v1: [pipeline] Using 7 schemas: ['crew_roster.sequencepositiondetails', 'crew_roster.reserveslegalitycontextdetails', 'crew_roster.reservescrewmember', 'crew_roster.base', 'crew_roster.basedate']
-2026-02-06 21:07:20,038 [INFO] chatbot.sql.pipeline_v1: [generate_sql] Sending query to LLM with 7 schemas, prompt_len=7604
-2026-02-06 21:07:20,038 [INFO] chatbot.llm.client: [chat_completion] model=gpt-5-2 json_mode=False sys_prompt_chars=0 user_preview="You are a SQL expert for an American Airlines crew management database system.
+2026-02-06 21:17:28,917 [INFO] chatbot.llm.client: [chat_completion] POST https://quasarmarket.coforge.com/qag/llmrouter-api/v2/chat/completions | model=gpt-5-2
+2026-02-06 21:17:32,494 [INFO] chatbot.llm.client: [chat_completion] Response status=200 | 3577ms
+2026-02-06 21:17:32,503 [INFO] chatbot.llm.client: [chat_completion] OK 3585ms | response_chars=353
+2026-02-06 21:17:32,520 [INFO] chatbot.api.chat: V1 intent: DATA confidence=0.94
+2026-02-06 21:17:32,574 [INFO] chatbot.sql.pipeline_v1: [pipeline] START query="For LAX base and processing date 1/29/2026, why was employeed id 502370 not legal for any sequence" context_len=297
+2026-02-06 21:17:32,577 [INFO] chatbot.sql.pipeline_v1: [retrieve_schemas] query="For LAX base and processing date 1/29/2026, why was employeed id 502370 not lega" top_k=5 registry_dbs={'crew_roster'}
+2026-02-06 21:17:32,579 [INFO] chatbot.sql.pipeline_v1: [retrieve_schemas] Keyword match returned 9 schemas: ['crew_roster.reservescrewmember', 'fleet_maintenance.maintenance_staff', 'crew_roster.sequence', 'flight_operations.flight_legs', 'fleet_maintenance.spare_parts_inventory']
+2026-02-06 21:17:32,579 [WARNING] chatbot.sql.pipeline_v1: [retrieve_schemas] Registry filter removed 4 schemas (registry has: {'crew_roster'})
+2026-02-06 21:17:32,580 [INFO] chatbot.llm.client: [embedding] Single text, chars=98
+2026-02-06 21:17:32,581 [INFO] chatbot.llm.client: [embedding_batch] 1 texts, total_chars=98
+2026-02-06 21:17:32,582 [INFO] chatbot.llm.client: [embedding] POST https://quasarmarket.coforge.com/qag/llmrouter-api/v2/text/embeddings | model=text-embeddings
+2026-02-06 21:17:34,030 [INFO] chatbot.llm.client: [embedding] Response status=200 | 1447ms
+2026-02-06 21:17:34,033 [INFO] chatbot.llm.client: [embedding] OK 1451ms | 1 embeddings, dims=746
+2026-02-06 21:17:34,035 [INFO] chatbot.sql.pipeline_v1: [pipeline] Using 7 schemas: ['crew_roster.reservescrewmember', 'crew_roster.sequence', 'crew_roster.sequencepositiondetails', 'crew_roster.base', 'crew_roster.legalityqladetails']
+2026-02-06 21:17:34,043 [INFO] chatbot.sql.pipeline_v1: [generate_sql] Sending query to LLM with 7 schemas, prompt_len=9859
+2026-02-06 21:17:34,044 [INFO] chatbot.llm.client: [chat_completion] model=gpt-5-2 json_mode=False sys_prompt_chars=0 user_preview="You are a SQL expert for an American Airlines crew management database system.
+Generate a SQLite SELECT query to answer ..."
+2026-02-06 21:17:34,047 [INFO] chatbot.llm.client: [chat_completion] POST https://quasarmarket.coforge.com/qag/llmrouter-api/v2/chat/completions | model=gpt-5-2
+2026-02-06 21:17:52,311 [INFO] chatbot.llm.client: [chat_completion] Response status=200 | 18264ms
+2026-02-06 21:17:52,313 [INFO] chatbot.llm.client: [chat_completion] OK 18266ms | response_chars=0
+2026-02-06 21:17:52,314 [INFO] chatbot.sql.pipeline_v1: [generate_sql] LLM responded in 18270ms | sql=""
+2026-02-06 21:17:52,314 [WARNING] chatbot.sql.pipeline_v1: [pipeline] SQL validation failed: Only SELECT statements are allowed
+2026-02-06 21:17:52,315 [WARNING] chatbot.api.chat: V1 SQL pipeline failed: Generated invalid SQL: Only SELECT statements are allowed
+2026-02-06 21:17:52,316 [INFO] chatbot.api.chat: V1 response: intent=DATA has_sql=False has_results=False suggestions=0 time=23406ms
+2026-02-06 21:17:52,405 [INFO] chatbot: POST /api/chat/message -> 200 (23497ms)
+2026-02-06 21:17:53,325 [INFO] chatbot: GET /api/chat/conversations -> 200 (4ms)
 
-Previous conversation context:
-Assistant..."
-2026-02-06 21:07:20,039 [INFO] chatbot.llm.client: [chat_completion] POST https://quasarmarket.coforge.com/qag/llmrouter-api/v2/chat/completions | model=gpt-5-2
-2026-02-06 21:07:27,711 [INFO] chatbot.llm.client: [chat_completion] Response status=200 | 7671ms
-2026-02-06 21:07:27,714 [INFO] chatbot.llm.client: [chat_completion] OK 7675ms | response_chars=1167
-2026-02-06 21:07:27,716 [INFO] chatbot.sql.pipeline_v1: [generate_sql] LLM responded in 7677ms | sql="SELECT
-  b.BaseCD,
-  b.BaseName,
-  bd.ProcessingDate,
-  rc.EmployeeID,
-  rc.FirstName,
-  rc.LastName,
-  rc.BaseDateID,
-  rc.ASGSequence,
-  s.SequenceN"
-2026-02-06 21:07:27,718 [INFO] chatbot.sql.pipeline_v1: [pipeline] Execute attempt 1/3
-2026-02-06 21:07:27,719 [INFO] chatbot.sql.pipeline_v1: [execute_sql] Executing: SELECT
-  b.BaseCD,
-  b.BaseName,
-  bd.ProcessingDate,
-  rc.EmployeeID,
-  rc.FirstName,
-  rc.LastName,
-  rc.BaseDateID,
-  rc.ASGSequence,
-  s.SequenceNumber,
-  lq.LegalityPhaseID,
-  lq.IsLegal,
-  lq.Is
-2026-02-06 21:07:27,731 [INFO] chatbot.sql.pipeline_v1: [execute_sql] OK 12ms | 0 rows, 19 columns
-2026-02-06 21:07:27,732 [INFO] chatbot.sql.pipeline_v1: [pipeline] SQL executed OK | 0 rows
-2026-02-06 21:07:27,733 [INFO] chatbot.sql.pipeline_v1: [pipeline] Zero rows returned, skipping summarization
-2026-02-06 21:07:27,735 [INFO] chatbot.sql.pipeline_v1: [pipeline] DONE success | attempts=1 | 10790ms | 0 rows
-2026-02-06 21:07:27,736 [INFO] chatbot.api.chat: V1 response: intent=DATA has_sql=True has_results=True suggestions=0 time=14879ms
-2026-02-06 21:07:27,790 [INFO] chatbot: POST /api/chat/message -> 200 (14935ms)
-2026-02-06 21:07:29,340 [INFO] chatbot: GET /api/chat/conversations -> 200 (6ms)
 
 
 
 PS C:\Users\Shaik.Jainmaih\Chat_v1_v2\sumit_chatbot_poc> uvicorn backend.main:app --reload
 INFO:     Will watch for changes in these directories: ['C:\\Users\\Shaik.Jainmaih\\Chat_v1_v2\\sumit_chatbot_poc']
 INFO:     Uvicorn running on http://127.0.0.1:8000 (Press CTRL+C to quit)
-INFO:     Started reloader process [21064] using WatchFiles
-INFO:     Started server process [15832]
+INFO:     Started reloader process [15056] using WatchFiles
+INFO:     Started server process [384]
 INFO:     Waiting for application startup.
-2026-02-06 21:01:15,418 [INFO] chatbot: Starting Crew Chatbot API...
-2026-02-06 21:01:15,418 [INFO] chatbot: LLM Model: gpt-5-2
-2026-02-06 21:01:15,418 [INFO] chatbot: Mode: SQLite (v1 API)
-2026-02-06 21:01:15,418 [INFO] chatbot: Database Dir: C:\Users\Shaik.Jainmaih\Chat_v1_v2\sumit_chatbot_poc\data\databases
+2026-02-06 21:15:53,649 [INFO] chatbot: Starting Crew Chatbot API...
+2026-02-06 21:15:53,650 [INFO] chatbot: LLM Model: gpt-5-2
+2026-02-06 21:15:53,650 [INFO] chatbot: Mode: SQLite (v1 API)
+2026-02-06 21:15:53,651 [INFO] chatbot: Database Dir: C:\Users\Shaik.Jainmaih\Chat_v1_v2\sumit_chatbot_poc\data\databases
 [OK] database_registry seeded with mock databases (DB_DIR=C:\Users\Shaik.Jainmaih\Chat_v1_v2\sumit_chatbot_poc\data\databases)
-2026-02-06 21:01:15,428 [INFO] chatbot: Database registry paths verified
+2026-02-06 21:15:53,715 [INFO] chatbot: Database registry paths verified
 INFO:     Application startup complete.
-2026-02-06 21:01:28,899 [INFO] chatbot: POST /api/auth/login -> 200 (532ms)
-INFO:     127.0.0.1:57072 - "POST /api/auth/login HTTP/1.1" 200 OK
-2026-02-06 21:01:31,392 [INFO] chatbot: GET /api/auth/visitor-name -> 200 (1ms)
-INFO:     127.0.0.1:63544 - "GET /api/auth/visitor-name?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhZG1pbiIsInVzZXJfaWQiOjEsInJvbGUiOiJhZG1pbiIsImV4cCI6MTc3MDM5NTQ4OH0.YDDscSGNrcr0ZnU-7dkB3HCkAHMYvEAvOp4gy8eucAg HTTP/1.1" 200 OK
-2026-02-06 21:01:31,822 [INFO] chatbot: GET /api/chat/conversations -> 200 (2ms)
-INFO:     127.0.0.1:54449 - "GET /api/chat/conversations?limit=10&token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhZG1pbiIsInVzZXJfaWQiOjEsInJvbGUiOiJhZG1pbiIsImV4cCI6MTc3MDM5NTQ4OH0.YDDscSGNrcr0ZnU-7dkB3HCkAHMYvEAvOp4gy8eucAg HTTP/1.1" 200 OK
-2026-02-06 21:01:36,693 [INFO] chatbot: GET /api/admin/stats -> 200 (14ms)
-INFO:     127.0.0.1:52774 - "GET /api/admin/stats?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhZG1pbiIsInVzZXJfaWQiOjEsInJvbGUiOiJhZG1pbiIsImV4cCI6MTc3MDM5NTQ4OH0.YDDscSGNrcr0ZnU-7dkB3HCkAHMYvEAvOp4gy8eucAg HTTP/1.1" 200 OK
-2026-02-06 21:01:37,038 [INFO] chatbot: GET /api/admin/users -> 200 (1ms)
-INFO:     127.0.0.1:52776 - "GET /api/admin/users?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhZG1pbiIsInVzZXJfaWQiOjEsInJvbGUiOiJhZG1pbiIsImV4cCI6MTc3MDM5NTQ4OH0.YDDscSGNrcr0ZnU-7dkB3HCkAHMYvEAvOp4gy8eucAg HTTP/1.1" 200 OK
-2026-02-06 21:01:37,475 [INFO] chatbot: GET /api/admin/feedback -> 200 (4ms)
-INFO:     127.0.0.1:52777 - "GET /api/admin/feedback?limit=100&token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhZG1pbiIsInVzZXJfaWQiOjEsInJvbGUiOiJhZG1pbiIsImV4cCI6MTc3MDM5NTQ4OH0.YDDscSGNrcr0ZnU-7dkB3HCkAHMYvEAvOp4gy8eucAg HTTP/1.1" 200 OK
-2026-02-06 21:01:38,046 [INFO] chatbot: GET /api/database/upload-history -> 200 (5ms)
-INFO:     127.0.0.1:52780 - "GET /api/database/upload-history?limit=10&token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhZG1pbiIsInVzZXJfaWQiOjEsInJvbGUiOiJhZG1pbiIsImV4cCI6MTc3MDM5NTQ4OH0.YDDscSGNrcr0ZnU-7dkB3HCkAHMYvEAvOp4gy8eucAg HTTP/1.1" 200 OK
-2026-02-06 21:01:38,776 [INFO] chatbot: GET /api/database/list -> 200 (5ms)
-INFO:     127.0.0.1:52781 - "GET /api/database/list?include_hidden=true&token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhZG1pbiIsInVzZXJfaWQiOjEsInJvbGUiOiJhZG1pbiIsImV4cCI6MTc3MDM5NTQ4OH0.YDDscSGNrcr0ZnU-7dkB3HCkAHMYvEAvOp4gy8eucAg HTTP/1.1" 200 OK
-2026-02-06 21:01:42,998 [INFO] chatbot: PUT /api/database/crew_management/visibility -> 200 (23ms)
-INFO:     127.0.0.1:60893 - "PUT /api/database/crew_management/visibility?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhZG1pbiIsInVzZXJfaWQiOjEsInJvbGUiOiJhZG1pbiIsImV4cCI6MTc3MDM5NTQ4OH0.YDDscSGNrcr0ZnU-7dkB3HCkAHMYvEAvOp4gy8eucAg HTTP/1.1" 200 OK
-2026-02-06 21:01:43,544 [INFO] chatbot: GET /api/admin/stats -> 200 (7ms)
-INFO:     127.0.0.1:60894 - "GET /api/admin/stats?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhZG1pbiIsInVzZXJfaWQiOjEsInJvbGUiOiJhZG1pbiIsImV4cCI6MTc3MDM5NTQ4OH0.YDDscSGNrcr0ZnU-7dkB3HCkAHMYvEAvOp4gy8eucAg HTTP/1.1" 200 OK
-2026-02-06 21:01:44,014 [INFO] chatbot: PUT /api/database/flight_operations/visibility -> 200 (18ms)
-INFO:     127.0.0.1:60895 - "PUT /api/database/flight_operations/visibility?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhZG1pbiIsInVzZXJfaWQiOjEsInJvbGUiOiJhZG1pbiIsImV4cCI6MTc3MDM5NTQ4OH0.YDDscSGNrcr0ZnU-7dkB3HCkAHMYvEAvOp4gy8eucAg HTTP/1.1" 200 OK
-2026-02-06 21:01:44,581 [INFO] chatbot: GET /api/admin/stats -> 200 (10ms)
-INFO:     127.0.0.1:60896 - "GET /api/admin/stats?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhZG1pbiIsInVzZXJfaWQiOjEsInJvbGUiOiJhZG1pbiIsImV4cCI6MTc3MDM5NTQ4OH0.YDDscSGNrcr0ZnU-7dkB3HCkAHMYvEAvOp4gy8eucAg HTTP/1.1" 200 OK
-2026-02-06 21:01:45,176 [INFO] chatbot: GET /api/admin/users -> 200 (3ms)
-INFO:     127.0.0.1:60897 - "GET /api/admin/users?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhZG1pbiIsInVzZXJfaWQiOjEsInJvbGUiOiJhZG1pbiIsImV4cCI6MTc3MDM5NTQ4OH0.YDDscSGNrcr0ZnU-7dkB3HCkAHMYvEAvOp4gy8eucAg HTTP/1.1" 200 OK
-2026-02-06 21:01:45,322 [INFO] chatbot: PUT /api/database/hr_payroll/visibility -> 200 (20ms)
-INFO:     127.0.0.1:60898 - "PUT /api/database/hr_payroll/visibility?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhZG1pbiIsInVzZXJfaWQiOjEsInJvbGUiOiJhZG1pbiIsImV4cCI6MTc3MDM5NTQ4OH0.YDDscSGNrcr0ZnU-7dkB3HCkAHMYvEAvOp4gy8eucAg HTTP/1.1" 200 OK
-2026-02-06 21:01:45,734 [INFO] chatbot: GET /api/admin/stats -> 200 (5ms)
-INFO:     127.0.0.1:60899 - "GET /api/admin/stats?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhZG1pbiIsInVzZXJfaWQiOjEsInJvbGUiOiJhZG1pbiIsImV4cCI6MTc3MDM5NTQ4OH0.YDDscSGNrcr0ZnU-7dkB3HCkAHMYvEAvOp4gy8eucAg HTTP/1.1" 200 OK
-2026-02-06 21:01:46,118 [INFO] chatbot: PUT /api/database/compliance_training/visibility -> 200 (58ms)
-INFO:     127.0.0.1:60900 - "PUT /api/database/compliance_training/visibility?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhZG1pbiIsInVzZXJfaWQiOjEsInJvbGUiOiJhZG1pbiIsImV4cCI6MTc3MDM5NTQ4OH0.YDDscSGNrcr0ZnU-7dkB3HCkAHMYvEAvOp4gy8eucAg HTTP/1.1" 200 OK
-2026-02-06 21:01:46,612 [INFO] chatbot: GET /api/admin/stats -> 200 (9ms)
-INFO:     127.0.0.1:51798 - "GET /api/admin/stats?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhZG1pbiIsInVzZXJfaWQiOjEsInJvbGUiOiJhZG1pbiIsImV4cCI6MTc3MDM5NTQ4OH0.YDDscSGNrcr0ZnU-7dkB3HCkAHMYvEAvOp4gy8eucAg HTTP/1.1" 200 OK
-2026-02-06 21:01:47,104 [INFO] chatbot: GET /api/admin/users -> 200 (3ms)
-INFO:     127.0.0.1:52935 - "GET /api/admin/users?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhZG1pbiIsInVzZXJfaWQiOjEsInJvbGUiOiJhZG1pbiIsImV4cCI6MTc3MDM5NTQ4OH0.YDDscSGNrcr0ZnU-7dkB3HCkAHMYvEAvOp4gy8eucAg HTTP/1.1" 200 OK
-2026-02-06 21:01:47,668 [INFO] chatbot: GET /api/admin/feedback -> 200 (3ms)
-INFO:     127.0.0.1:52936 - "GET /api/admin/feedback?limit=100&token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhZG1pbiIsInVzZXJfaWQiOjEsInJvbGUiOiJhZG1pbiIsImV4cCI6MTc3MDM5NTQ4OH0.YDDscSGNrcr0ZnU-7dkB3HCkAHMYvEAvOp4gy8eucAg HTTP/1.1" 200 OK
-2026-02-06 21:01:48,201 [INFO] chatbot: GET /api/database/upload-history -> 200 (3ms)
-INFO:     127.0.0.1:52937 - "GET /api/database/upload-history?limit=10&token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhZG1pbiIsInVzZXJfaWQiOjEsInJvbGUiOiJhZG1pbiIsImV4cCI6MTc3MDM5NTQ4OH0.YDDscSGNrcr0ZnU-7dkB3HCkAHMYvEAvOp4gy8eucAg HTTP/1.1" 200 OK
-2026-02-06 21:01:48,446 [INFO] chatbot: GET /api/chat/conversations -> 200 (2ms)
-INFO:     127.0.0.1:52939 - "GET /api/chat/conversations?limit=10&token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhZG1pbiIsInVzZXJfaWQiOjEsInJvbGUiOiJhZG1pbiIsImV4cCI6MTc3MDM5NTQ4OH0.YDDscSGNrcr0ZnU-7dkB3HCkAHMYvEAvOp4gy8eucAg HTTP/1.1" 200 OK
-2026-02-06 21:01:50,941 [INFO] chatbot.api.chat: V1 request: conv=60 query="Hi"
-2026-02-06 21:01:50,945 [INFO] chatbot.api.chat: V1 intent: GENERAL confidence=0.99
-2026-02-06 21:01:50,974 [INFO] chatbot.api.chat: V1 response: intent=GENERAL has_sql=False has_results=False suggestions=0 time=55ms
-2026-02-06 21:01:51,008 [INFO] chatbot: POST /api/chat/message -> 200 (90ms)
-INFO:     127.0.0.1:60133 - "POST /api/chat/message?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhZG1pbiIsInVzZXJfaWQiOjEsInJvbGUiOiJhZG1pbiIsImV4cCI6MTc3MDM5NTQ4OH0.YDDscSGNrcr0ZnU-7dkB3HCkAHMYvEAvOp4gy8eucAg HTTP/1.1" 200 OK
-2026-02-06 21:01:51,705 [INFO] chatbot: GET /api/chat/conversations -> 200 (3ms)
-INFO:     127.0.0.1:60134 - "GET /api/chat/conversations?limit=10&token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhZG1pbiIsInVzZXJfaWQiOjEsInJvbGUiOiJhZG1pbiIsImV4cCI6MTc3MDM5NTQ4OH0.YDDscSGNrcr0ZnU-7dkB3HCkAHMYvEAvOp4gy8eucAg HTTP/1.1" 200 OK
-2026-02-06 21:02:28,048 [INFO] chatbot.api.chat: V1 request: conv=60 query="For LAX base and processing date 1/29/2026, why was employee id 502370 not legal for any sequence"
+2026-02-06 21:16:07,712 [INFO] chatbot: POST /api/auth/login -> 200 (589ms)
+INFO:     127.0.0.1:65203 - "POST /api/auth/login HTTP/1.1" 200 OK
+2026-02-06 21:16:11,253 [INFO] chatbot: GET /api/auth/visitor-name -> 200 (4ms)
+INFO:     127.0.0.1:62210 - "GET /api/auth/visitor-name?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhZG1pbiIsInVzZXJfaWQiOjEsInJvbGUiOiJhZG1pbiIsImV4cCI6MTc3MDM5NjM2N30.iTbHt1WzoxKohTvi4HXgvf-x_Ne6Ms3gDzFE5OhCbk0 HTTP/1.1" 200 OK
+2026-02-06 21:16:12,087 [INFO] chatbot: GET /api/chat/conversations -> 200 (6ms)
+INFO:     127.0.0.1:62212 - "GET /api/chat/conversations?limit=10&token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhZG1pbiIsInVzZXJfaWQiOjEsInJvbGUiOiJhZG1pbiIsImV4cCI6MTc3MDM5NjM2N30.iTbHt1WzoxKohTvi4HXgvf-x_Ne6Ms3gDzFE5OhCbk0 HTTP/1.1" 200 OK
+2026-02-06 21:16:20,358 [INFO] chatbot.api.chat: V1 request: conv=61 query="Hi"
+2026-02-06 21:16:20,362 [INFO] chatbot.api.chat: V1 intent: GENERAL confidence=0.99
+2026-02-06 21:16:20,406 [INFO] chatbot.api.chat: V1 response: intent=GENERAL has_sql=False has_results=False suggestions=0 time=73ms
+2026-02-06 21:16:20,450 [INFO] chatbot: POST /api/chat/message -> 200 (119ms)
+INFO:     127.0.0.1:52905 - "POST /api/chat/message?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhZG1pbiIsInVzZXJfaWQiOjEsInJvbGUiOiJhZG1pbiIsImV4cCI6MTc3MDM5NjM2N30.iTbHt1WzoxKohTvi4HXgvf-x_Ne6Ms3gDzFE5OhCbk0 HTTP/1.1" 200 OK
+2026-02-06 21:16:21,370 [INFO] chatbot: GET /api/chat/conversations -> 200 (5ms)
+INFO:     127.0.0.1:52906 - "GET /api/chat/conversations?limit=10&token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhZG1pbiIsInVzZXJfaWQiOjEsInJvbGUiOiJhZG1pbiIsImV4cCI6MTc3MDM5NjM2N30.iTbHt1WzoxKohTvi4HXgvf-x_Ne6Ms3gDzFE5OhCbk0 HTTP/1.1" 200 OK
+2026-02-06 21:16:32,303 [INFO] chatbot.api.chat: V1 request: conv=61 query="For LAX base and processing date 1/29/2026, why was employeed id 502370 not legal for any sequence"
 LLM Client: Chat API at https://quasarmarket.coforge.com/qag/llmrouter-api/v2/chat/completions
 LLM Client: Embedding API at https://quasarmarket.coforge.com/qag/llmrouter-api/v2/text/embeddings
 LLM Client: Chat fallback at https://quasarmarket.coforge.com/qag/llmrouter-api/v3/chat/completions        
 LLM Client: Embedding fallback at https://quasarmarket.coforge.com/qag/llmrouter-api/v3/text/embeddings    
   SSL verification: disabled
-2026-02-06 21:02:28,050 [INFO] chatbot.llm.client: [chat_completion] model=gpt-5-2 json_mode=True sys_prompt_chars=0 user_preview="You are an intent classifier for an American Airlines crew management chatbot.     
+2026-02-06 21:16:32,305 [INFO] chatbot.llm.client: [chat_completion] model=gpt-5-2 json_mode=True sys_prompt_chars=0 user_preview="You are an intent classifier for an American Airlines crew management chatbot.     
 
 Classify the user's query into exactly o..."
-2026-02-06 21:02:28,051 [INFO] chatbot.llm.client: [chat_completion] POST https://quasarmarket.coforge.com/qag/llmrouter-api/v2/chat/completions | model=gpt-5-2
-2026-02-06 21:02:31,741 [INFO] chatbot.llm.client: [chat_completion] Response status=200 | 3690ms
-2026-02-06 21:02:31,743 [INFO] chatbot.llm.client: [chat_completion] OK 3692ms | response_chars=394
-2026-02-06 21:02:31,744 [INFO] chatbot.api.chat: V1 intent: DATA confidence=0.93
-2026-02-06 21:02:31,776 [INFO] chatbot.sql.pipeline_v1: [pipeline] START query="For LAX base and processing date 1/29/2026, why was employee id 502370 not legal for any sequence" context_len=174
-2026-02-06 21:02:31,779 [INFO] chatbot.sql.pipeline_v1: [retrieve_schemas] query="For LAX base and processing date 1/29/2026, why was employee id 502370 not legal" top_k=5 registry_dbs={'crew_roster'}
-2026-02-06 21:02:31,782 [INFO] chatbot.sql.schema_cache: Schema cache loaded: 42 tables from C:\Users\Shaik.Jainmaih\Chat_v1_v2\sumit_chatbot_poc\data\databases\app.db
-2026-02-06 21:02:31,782 [INFO] chatbot.sql.schema_cache: Schema cache databases: {'flight_operations', 'crew_roster', 'compliance_training', 'hr_payroll', 'fleet_maintenance', 'crew_management'}
-2026-02-06 21:02:31,784 [INFO] chatbot.sql.pipeline_v1: [retrieve_schemas] Keyword match returned 9 schemas: ['flight_operations.airports', 'crew_management.crew_members', 'crew_roster.sequencepositiondetails', 'fleet_maintenance.spare_parts_inventory', 'crew_roster.reserveslegalitycontextdetails']
-2026-02-06 21:02:31,785 [WARNING] chatbot.sql.pipeline_v1: [retrieve_schemas] Registry filter removed 5 schemas (registry has: {'crew_roster'})
+2026-02-06 21:16:32,306 [INFO] chatbot.llm.client: [chat_completion] POST https://quasarmarket.coforge.com/qag/llmrouter-api/v2/chat/completions | model=gpt-5-2
+2026-02-06 21:16:35,786 [INFO] chatbot.llm.client: [chat_completion] Response status=200 | 3480ms
+2026-02-06 21:16:35,789 [INFO] chatbot.llm.client: [chat_completion] OK 3483ms | response_chars=424
+2026-02-06 21:16:35,791 [INFO] chatbot.api.chat: V1 intent: DATA confidence=0.93
+2026-02-06 21:16:35,879 [INFO] chatbot.sql.pipeline_v1: [pipeline] START query="For LAX base and processing date 1/29/2026, why was employeed id 502370 not legal for any sequence" context_len=100
+2026-02-06 21:16:35,884 [INFO] chatbot.sql.pipeline_v1: [retrieve_schemas] query="For LAX base and processing date 1/29/2026, why was employeed id 502370 not lega" top_k=5 registry_dbs={'hr_payroll', 'flight_operations', 'crew_roster', 'compliance_training', 'crew_management'}
+2026-02-06 21:16:35,892 [INFO] chatbot.sql.schema_cache: Schema cache loaded: 42 tables from C:\Users\Shaik.Jainmaih\Chat_v1_v2\sumit_chatbot_poc\data\databases\app.db
+2026-02-06 21:16:35,893 [INFO] chatbot.sql.schema_cache: Schema cache databases: {'hr_payroll', 'flight_operations', 'fleet_maintenance', 'crew_roster', 'compliance_training', 'crew_management'}
+2026-02-06 21:16:35,894 [INFO] chatbot.sql.pipeline_v1: [retrieve_schemas] Keyword match returned 9 schemas: ['crew_roster.reservescrewmember', 'fleet_maintenance.maintenance_staff', 'crew_roster.sequence', 'flight_operations.flight_legs', 'fleet_maintenance.spare_parts_inventory']
+2026-02-06 21:16:35,895 [WARNING] chatbot.sql.pipeline_v1: [retrieve_schemas] Registry filter removed 3 schemas (registry has: {'hr_payroll', 'flight_operations', 'crew_roster', 'compliance_training', 'crew_management'})
 Loaded FAISS index 'schema_metadata' with 42 items
-2026-02-06 21:02:31,788 [INFO] chatbot.llm.client: [embedding] Single text, chars=97
-2026-02-06 21:02:31,789 [INFO] chatbot.llm.client: [embedding_batch] 1 texts, total_chars=97
-2026-02-06 21:02:31,790 [INFO] chatbot.llm.client: [embedding] POST https://quasarmarket.coforge.com/qag/llmrouter-api/v2/text/embeddings | model=text-embeddings
-2026-02-06 21:02:33,060 [INFO] chatbot.llm.client: [embedding] Response status=200 | 1270ms
-2026-02-06 21:02:33,063 [INFO] chatbot.llm.client: [embedding] OK 1273ms | 1 embeddings, dims=746
-2026-02-06 21:02:33,064 [INFO] chatbot.sql.pipeline_v1: [pipeline] Using 7 schemas: ['crew_roster.sequencepositiondetails', 'crew_roster.reserveslegalitycontextdetails', 'crew_roster.reservescrewmember', 'crew_roster.base', 'crew_roster.basedate']
-2026-02-06 21:02:33,064 [INFO] chatbot.sql.pipeline_v1: [generate_sql] Sending query to LLM with 7 schemas, prompt_len=7206
-2026-02-06 21:02:33,070 [INFO] chatbot.llm.client: [chat_completion] model=gpt-5-2 json_mode=False sys_prompt_chars=0 user_preview="You are a SQL expert for an American Airlines crew management database system.    
+2026-02-06 21:16:35,900 [INFO] chatbot.llm.client: [embedding] Single text, chars=98
+2026-02-06 21:16:35,901 [INFO] chatbot.llm.client: [embedding_batch] 1 texts, total_chars=98
+2026-02-06 21:16:35,902 [INFO] chatbot.llm.client: [embedding] POST https://quasarmarket.coforge.com/qag/llmrouter-api/v2/text/embeddings | model=text-embeddings
+2026-02-06 21:16:37,299 [INFO] chatbot.llm.client: [embedding] Response status=200 | 1397ms
+2026-02-06 21:16:37,303 [INFO] chatbot.llm.client: [embedding] OK 1401ms | 1 embeddings, dims=746
+2026-02-06 21:16:37,305 [INFO] chatbot.sql.pipeline_v1: [pipeline] Using 9 schemas: ['crew_roster.reservescrewmember', 'crew_roster.reservescrewmember', 'crew_roster.sequence', 'flight_operations.flight_legs', 'crew_roster.sequencepositiondetails']
+2026-02-06 21:16:37,306 [INFO] chatbot.sql.pipeline_v1: [generate_sql] Sending query to LLM with 9 schemas, prompt_len=11046
+2026-02-06 21:16:37,309 [INFO] chatbot.llm.client: [chat_completion] model=gpt-5-2 json_mode=False sys_prompt_chars=0 user_preview="You are a SQL expert for an American Airlines crew management database system.    
+Generate a SQLite SELECT query to answer ..."
+2026-02-06 21:16:37,311 [INFO] chatbot.llm.client: [chat_completion] POST https://quasarmarket.coforge.com/qag/llmrouter-api/v2/chat/completions | model=gpt-5-2
+2026-02-06 21:16:44,364 [INFO] chatbot.llm.client: [chat_completion] Response status=200 | 7053ms
+2026-02-06 21:16:44,368 [INFO] chatbot.llm.client: [chat_completion] OK 7057ms | response_chars=1155
+2026-02-06 21:16:44,370 [INFO] chatbot.sql.pipeline_v1: [generate_sql] LLM responded in 7060ms | sql="SELECT
+  b.BaseCD AS base_code,
+  bd.ProcessingDate AS processing_date,
+  r.EmployeeID AS employee_id,
+  r.FirstName AS first_name,
+  r.LastName AS la"
+2026-02-06 21:16:44,376 [INFO] chatbot.sql.pipeline_v1: [pipeline] Execute attempt 1/3
+2026-02-06 21:16:44,376 [INFO] chatbot.sql.pipeline_v1: [execute_sql] Executing: SELECT
+  b.BaseCD AS base_code,
+  bd.ProcessingDate AS processing_date,
+  r.EmployeeID AS employee_id,
+  r.FirstName AS first_name,
+  r.LastName AS last_name,
+  ld.LegalityPhaseID AS legality_phase_id
+2026-02-06 21:16:44,393 [INFO] chatbot.sql.pipeline_v1: [execute_sql] OK 17ms | 0 rows, 15 columns
+2026-02-06 21:16:44,394 [INFO] chatbot.sql.pipeline_v1: [pipeline] SQL executed OK | 0 rows
+2026-02-06 21:16:44,395 [INFO] chatbot.sql.pipeline_v1: [pipeline] Zero rows with context, retrying without context
+2026-02-06 21:16:44,396 [INFO] chatbot.sql.pipeline_v1: [generate_sql] Sending query to LLM with 9 schemas, prompt_len=10656
+2026-02-06 21:16:44,397 [INFO] chatbot.llm.client: [chat_completion] model=gpt-5-2 json_mode=False sys_prompt_chars=0 user_preview="You are a SQL expert for an American Airlines crew management database system.    
+Generate a SQLite SELECT query to answer ..."
+2026-02-06 21:16:44,398 [INFO] chatbot.llm.client: [chat_completion] POST https://quasarmarket.coforge.com/qag/llmrouter-api/v2/chat/completions | model=gpt-5-2
+2026-02-06 21:16:52,076 [INFO] chatbot.llm.client: [chat_completion] Response status=200 | 7677ms
+2026-02-06 21:16:52,080 [INFO] chatbot.llm.client: [chat_completion] OK 7681ms | response_chars=1316
+2026-02-06 21:16:52,082 [INFO] chatbot.sql.pipeline_v1: [generate_sql] LLM responded in 7684ms | sql="SELECT
+  rcm.EmployeeID AS employee_id,
+  rcm.FirstName AS first_name,
+  rcm.LastName AS last_name,
+  b.BaseCD AS base_code,
+  bd.ProcessingDate AS pr"
+2026-02-06 21:16:52,085 [INFO] chatbot.sql.pipeline_v1: [execute_sql] Executing: SELECT
+  rcm.EmployeeID AS employee_id,
+  rcm.FirstName AS first_name,
+  rcm.LastName AS last_name,
+  b.BaseCD AS base_code,
+  bd.ProcessingDate AS processing_date,
+  bd.BaseDateID AS base_date_id,
 
-Previous conversation context:
-User: Hi
-..."
-2026-02-06 21:02:33,071 [INFO] chatbot.llm.client: [chat_completion] POST https://quasarmarket.coforge.com/qag/llmrouter-api/v2/chat/completions | model=gpt-5-2
-2026-02-06 21:02:43,070 [INFO] chatbot.llm.client: [chat_completion] Response status=200 | 9999ms
-2026-02-06 21:02:43,072 [INFO] chatbot.llm.client: [chat_completion] OK 10001ms | response_chars=1305
-2026-02-06 21:02:43,073 [INFO] chatbot.sql.pipeline_v1: [generate_sql] LLM responded in 10003ms | sql="SELECT
-  b.BaseCD,
-  bd.ProcessingDate,
-  rcm.EmployeeID,
-  rcm.FirstName,
-  rcm.LastName,
-  rcm.IsSick,
-  rcm.IsVolunteer,
-  rcm.IsCompletelyAvailabl"
-2026-02-06 21:02:43,075 [INFO] chatbot.sql.pipeline_v1: [pipeline] Execute attempt 1/3
-2026-02-06 21:02:43,077 [INFO] chatbot.sql.pipeline_v1: [execute_sql] Executing: SELECT
-  b.BaseCD,
-  bd.ProcessingDate,
-  rcm.EmployeeID,
-  rcm.FirstName,
-  rcm.LastName,
-  rcm.IsSick,
-  rcm.IsVolunteer,
-  rcm.IsCompletelyAvailableReserve,
-  rcm.ASGDays,
-  rcm.ASGStandby,
-  rcm.A
-2026-02-06 21:02:43,090 [INFO] chatbot.sql.pipeline_v1: [execute_sql] OK 13ms | 100 rows, 21 columns
-2026-02-06 21:02:43,091 [INFO] chatbot.sql.pipeline_v1: [pipeline] SQL executed OK | 100 rows
-2026-02-06 21:02:43,093 [INFO] chatbot.sql.pipeline_v1: [summarize] Prompt length: 15431 chars, rows sent: 25/100
-2026-02-06 21:02:43,093 [INFO] chatbot.llm.client: [chat_completion] model=gpt-5-2 json_mode=False sys_prompt_chars=0 user_preview="You are a helpful assistant summarizing database query results for airline crew staff.
+2026-02-06 21:16:52,102 [INFO] chatbot.sql.pipeline_v1: [execute_sql] OK 16ms | 100 rows, 17 columns
+2026-02-06 21:16:52,102 [INFO] chatbot.sql.pipeline_v1: [pipeline] Context-free retry returned 100 rows    
+2026-02-06 21:16:52,104 [INFO] chatbot.sql.pipeline_v1: [summarize] Prompt length: 14793 chars, rows sent: 25/100
+2026-02-06 21:16:52,106 [INFO] chatbot.llm.client: [chat_completion] model=gpt-5-2 json_mode=False sys_prompt_chars=0 user_preview="You are a helpful assistant summarizing database query results for airline crew staff.
 
 User's original question: For LA..."
-2026-02-06 21:02:43,094 [INFO] chatbot.llm.client: [chat_completion] POST https://quasarmarket.coforge.com/qag/llmrouter-api/v2/chat/completions | model=gpt-5-2
-2026-02-06 21:02:54,515 [INFO] chatbot.llm.client: [chat_completion] Response status=200 | 11420ms
-2026-02-06 21:02:54,518 [INFO] chatbot.llm.client: [chat_completion] OK 11423ms | response_chars=1327
-2026-02-06 21:02:54,519 [INFO] chatbot.sql.pipeline_v1: [pipeline] DONE success | attempts=1 | 22742ms | 100 rows
-2026-02-06 21:02:54,519 [INFO] chatbot.api.chat: V1 response: intent=DATA has_sql=True has_results=True suggestions=3 time=26473ms
-2026-02-06 21:02:54,568 [INFO] chatbot: POST /api/chat/message -> 200 (26523ms)
-INFO:     127.0.0.1:49674 - "POST /api/chat/message?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhZG1pbiIsInVzZXJfaWQiOjEsInJvbGUiOiJhZG1pbiIsImV4cCI6MTc3MDM5NTQ4OH0.YDDscSGNrcr0ZnU-7dkB3HCkAHMYvEAvOp4gy8eucAg HTTP/1.1" 200 OK
-2026-02-06 21:02:55,558 [INFO] chatbot: GET /api/chat/conversations -> 200 (4ms)
-INFO:     127.0.0.1:65456 - "GET /api/chat/conversations?limit=10&token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhZG1pbiIsInVzZXJfaWQiOjEsInJvbGUiOiJhZG1pbiIsImV4cCI6MTc3MDM5NTQ4OH0.YDDscSGNrcr0ZnU-7dkB3HCkAHMYvEAvOp4gy8eucAg HTTP/1.1" 200 OK
-2026-02-06 21:03:47,664 [INFO] chatbot.api.chat: V1 request: conv=60 query="Which other LAX reserves on 01/29/2026 are missing legality QLA/context records (NULL legality fields)?"
-2026-02-06 21:03:47,665 [INFO] chatbot.api.chat: V1 intent: DATA confidence=0.95
-2026-02-06 21:03:47,693 [INFO] chatbot.sql.pipeline_v1: [pipeline] START query="Which other LAX reserves on 01/29/2026 are missing legality QLA/context records (NULL legality fields)?" context_len=490
-2026-02-06 21:03:47,695 [INFO] chatbot.sql.pipeline_v1: [retrieve_schemas] query="Which other LAX reserves on 01/29/2026 are missing legality QLA/context records " top_k=5 registry_dbs={'crew_roster'}
-2026-02-06 21:03:47,696 [INFO] chatbot.sql.pipeline_v1: [retrieve_schemas] Keyword match returned 9 schemas: ['fleet_maintenance.aircraft_inspections', 'crew_roster.reserveslegality', 'crew_roster.basedate', 'crew_management.crew_members', 'crew_roster.legalitypostqlastatus']
-2026-02-06 21:03:47,696 [WARNING] chatbot.sql.pipeline_v1: [retrieve_schemas] Registry filter removed 3 schemas (registry has: {'crew_roster'})
-2026-02-06 21:03:47,696 [INFO] chatbot.llm.client: [embedding] Single text, chars=103
-2026-02-06 21:03:47,696 [INFO] chatbot.llm.client: [embedding_batch] 1 texts, total_chars=103
-2026-02-06 21:03:47,696 [INFO] chatbot.llm.client: [embedding] POST https://quasarmarket.coforge.com/qag/llmrouter-api/v2/text/embeddings | model=text-embeddings
-2026-02-06 21:03:49,121 [INFO] chatbot.llm.client: [embedding] Response status=200 | 1424ms
-2026-02-06 21:03:49,123 [INFO] chatbot.llm.client: [embedding] OK 1426ms | 1 embeddings, dims=746
-2026-02-06 21:03:49,124 [INFO] chatbot.sql.pipeline_v1: [pipeline] Using 7 schemas: ['crew_roster.reserveslegality', 'crew_roster.basedate', 'crew_roster.legalitypostqlastatus', 'crew_roster.legalityqladetails', 'crew_roster.sequence']
-2026-02-06 21:03:49,125 [INFO] chatbot.sql.pipeline_v1: [generate_sql] Sending query to LLM with 7 schemas, prompt_len=6890
-2026-02-06 21:03:49,125 [INFO] chatbot.llm.client: [chat_completion] model=gpt-5-2 json_mode=False sys_prompt_chars=0 user_preview="You are a SQL expert for an American Airlines crew management database system.    
-
-Previous conversation context:
-User: Hi
-..."
-2026-02-06 21:03:49,125 [INFO] chatbot.llm.client: [chat_completion] POST https://quasarmarket.coforge.com/qag/llmrouter-api/v2/chat/completions | model=gpt-5-2
-2026-02-06 21:03:56,531 [INFO] chatbot.llm.client: [chat_completion] Response status=200 | 7405ms
-2026-02-06 21:03:56,533 [INFO] chatbot.llm.client: [chat_completion] OK 7408ms | response_chars=1227
-2026-02-06 21:03:56,534 [INFO] chatbot.sql.pipeline_v1: [generate_sql] LLM responded in 7409ms | sql="SELECT
-  b.BaseCD,
-  bd.ProcessingDate,
-  rl.ReservesCrewMemberID AS employee_id,
-  rl.ReservesLegalityID,
-  rl.BaseDateID,
-  rl.SequencePositionDetai"
-2026-02-06 21:03:56,535 [INFO] chatbot.sql.pipeline_v1: [pipeline] Execute attempt 1/3
-2026-02-06 21:03:56,536 [INFO] chatbot.sql.pipeline_v1: [execute_sql] Executing: SELECT
-  b.BaseCD,
-  bd.ProcessingDate,
-  rl.ReservesCrewMemberID AS employee_id,
-  rl.ReservesLegalityID,
-  rl.BaseDateID,
-  rl.SequencePositionDetailsID,
-  qla.LegalityQLADetailsID,
-  qla.IsLegal AS
-2026-02-06 21:03:56,707 [INFO] chatbot.sql.pipeline_v1: [execute_sql] OK 170ms | 0 rows, 14 columns
-2026-02-06 21:03:56,708 [INFO] chatbot.sql.pipeline_v1: [pipeline] SQL executed OK | 0 rows
-2026-02-06 21:03:56,708 [INFO] chatbot.sql.pipeline_v1: [pipeline] Zero rows returned, skipping summarization
-2026-02-06 21:03:56,709 [INFO] chatbot.sql.pipeline_v1: [pipeline] DONE success | attempts=1 | 9015ms | 0 rows
-2026-02-06 21:03:56,709 [INFO] chatbot.api.chat: V1 response: intent=DATA has_sql=True has_results=True suggestions=0 time=9049ms
-2026-02-06 21:03:56,750 [INFO] chatbot: POST /api/chat/message -> 200 (9090ms)
-INFO:     127.0.0.1:54202 - "POST /api/chat/message?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhZG1pbiIsInVzZXJfaWQiOjEsInJvbGUiOiJhZG1pbiIsImV4cCI6MTc3MDM5NTQ4OH0.YDDscSGNrcr0ZnU-7dkB3HCkAHMYvEAvOp4gy8eucAg HTTP/1.1" 200 OK
-2026-02-06 21:03:57,302 [INFO] chatbot: GET /api/chat/conversations -> 200 (2ms)
-INFO:     127.0.0.1:50768 - "GET /api/chat/conversations?limit=10&token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhZG1pbiIsInVzZXJfaWQiOjEsInJvbGUiOiJhZG1pbiIsImV4cCI6MTc3MDM5NTQ4OH0.YDDscSGNrcr0ZnU-7dkB3HCkAHMYvEAvOp4gy8eucAg HTTP/1.1" 200 OK
-2026-02-06 21:04:39,946 [INFO] chatbot.api.chat: V1 request: conv=60 query="how many crew do we have?"
-2026-02-06 21:04:39,946 [INFO] chatbot.api.chat: V1 intent: DATA confidence=0.95
-2026-02-06 21:04:39,973 [INFO] chatbot.sql.pipeline_v1: [pipeline] START query="how many crew do we have?" context_len=736
-2026-02-06 21:04:39,976 [INFO] chatbot.sql.pipeline_v1: [retrieve_schemas] query="how many crew do we have?" top_k=5 registry_dbs={'crew_roster'}
-2026-02-06 21:04:39,977 [INFO] chatbot.sql.pipeline_v1: [retrieve_schemas] Keyword match returned 9 schemas: ['crew_management.crew_members', 'crew_roster.sequencepositiondetails', 'fleet_maintenance.spare_parts_inventory', 'crew_roster.reserveslegalitycontextdetails', 'crew_roster.reservescrewmember']
-2026-02-06 21:04:39,977 [WARNING] chatbot.sql.pipeline_v1: [retrieve_schemas] Registry filter removed 4 schemas (registry has: {'crew_roster'})
-2026-02-06 21:04:39,978 [INFO] chatbot.llm.client: [embedding] Single text, chars=25
-2026-02-06 21:04:39,978 [INFO] chatbot.llm.client: [embedding_batch] 1 texts, total_chars=25
-2026-02-06 21:04:39,978 [INFO] chatbot.llm.client: [embedding] POST https://quasarmarket.coforge.com/qag/llmrouter-api/v2/text/embeddings | model=text-embeddings
-2026-02-06 21:04:41,281 [INFO] chatbot.llm.client: [embedding] Response status=200 | 1302ms
-2026-02-06 21:04:41,283 [INFO] chatbot.llm.client: [embedding] OK 1304ms | 1 embeddings, dims=746
-2026-02-06 21:04:41,284 [INFO] chatbot.sql.pipeline_v1: [pipeline] Using 5 schemas: ['crew_roster.sequencepositiondetails', 'crew_roster.reserveslegalitycontextdetails', 'crew_roster.reservescrewmember', 'crew_roster.base', 'crew_roster.reserveslegality']
-2026-02-06 21:04:41,285 [INFO] chatbot.sql.pipeline_v1: [generate_sql] Sending query to LLM with 5 schemas, prompt_len=6124
-2026-02-06 21:04:41,285 [INFO] chatbot.llm.client: [chat_completion] model=gpt-5-2 json_mode=False sys_prompt_chars=0 user_preview="You are a SQL expert for an American Airlines crew management database system.    
-
-Previous conversation context:
-Assistant..."
-2026-02-06 21:04:41,286 [INFO] chatbot.llm.client: [chat_completion] POST https://quasarmarket.coforge.com/qag/llmrouter-api/v2/chat/completions | model=gpt-5-2
-2026-02-06 21:04:43,648 [INFO] chatbot.llm.client: [chat_completion] Response status=200 | 2362ms
-2026-02-06 21:04:43,650 [INFO] chatbot.llm.client: [chat_completion] OK 2364ms | response_chars=115
-2026-02-06 21:04:43,651 [INFO] chatbot.sql.pipeline_v1: [generate_sql] LLM responded in 2365ms | sql="SELECT COUNT(DISTINCT crew_roster.reservescrewmember.EmployeeID) AS crew_count
-FROM crew_roster.reservescrewmember;"
-2026-02-06 21:04:43,651 [INFO] chatbot.sql.pipeline_v1: [pipeline] Execute attempt 1/3
-2026-02-06 21:04:43,652 [INFO] chatbot.sql.pipeline_v1: [execute_sql] Executing: SELECT COUNT(DISTINCT crew_roster.reservescrewmember.EmployeeID) AS crew_count
-FROM crew_roster.reservescrewmember;
-2026-02-06 21:04:43,654 [INFO] chatbot.sql.pipeline_v1: [execute_sql] OK 2ms | 1 rows, 1 columns
-2026-02-06 21:04:43,655 [INFO] chatbot.sql.pipeline_v1: [pipeline] SQL executed OK | 1 rows
-2026-02-06 21:04:43,656 [INFO] chatbot.sql.pipeline_v1: [summarize] Prompt length: 2336 chars, rows sent: 1/1
-2026-02-06 21:04:43,656 [INFO] chatbot.llm.client: [chat_completion] model=gpt-5-2 json_mode=False sys_prompt_chars=0 user_preview="You are a helpful assistant summarizing database query results for airline crew staff.
-
-User's original question: how ma..."
-2026-02-06 21:04:43,657 [INFO] chatbot.llm.client: [chat_completion] POST https://quasarmarket.coforge.com/qag/llmrouter-api/v2/chat/completions | model=gpt-5-2
-2026-02-06 21:04:47,411 [INFO] chatbot.llm.client: [chat_completion] Response status=200 | 3753ms
-2026-02-06 21:04:47,413 [INFO] chatbot.llm.client: [chat_completion] OK 3755ms | response_chars=407
-2026-02-06 21:04:47,414 [INFO] chatbot.sql.pipeline_v1: [pipeline] DONE success | attempts=1 | 7440ms | 1 rows
-2026-02-06 21:04:47,414 [INFO] chatbot.api.chat: V1 response: intent=DATA has_sql=True has_results=True suggestions=3 time=7470ms
-2026-02-06 21:04:47,460 [INFO] chatbot: POST /api/chat/message -> 200 (7517ms)
-INFO:     127.0.0.1:51521 - "POST /api/chat/message?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhZG1pbiIsInVzZXJfaWQiOjEsInJvbGUiOiJhZG1pbiIsImV4cCI6MTc3MDM5NTQ4OH0.YDDscSGNrcr0ZnU-7dkB3HCkAHMYvEAvOp4gy8eucAg HTTP/1.1" 200 OK
-2026-02-06 21:04:48,298 [INFO] chatbot: GET /api/chat/conversations -> 200 (2ms)
-INFO:     127.0.0.1:52564 - "GET /api/chat/conversations?limit=10&token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhZG1pbiIsInVzZXJfaWQiOjEsInJvbGUiOiJhZG1pbiIsImV4cCI6MTc3MDM5NTQ4OH0.YDDscSGNrcr0ZnU-7dkB3HCkAHMYvEAvOp4gy8eucAg HTTP/1.1" 200 OK
-2026-02-06 21:04:55,189 [INFO] chatbot.api.chat: V1 request: conv=60 query="I need that crew information"
-2026-02-06 21:04:55,190 [INFO] chatbot.llm.client: [chat_completion] model=gpt-5-2 json_mode=False sys_prompt_chars=0 user_preview="You are a query rewriter. Your job is to rewrite follow-up questions into standalone questions.
-
-Conversation history:
-A..."
-2026-02-06 21:04:55,190 [INFO] chatbot.llm.client: [chat_completion] POST https://quasarmarket.coforge.com/qag/llmrouter-api/v2/chat/completions | model=gpt-5-2
-2026-02-06 21:04:59,085 [INFO] chatbot.llm.client: [chat_completion] Response status=200 | 3894ms
-2026-02-06 21:04:59,087 [INFO] chatbot.llm.client: [chat_completion] OK 3896ms | response_chars=414
-2026-02-06 21:04:59,087 [INFO] chatbot.api.chat: V1 rewritten query: "Can you provide the detailed information for the single distinct crew member (EmployeeID 502370, JOHN BURT MARCUS) recor"
-2026-02-06 21:04:59,088 [INFO] chatbot.api.chat: V1 intent: DATA confidence=0.95
-2026-02-06 21:04:59,115 [INFO] chatbot.sql.pipeline_v1: [pipeline] START query="Can you provide the detailed information for the single distinct crew member (EmployeeID 502370, JOHN BURT MARCUS) recor" context_len=644
-2026-02-06 21:04:59,118 [INFO] chatbot.sql.pipeline_v1: [retrieve_schemas] query="Can you provide the detailed information for the single distinct crew member (Em" top_k=5 registry_dbs={'crew_roster'}
-2026-02-06 21:04:59,120 [INFO] chatbot.sql.pipeline_v1: [retrieve_schemas] Keyword match returned 9 schemas: ['flight_operations.airports', 'crew_management.crew_members', 'crew_roster.sequencepositiondetails', 'fleet_maintenance.spare_parts_inventory', 'crew_roster.reserveslegalitycontextdetails']
-2026-02-06 21:04:59,120 [WARNING] chatbot.sql.pipeline_v1: [retrieve_schemas] Registry filter removed 5 schemas (registry has: {'crew_roster'})
-2026-02-06 21:04:59,121 [INFO] chatbot.llm.client: [embedding] Single text, chars=414
-2026-02-06 21:04:59,121 [INFO] chatbot.llm.client: [embedding_batch] 1 texts, total_chars=414
-2026-02-06 21:04:59,122 [INFO] chatbot.llm.client: [embedding] POST https://quasarmarket.coforge.com/qag/llmrouter-api/v2/text/embeddings | model=text-embeddings
-2026-02-06 21:05:00,410 [INFO] chatbot.llm.client: [embedding] Response status=200 | 1288ms
-2026-02-06 21:05:00,413 [INFO] chatbot.llm.client: [embedding] OK 1291ms | 1 embeddings, dims=746
-2026-02-06 21:05:00,414 [INFO] chatbot.sql.pipeline_v1: [pipeline] Using 6 schemas: ['crew_roster.sequencepositiondetails', 'crew_roster.reserveslegalitycontextdetails', 'crew_roster.reservescrewmember', 'crew_roster.base', 'crew_roster.reserveslegality']
-2026-02-06 21:05:00,415 [INFO] chatbot.sql.pipeline_v1: [generate_sql] Sending query to LLM with 6 schemas, prompt_len=7310
-2026-02-06 21:05:00,419 [INFO] chatbot.llm.client: [chat_completion] model=gpt-5-2 json_mode=False sys_prompt_chars=0 user_preview="You are a SQL expert for an American Airlines crew management database system.    
-
-Previous conversation context:
-Assistant..."
-2026-02-06 21:05:00,421 [INFO] chatbot.llm.client: [chat_completion] POST https://quasarmarket.coforge.com/qag/llmrouter-api/v2/chat/completions | model=gpt-5-2
-2026-02-06 21:05:08,486 [INFO] chatbot.llm.client: [chat_completion] Response status=200 | 8064ms
-2026-02-06 21:05:08,489 [INFO] chatbot.llm.client: [chat_completion] OK 8067ms | response_chars=1436
-2026-02-06 21:05:08,490 [INFO] chatbot.sql.pipeline_v1: [generate_sql] LLM responded in 8070ms | sql="SELECT
-  b.BaseCD,
-  rcm.BaseDateID,
-  rcm.EmployeeID,
-  rcm.FirstName,
-  rcm.LastName,
-  rcm.SeniorityNumber,
-  rcm.IsSick,
-  rcm.IsVolunteer,
-  rcm."
-2026-02-06 21:05:08,491 [INFO] chatbot.sql.pipeline_v1: [pipeline] Execute attempt 1/3
-2026-02-06 21:05:08,491 [INFO] chatbot.sql.pipeline_v1: [execute_sql] Executing: SELECT
-  b.BaseCD,
-  rcm.BaseDateID,
-  rcm.EmployeeID,
-  rcm.FirstName,
-  rcm.LastName,
-  rcm.SeniorityNumber,
-  rcm.IsSick,
-  rcm.IsVolunteer,
-  rcm.IsCompletelyAvailableReserve,
-  rcm.AVLDays,
-  rcm
-2026-02-06 21:05:08,499 [INFO] chatbot.sql.pipeline_v1: [execute_sql] OK 7ms | 0 rows, 32 columns
-2026-02-06 21:05:08,501 [INFO] chatbot.sql.pipeline_v1: [pipeline] SQL executed OK | 0 rows
-2026-02-06 21:05:08,501 [INFO] chatbot.sql.pipeline_v1: [pipeline] Zero rows returned, skipping summarization
-2026-02-06 21:05:08,503 [INFO] chatbot.sql.pipeline_v1: [pipeline] DONE success | attempts=1 | 9387ms | 0 rows
-2026-02-06 21:05:08,503 [INFO] chatbot.api.chat: V1 response: intent=DATA has_sql=True has_results=True suggestions=0 time=13320ms
-2026-02-06 21:05:08,554 [INFO] chatbot: POST /api/chat/message -> 200 (13372ms)
-INFO:     127.0.0.1:60811 - "POST /api/chat/message?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhZG1pbiIsInVzZXJfaWQiOjEsInJvbGUiOiJhZG1pbiIsImV4cCI6MTc3MDM5NTQ4OH0.YDDscSGNrcr0ZnU-7dkB3HCkAHMYvEAvOp4gy8eucAg HTTP/1.1" 200 OK
-2026-02-06 21:05:09,289 [INFO] chatbot: GET /api/chat/conversations -> 200 (3ms)
-INFO:     127.0.0.1:62001 - "GET /api/chat/conversations?limit=10&token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhZG1pbiIsInVzZXJfaWQiOjEsInJvbGUiOiJhZG1pbiIsImV4cCI6MTc3MDM5NTQ4OH0.YDDscSGNrcr0ZnU-7dkB3HCkAHMYvEAvOp4gy8eucAg HTTP/1.1" 200 OK
-2026-02-06 21:05:13,110 [INFO] chatbot.api.chat: V1 request: conv=60 query="Can you list the crew member(s) and their details (name, role, base)?"
-2026-02-06 21:05:13,111 [INFO] chatbot.api.chat: V1 intent: DATA confidence=0.95
-2026-02-06 21:05:13,133 [INFO] chatbot.sql.pipeline_v1: [pipeline] START query="Can you list the crew member(s) and their details (name, role, base)?" context_len=502
-2026-02-06 21:05:13,133 [INFO] chatbot.sql.pipeline_v1: [retrieve_schemas] query="Can you list the crew member(s) and their details (name, role, base)?" top_k=5 registry_dbs={'crew_roster'}
-2026-02-06 21:05:13,134 [INFO] chatbot.sql.pipeline_v1: [retrieve_schemas] Keyword match returned 9 schemas: ['fleet_maintenance.aircraft_inspections', 'flight_operations.airports', 'fleet_maintenance.maintenance_work_orders', 'hr_payroll.pay_grades', 'crew_management.crew_members']
-2026-02-06 21:05:13,134 [WARNING] chatbot.sql.pipeline_v1: [retrieve_schemas] Registry filter removed 5 schemas (registry has: {'crew_roster'})
-2026-02-06 21:05:13,135 [INFO] chatbot.llm.client: [embedding] Single text, chars=69
-2026-02-06 21:05:13,135 [INFO] chatbot.llm.client: [embedding_batch] 1 texts, total_chars=69
-2026-02-06 21:05:13,135 [INFO] chatbot.llm.client: [embedding] POST https://quasarmarket.coforge.com/qag/llmrouter-api/v2/text/embeddings | model=text-embeddings
-2026-02-06 21:05:14,570 [INFO] chatbot.llm.client: [embedding] Response status=200 | 1435ms
-2026-02-06 21:05:14,573 [INFO] chatbot.llm.client: [embedding] OK 1437ms | 1 embeddings, dims=746
-2026-02-06 21:05:14,575 [INFO] chatbot.sql.pipeline_v1: [pipeline] Using 7 schemas: ['crew_roster.reserveslegality', 'crew_roster.basedate', 'crew_roster.legalityqladetails', 'crew_roster.legalitypostqlastatus', 'crew_roster.reservescrewmember']
-2026-02-06 21:05:14,575 [INFO] chatbot.sql.pipeline_v1: [generate_sql] Sending query to LLM with 7 schemas, prompt_len=7706
-2026-02-06 21:05:14,580 [INFO] chatbot.llm.client: [chat_completion] model=gpt-5-2 json_mode=False sys_prompt_chars=0 user_preview="You are a SQL expert for an American Airlines crew management database system.    
-
-Previous conversation context:
-Assistant..."
-2026-02-06 21:05:14,580 [INFO] chatbot.llm.client: [chat_completion] POST https://quasarmarket.coforge.com/qag/llmrouter-api/v2/chat/completions | model=gpt-5-2
-2026-02-06 21:05:18,212 [INFO] chatbot.llm.client: [chat_completion] Response status=200 | 3631ms
-2026-02-06 21:05:18,214 [INFO] chatbot.llm.client: [chat_completion] OK 3633ms | response_chars=363
-2026-02-06 21:05:18,214 [INFO] chatbot.sql.pipeline_v1: [generate_sql] LLM responded in 3634ms | sql="SELECT
-  r.EmployeeID AS employee_id,
-  r.FirstName AS first_name,
-  r.LastName AS last_name,
-  b.BaseCD AS base_code,
-  b.BaseName AS base_name
-FROM "
-2026-02-06 21:05:18,215 [INFO] chatbot.sql.pipeline_v1: [pipeline] Execute attempt 1/3
-2026-02-06 21:05:18,216 [INFO] chatbot.sql.pipeline_v1: [execute_sql] Executing: SELECT
-  r.EmployeeID AS employee_id,
-  r.FirstName AS first_name,
-  r.LastName AS last_name,
-  b.BaseCD AS base_code,
-  b.BaseName AS base_name
-FROM crew_roster.reservescrewmember r
-LEFT JOIN crew_ro
-2026-02-06 21:05:18,222 [INFO] chatbot.sql.pipeline_v1: [execute_sql] OK 5ms | 100 rows, 5 columns
-2026-02-06 21:05:18,222 [INFO] chatbot.sql.pipeline_v1: [pipeline] SQL executed OK | 100 rows
-2026-02-06 21:05:18,223 [INFO] chatbot.sql.pipeline_v1: [summarize] Prompt length: 5686 chars, rows sent: 25/100
-2026-02-06 21:05:18,223 [INFO] chatbot.llm.client: [chat_completion] model=gpt-5-2 json_mode=False sys_prompt_chars=0 user_preview="You are a helpful assistant summarizing database query results for airline crew staff.
-
-User's original question: Can yo..."
-2026-02-06 21:05:18,224 [INFO] chatbot.llm.client: [chat_completion] POST https://quasarmarket.coforge.com/qag/llmrouter-api/v2/chat/completions | model=gpt-5-2
-2026-02-06 21:05:23,351 [INFO] chatbot.llm.client: [chat_completion] Response status=200 | 5127ms
-2026-02-06 21:05:23,353 [INFO] chatbot.llm.client: [chat_completion] OK 5129ms | response_chars=593
-2026-02-06 21:05:23,354 [INFO] chatbot.sql.pipeline_v1: [pipeline] DONE success | attempts=1 | 10221ms | 100 rows
-2026-02-06 21:05:23,355 [INFO] chatbot.api.chat: V1 response: intent=DATA has_sql=True has_results=True suggestions=3 time=10248ms
-2026-02-06 21:05:23,408 [INFO] chatbot: POST /api/chat/message -> 200 (10302ms)
-INFO:     127.0.0.1:58365 - "POST /api/chat/message?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhZG1pbiIsInVzZXJfaWQiOjEsInJvbGUiOiJhZG1pbiIsImV4cCI6MTc3MDM5NTQ4OH0.YDDscSGNrcr0ZnU-7dkB3HCkAHMYvEAvOp4gy8eucAg HTTP/1.1" 200 OK
-2026-02-06 21:05:24,525 [INFO] chatbot: GET /api/chat/conversations -> 200 (2ms)
-INFO:     127.0.0.1:50146 - "GET /api/chat/conversations?limit=10&token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhZG1pbiIsInVzZXJfaWQiOjEsInJvbGUiOiJhZG1pbiIsImV4cCI6MTc3MDM5NTQ4OH0.YDDscSGNrcr0ZnU-7dkB3HCkAHMYvEAvOp4gy8eucAg HTTP/1.1" 200 OK
-2026-02-06 21:06:20,420 [INFO] chatbot.api.chat: V1 request: conv=60 query="how many crew do we have ?"
-2026-02-06 21:06:20,421 [INFO] chatbot.api.chat: V1 intent: DATA confidence=0.95
-2026-02-06 21:06:20,508 [INFO] chatbot.sql.pipeline_v1: [pipeline] START query="how many crew do we have ?" context_len=613
-2026-02-06 21:06:20,514 [INFO] chatbot.sql.pipeline_v1: [retrieve_schemas] query="how many crew do we have ?" top_k=5 registry_dbs={'crew_roster'}
-2026-02-06 21:06:20,517 [INFO] chatbot.sql.pipeline_v1: [retrieve_schemas] Keyword match returned 9 schemas: ['crew_management.crew_members', 'crew_roster.sequencepositiondetails', 'fleet_maintenance.spare_parts_inventory', 'crew_roster.reserveslegalitycontextdetails', 'crew_roster.reservescrewmember']
-2026-02-06 21:06:20,519 [WARNING] chatbot.sql.pipeline_v1: [retrieve_schemas] Registry filter removed 4 schemas (registry has: {'crew_roster'})
-2026-02-06 21:06:20,519 [INFO] chatbot.llm.client: [embedding] Single text, chars=26
-2026-02-06 21:06:20,520 [INFO] chatbot.llm.client: [embedding_batch] 1 texts, total_chars=26
-2026-02-06 21:06:20,521 [INFO] chatbot.llm.client: [embedding] POST https://quasarmarket.coforge.com/qag/llmrouter-api/v2/text/embeddings | model=text-embeddings
-2026-02-06 21:06:21,929 [INFO] chatbot.llm.client: [embedding] Response status=200 | 1408ms
-2026-02-06 21:06:21,932 [INFO] chatbot.llm.client: [embedding] OK 1411ms | 1 embeddings, dims=746
-2026-02-06 21:06:21,933 [INFO] chatbot.sql.pipeline_v1: [pipeline] Using 5 schemas: ['crew_roster.sequencepositiondetails', 'crew_roster.reserveslegalitycontextdetails', 'crew_roster.reservescrewmember', 'crew_roster.base', 'crew_roster.reserveslegality']
-2026-02-06 21:06:21,934 [INFO] chatbot.sql.pipeline_v1: [generate_sql] Sending query to LLM with 5 schemas, prompt_len=6002
-2026-02-06 21:06:21,935 [INFO] chatbot.llm.client: [chat_completion] model=gpt-5-2 json_mode=False sys_prompt_chars=0 user_preview="You are a SQL expert for an American Airlines crew management database system.    
-
-Previous conversation context:
-Assistant..."
-2026-02-06 21:06:21,935 [INFO] chatbot.llm.client: [chat_completion] POST https://quasarmarket.coforge.com/qag/llmrouter-api/v2/chat/completions | model=gpt-5-2
-2026-02-06 21:06:24,026 [INFO] chatbot.llm.client: [chat_completion] Response status=200 | 2090ms
-2026-02-06 21:06:24,028 [INFO] chatbot.llm.client: [chat_completion] OK 2092ms | response_chars=91
-2026-02-06 21:06:24,029 [INFO] chatbot.sql.pipeline_v1: [generate_sql] LLM responded in 2093ms | sql="SELECT COUNT(DISTINCT r.EmployeeID) AS crew_count
-FROM crew_roster.reservescrewmember AS r;"
-2026-02-06 21:06:24,029 [INFO] chatbot.sql.pipeline_v1: [pipeline] Execute attempt 1/3
-2026-02-06 21:06:24,030 [INFO] chatbot.sql.pipeline_v1: [execute_sql] Executing: SELECT COUNT(DISTINCT r.EmployeeID) AS crew_count
-FROM crew_roster.reservescrewmember AS r;
-2026-02-06 21:06:24,033 [INFO] chatbot.sql.pipeline_v1: [execute_sql] OK 2ms | 1 rows, 1 columns
-2026-02-06 21:06:24,033 [INFO] chatbot.sql.pipeline_v1: [pipeline] SQL executed OK | 1 rows
-2026-02-06 21:06:24,034 [INFO] chatbot.sql.pipeline_v1: [summarize] Prompt length: 2313 chars, rows sent: 1/1
-2026-02-06 21:06:24,035 [INFO] chatbot.llm.client: [chat_completion] model=gpt-5-2 json_mode=False sys_prompt_chars=0 user_preview="You are a helpful assistant summarizing database query results for airline crew staff.
-
-User's original question: how ma..."
-2026-02-06 21:06:24,036 [INFO] chatbot.llm.client: [chat_completion] POST https://quasarmarket.coforge.com/qag/llmrouter-api/v2/chat/completions | model=gpt-5-2
-2026-02-06 21:06:28,011 [INFO] chatbot.llm.client: [chat_completion] Response status=200 | 3974ms
-2026-02-06 21:06:28,014 [INFO] chatbot.llm.client: [chat_completion] OK 3977ms | response_chars=356
-2026-02-06 21:06:28,014 [INFO] chatbot.sql.pipeline_v1: [pipeline] DONE success | attempts=1 | 7505ms | 1 rows
-2026-02-06 21:06:28,016 [INFO] chatbot.api.chat: V1 response: intent=DATA has_sql=True has_results=True suggestions=3 time=7602ms
-2026-02-06 21:06:28,112 [INFO] chatbot: POST /api/chat/message -> 200 (7700ms)
-INFO:     127.0.0.1:63383 - "POST /api/chat/message?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhZG1pbiIsInVzZXJfaWQiOjEsInJvbGUiOiJhZG1pbiIsImV4cCI6MTc3MDM5NTQ4OH0.YDDscSGNrcr0ZnU-7dkB3HCkAHMYvEAvOp4gy8eucAg HTTP/1.1" 200 OK
-2026-02-06 21:06:29,397 [INFO] chatbot: GET /api/chat/conversations -> 200 (5ms)
-INFO:     127.0.0.1:64689 - "GET /api/chat/conversations?limit=10&token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhZG1pbiIsInVzZXJfaWQiOjEsInJvbGUiOiJhZG1pbiIsImV4cCI6MTc3MDM5NTQ4OH0.YDDscSGNrcr0ZnU-7dkB3HCkAHMYvEAvOp4gy8eucAg HTTP/1.1" 200 OK
-2026-02-06 21:06:33,930 [INFO] chatbot.api.chat: V1 request: conv=60 query="Can you list the crew member(s) (name and EmployeeID) in the reserves roster?"
-2026-02-06 21:06:33,931 [INFO] chatbot.api.chat: V1 intent: DATA confidence=0.95
-2026-02-06 21:06:34,022 [INFO] chatbot.sql.pipeline_v1: [pipeline] START query="Can you list the crew member(s) (name and EmployeeID) in the reserves roster?" context_len=591
-2026-02-06 21:06:34,026 [INFO] chatbot.sql.pipeline_v1: [retrieve_schemas] query="Can you list the crew member(s) (name and EmployeeID) in the reserves roster?" top_k=5 registry_dbs={'crew_roster'}
-2026-02-06 21:06:34,028 [INFO] chatbot.sql.pipeline_v1: [retrieve_schemas] Keyword match returned 9 schemas: ['crew_management.crew_members', 'crew_roster.sequencepositiondetails', 'fleet_maintenance.spare_parts_inventory', 'crew_roster.reserveslegalitycontextdetails', 'crew_roster.reservescrewmember']
-2026-02-06 21:06:34,029 [WARNING] chatbot.sql.pipeline_v1: [retrieve_schemas] Registry filter removed 4 schemas (registry has: {'crew_roster'})
-2026-02-06 21:06:34,031 [INFO] chatbot.llm.client: [embedding] Single text, chars=77
-2026-02-06 21:06:34,032 [INFO] chatbot.llm.client: [embedding_batch] 1 texts, total_chars=77
-2026-02-06 21:06:34,033 [INFO] chatbot.llm.client: [embedding] POST https://quasarmarket.coforge.com/qag/llmrouter-api/v2/text/embeddings | model=text-embeddings
-2026-02-06 21:06:35,457 [INFO] chatbot.llm.client: [embedding] Response status=200 | 1424ms
-2026-02-06 21:06:35,461 [INFO] chatbot.llm.client: [embedding] OK 1428ms | 1 embeddings, dims=746
-2026-02-06 21:06:35,464 [INFO] chatbot.sql.pipeline_v1: [pipeline] Using 5 schemas: ['crew_roster.sequencepositiondetails', 'crew_roster.reserveslegalitycontextdetails', 'crew_roster.reservescrewmember', 'crew_roster.base', 'crew_roster.reserveslegality']
-2026-02-06 21:06:35,468 [INFO] chatbot.sql.pipeline_v1: [generate_sql] Sending query to LLM with 5 schemas, prompt_len=6031
-2026-02-06 21:06:35,469 [INFO] chatbot.llm.client: [chat_completion] model=gpt-5-2 json_mode=False sys_prompt_chars=0 user_preview="You are a SQL expert for an American Airlines crew management database system.    
-
-Previous conversation context:
-Assistant..."
-2026-02-06 21:06:35,470 [INFO] chatbot.llm.client: [chat_completion] POST https://quasarmarket.coforge.com/qag/llmrouter-api/v2/chat/completions | model=gpt-5-2
-2026-02-06 21:06:38,072 [INFO] chatbot.llm.client: [chat_completion] Response status=200 | 2602ms
-2026-02-06 21:06:38,076 [INFO] chatbot.llm.client: [chat_completion] OK 2605ms | response_chars=189
-2026-02-06 21:06:38,077 [INFO] chatbot.sql.pipeline_v1: [generate_sql] LLM responded in 2607ms | sql="SELECT DISTINCT
-  r.EmployeeID,
-  r.FirstName,
-  r.LastName
-FROM crew_roster.reservescrewmember AS r
-WHERE r.EmployeeID IS NOT NULL
-ORDER BY r.LastNam"
-2026-02-06 21:06:38,078 [INFO] chatbot.sql.pipeline_v1: [pipeline] Execute attempt 1/3
-2026-02-06 21:06:38,082 [INFO] chatbot.sql.pipeline_v1: [execute_sql] Executing: SELECT DISTINCT
-  r.EmployeeID,
-  r.FirstName,
-  r.LastName
-FROM crew_roster.reservescrewmember AS r
-WHERE r.EmployeeID IS NOT NULL
-ORDER BY r.LastName, r.FirstName, r.EmployeeID
-LIMIT 100;
-2026-02-06 21:06:38,087 [INFO] chatbot.sql.pipeline_v1: [execute_sql] OK 4ms | 1 rows, 3 columns
-2026-02-06 21:06:38,088 [INFO] chatbot.sql.pipeline_v1: [pipeline] SQL executed OK | 1 rows
-2026-02-06 21:06:38,089 [INFO] chatbot.sql.pipeline_v1: [summarize] Prompt length: 2515 chars, rows sent: 1/1
-2026-02-06 21:06:38,090 [INFO] chatbot.llm.client: [chat_completion] model=gpt-5-2 json_mode=False sys_prompt_chars=0 user_preview="You are a helpful assistant summarizing database query results for airline crew staff.
-
-User's original question: Can yo..."
-2026-02-06 21:06:38,092 [INFO] chatbot.llm.client: [chat_completion] POST https://quasarmarket.coforge.com/qag/llmrouter-api/v2/chat/completions | model=gpt-5-2
-2026-02-06 21:06:41,931 [INFO] chatbot.llm.client: [chat_completion] Response status=200 | 3838ms
-2026-02-06 21:06:41,934 [INFO] chatbot.llm.client: [chat_completion] OK 3841ms | response_chars=438
-2026-02-06 21:06:41,935 [INFO] chatbot.sql.pipeline_v1: [pipeline] DONE success | attempts=1 | 7913ms | 1 rows
-2026-02-06 21:06:41,937 [INFO] chatbot.api.chat: V1 response: intent=DATA has_sql=True has_results=True suggestions=3 time=8010ms
-2026-02-06 21:06:42,035 [INFO] chatbot: POST /api/chat/message -> 200 (8111ms)
-INFO:     127.0.0.1:64691 - "POST /api/chat/message?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhZG1pbiIsInVzZXJfaWQiOjEsInJvbGUiOiJhZG1pbiIsImV4cCI6MTc3MDM5NTQ4OH0.YDDscSGNrcr0ZnU-7dkB3HCkAHMYvEAvOp4gy8eucAg HTTP/1.1" 200 OK
-2026-02-06 21:06:43,559 [INFO] chatbot: GET /api/chat/conversations -> 200 (5ms)
-INFO:     127.0.0.1:60389 - "GET /api/chat/conversations?limit=10&token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhZG1pbiIsInVzZXJfaWQiOjEsInJvbGUiOiJhZG1pbiIsImV4cCI6MTc3MDM5NTQ4OH0.YDDscSGNrcr0ZnU-7dkB3HCkAHMYvEAvOp4gy8eucAg HTTP/1.1" 200 OK
-2026-02-06 21:07:12,861 [INFO] chatbot.api.chat: V1 request: conv=60 query="For LAX base and processing date 1/29/2026, why was employeed id 502370 not legal for any sequence"
-2026-02-06 21:07:12,862 [INFO] chatbot.llm.client: [chat_completion] model=gpt-5-2 json_mode=True sys_prompt_chars=0 user_preview="You are an intent classifier for an American Airlines crew management chatbot.     
+2026-02-06 21:16:52,106 [INFO] chatbot.llm.client: [chat_completion] POST https://quasarmarket.coforge.com/qag/llmrouter-api/v2/chat/completions | model=gpt-5-2
+2026-02-06 21:17:04,297 [INFO] chatbot.llm.client: [chat_completion] Response status=200 | 12190ms
+2026-02-06 21:17:04,299 [INFO] chatbot.llm.client: [chat_completion] OK 12192ms | response_chars=1341
+2026-02-06 21:17:04,300 [INFO] chatbot.sql.pipeline_v1: [pipeline] DONE success | attempts=1 | 28421ms | 100 rows
+2026-02-06 21:17:04,301 [INFO] chatbot.api.chat: V1 response: intent=DATA has_sql=True has_results=True suggestions=3 time=32003ms
+2026-02-06 21:17:04,358 [INFO] chatbot: POST /api/chat/message -> 200 (32063ms)
+INFO:     127.0.0.1:61853 - "POST /api/chat/message?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhZG1pbiIsInVzZXJfaWQiOjEsInJvbGUiOiJhZG1pbiIsImV4cCI6MTc3MDM5NjM2N30.iTbHt1WzoxKohTvi4HXgvf-x_Ne6Ms3gDzFE5OhCbk0 HTTP/1.1" 200 OK
+2026-02-06 21:17:04,368 [INFO] chatbot: GET /api/chat/conversations -> 200 (5ms)
+INFO:     127.0.0.1:55132 - "GET /api/chat/conversations?limit=10&token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhZG1pbiIsInVzZXJfaWQiOjEsInJvbGUiOiJhZG1pbiIsImV4cCI6MTc3MDM5NjM2N30.iTbHt1WzoxKohTvi4HXgvf-x_Ne6Ms3gDzFE5OhCbk0 HTTP/1.1" 200 OK
+2026-02-06 21:17:04,962 [INFO] chatbot: GET /api/admin/stats -> 200 (12ms)
+INFO:     127.0.0.1:50327 - "GET /api/admin/stats?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhZG1pbiIsInVzZXJfaWQiOjEsInJvbGUiOiJhZG1pbiIsImV4cCI6MTc3MDM5NjM2N30.iTbHt1WzoxKohTvi4HXgvf-x_Ne6Ms3gDzFE5OhCbk0 HTTP/1.1" 200 OK
+2026-02-06 21:17:05,682 [INFO] chatbot: GET /api/admin/users -> 200 (4ms)
+INFO:     127.0.0.1:50330 - "GET /api/admin/users?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhZG1pbiIsInVzZXJfaWQiOjEsInJvbGUiOiJhZG1pbiIsImV4cCI6MTc3MDM5NjM2N30.iTbHt1WzoxKohTvi4HXgvf-x_Ne6Ms3gDzFE5OhCbk0 HTTP/1.1" 200 OK
+2026-02-06 21:17:06,453 [INFO] chatbot: GET /api/admin/feedback -> 200 (4ms)
+INFO:     127.0.0.1:50332 - "GET /api/admin/feedback?limit=100&token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhZG1pbiIsInVzZXJfaWQiOjEsInJvbGUiOiJhZG1pbiIsImV4cCI6MTc3MDM5NjM2N30.iTbHt1WzoxKohTvi4HXgvf-x_Ne6Ms3gDzFE5OhCbk0 HTTP/1.1" 200 OK
+2026-02-06 21:17:07,247 [INFO] chatbot: GET /api/database/upload-history -> 200 (4ms)
+INFO:     127.0.0.1:50335 - "GET /api/database/upload-history?limit=10&token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhZG1pbiIsInVzZXJfaWQiOjEsInJvbGUiOiJhZG1pbiIsImV4cCI6MTc3MDM5NjM2N30.iTbHt1WzoxKohTvi4HXgvf-x_Ne6Ms3gDzFE5OhCbk0 HTTP/1.1" 200 OK
+2026-02-06 21:17:08,029 [INFO] chatbot: GET /api/database/list -> 200 (6ms)
+INFO:     127.0.0.1:50336 - "GET /api/database/list?include_hidden=true&token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhZG1pbiIsInVzZXJfaWQiOjEsInJvbGUiOiJhZG1pbiIsImV4cCI6MTc3MDM5NjM2N30.iTbHt1WzoxKohTvi4HXgvf-x_Ne6Ms3gDzFE5OhCbk0 HTTP/1.1" 200 OK
+2026-02-06 21:17:17,283 [INFO] chatbot: PUT /api/database/crew_management/visibility -> 200 (70ms)
+INFO:     127.0.0.1:57444 - "PUT /api/database/crew_management/visibility?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhZG1pbiIsInVzZXJfaWQiOjEsInJvbGUiOiJhZG1pbiIsImV4cCI6MTc3MDM5NjM2N30.iTbHt1WzoxKohTvi4HXgvf-x_Ne6Ms3gDzFE5OhCbk0 HTTP/1.1" 200 OK
+2026-02-06 21:17:18,107 [INFO] chatbot: GET /api/admin/stats -> 200 (13ms)
+INFO:     127.0.0.1:59967 - "GET /api/admin/stats?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhZG1pbiIsInVzZXJfaWQiOjEsInJvbGUiOiJhZG1pbiIsImV4cCI6MTc3MDM5NjM2N30.iTbHt1WzoxKohTvi4HXgvf-x_Ne6Ms3gDzFE5OhCbk0 HTTP/1.1" 200 OK
+2026-02-06 21:17:18,332 [INFO] chatbot: PUT /api/database/flight_operations/visibility -> 200 (56ms)
+INFO:     127.0.0.1:59968 - "PUT /api/database/flight_operations/visibility?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhZG1pbiIsInVzZXJfaWQiOjEsInJvbGUiOiJhZG1pbiIsImV4cCI6MTc3MDM5NjM2N30.iTbHt1WzoxKohTvi4HXgvf-x_Ne6Ms3gDzFE5OhCbk0 HTTP/1.1" 200 OK
+2026-02-06 21:17:19,113 [INFO] chatbot: GET /api/admin/stats -> 200 (14ms)
+INFO:     127.0.0.1:59969 - "GET /api/admin/stats?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhZG1pbiIsInVzZXJfaWQiOjEsInJvbGUiOiJhZG1pbiIsImV4cCI6MTc3MDM5NjM2N30.iTbHt1WzoxKohTvi4HXgvf-x_Ne6Ms3gDzFE5OhCbk0 HTTP/1.1" 200 OK
+2026-02-06 21:17:19,339 [INFO] chatbot: PUT /api/database/hr_payroll/visibility -> 200 (29ms)
+INFO:     127.0.0.1:59970 - "PUT /api/database/hr_payroll/visibility?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhZG1pbiIsInVzZXJfaWQiOjEsInJvbGUiOiJhZG1pbiIsImV4cCI6MTc3MDM5NjM2N30.iTbHt1WzoxKohTvi4HXgvf-x_Ne6Ms3gDzFE5OhCbk0 HTTP/1.1" 200 OK
+2026-02-06 21:17:20,156 [INFO] chatbot: GET /api/admin/stats -> 200 (14ms)
+INFO:     127.0.0.1:59971 - "GET /api/admin/stats?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhZG1pbiIsInVzZXJfaWQiOjEsInJvbGUiOiJhZG1pbiIsImV4cCI6MTc3MDM5NjM2N30.iTbHt1WzoxKohTvi4HXgvf-x_Ne6Ms3gDzFE5OhCbk0 HTTP/1.1" 200 OK
+2026-02-06 21:17:20,400 [INFO] chatbot: PUT /api/database/compliance_training/visibility -> 200 (69ms)
+INFO:     127.0.0.1:59972 - "PUT /api/database/compliance_training/visibility?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhZG1pbiIsInVzZXJfaWQiOjEsInJvbGUiOiJhZG1pbiIsImV4cCI6MTc3MDM5NjM2N30.iTbHt1WzoxKohTvi4HXgvf-x_Ne6Ms3gDzFE5OhCbk0 HTTP/1.1" 200 OK
+2026-02-06 21:17:21,130 [INFO] chatbot: GET /api/admin/stats -> 200 (11ms)
+INFO:     127.0.0.1:59973 - "GET /api/admin/stats?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhZG1pbiIsInVzZXJfaWQiOjEsInJvbGUiOiJhZG1pbiIsImV4cCI6MTc3MDM5NjM2N30.iTbHt1WzoxKohTvi4HXgvf-x_Ne6Ms3gDzFE5OhCbk0 HTTP/1.1" 200 OK
+2026-02-06 21:17:21,807 [INFO] chatbot: GET /api/admin/users -> 200 (4ms)
+INFO:     127.0.0.1:59974 - "GET /api/admin/users?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhZG1pbiIsInVzZXJfaWQiOjEsInJvbGUiOiJhZG1pbiIsImV4cCI6MTc3MDM5NjM2N30.iTbHt1WzoxKohTvi4HXgvf-x_Ne6Ms3gDzFE5OhCbk0 HTTP/1.1" 200 OK
+2026-02-06 21:17:22,531 [INFO] chatbot: GET /api/admin/feedback -> 200 (4ms)
+INFO:     127.0.0.1:59976 - "GET /api/admin/feedback?limit=100&token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhZG1pbiIsInVzZXJfaWQiOjEsInJvbGUiOiJhZG1pbiIsImV4cCI6MTc3MDM5NjM2N30.iTbHt1WzoxKohTvi4HXgvf-x_Ne6Ms3gDzFE5OhCbk0 HTTP/1.1" 200 OK
+2026-02-06 21:17:23,323 [INFO] chatbot: GET /api/database/upload-history -> 200 (6ms)
+INFO:     127.0.0.1:59977 - "GET /api/database/upload-history?limit=10&token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhZG1pbiIsInVzZXJfaWQiOjEsInJvbGUiOiJhZG1pbiIsImV4cCI6MTc3MDM5NjM2N30.iTbHt1WzoxKohTvi4HXgvf-x_Ne6Ms3gDzFE5OhCbk0 HTTP/1.1" 200 OK
+2026-02-06 21:17:23,757 [INFO] chatbot: GET /api/chat/conversations -> 200 (6ms)
+INFO:     127.0.0.1:59978 - "GET /api/chat/conversations?limit=10&token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhZG1pbiIsInVzZXJfaWQiOjEsInJvbGUiOiJhZG1pbiIsImV4cCI6MTc3MDM5NjM2N30.iTbHt1WzoxKohTvi4HXgvf-x_Ne6Ms3gDzFE5OhCbk0 HTTP/1.1" 200 OK
+2026-02-06 21:17:28,916 [INFO] chatbot.api.chat: V1 request: conv=61 query="For LAX base and processing date 1/29/2026, why was employeed id 502370 not legal for any sequence"
+2026-02-06 21:17:28,917 [INFO] chatbot.llm.client: [chat_completion] model=gpt-5-2 json_mode=True sys_prompt_chars=0 user_preview="You are an intent classifier for an American Airlines crew management chatbot.     
 
 Classify the user's query into exactly o..."
-2026-02-06 21:07:12,862 [INFO] chatbot.llm.client: [chat_completion] POST https://quasarmarket.coforge.com/qag/llmrouter-api/v2/chat/completions | model=gpt-5-2
-2026-02-06 21:07:16,894 [INFO] chatbot.llm.client: [chat_completion] Response status=200 | 4032ms
-2026-02-06 21:07:16,897 [INFO] chatbot.llm.client: [chat_completion] OK 4034ms | response_chars=421
-2026-02-06 21:07:16,898 [INFO] chatbot.api.chat: V1 intent: DATA confidence=0.93
-2026-02-06 21:07:16,944 [INFO] chatbot.sql.pipeline_v1: [pipeline] START query="For LAX base and processing date 1/29/2026, why was employeed id 502370 not legal for any sequence" context_len=571
-2026-02-06 21:07:16,947 [INFO] chatbot.sql.pipeline_v1: [retrieve_schemas] query="For LAX base and processing date 1/29/2026, why was employeed id 502370 not lega" top_k=5 registry_dbs={'crew_roster'}
-2026-02-06 21:07:16,949 [INFO] chatbot.sql.pipeline_v1: [retrieve_schemas] Keyword match returned 9 schemas: ['flight_operations.airports', 'crew_management.crew_members', 'crew_roster.sequencepositiondetails', 'fleet_maintenance.spare_parts_inventory', 'crew_roster.reserveslegalitycontextdetails']
-2026-02-06 21:07:16,949 [WARNING] chatbot.sql.pipeline_v1: [retrieve_schemas] Registry filter removed 5 schemas (registry has: {'crew_roster'})
-2026-02-06 21:07:16,950 [INFO] chatbot.llm.client: [embedding] Single text, chars=98
-2026-02-06 21:07:16,951 [INFO] chatbot.llm.client: [embedding_batch] 1 texts, total_chars=98
-2026-02-06 21:07:16,952 [INFO] chatbot.llm.client: [embedding] POST https://quasarmarket.coforge.com/qag/llmrouter-api/v2/text/embeddings | model=text-embeddings
-2026-02-06 21:07:20,032 [INFO] chatbot.llm.client: [embedding] Response status=200 | 3079ms
-2026-02-06 21:07:20,035 [INFO] chatbot.llm.client: [embedding] OK 3083ms | 1 embeddings, dims=746
-2026-02-06 21:07:20,037 [INFO] chatbot.sql.pipeline_v1: [pipeline] Using 7 schemas: ['crew_roster.sequencepositiondetails', 'crew_roster.reserveslegalitycontextdetails', 'crew_roster.reservescrewmember', 'crew_roster.base', 'crew_roster.basedate']
-2026-02-06 21:07:20,038 [INFO] chatbot.sql.pipeline_v1: [generate_sql] Sending query to LLM with 7 schemas, prompt_len=7604
-2026-02-06 21:07:20,038 [INFO] chatbot.llm.client: [chat_completion] model=gpt-5-2 json_mode=False sys_prompt_chars=0 user_preview="You are a SQL expert for an American Airlines crew management database system.    
-
-Previous conversation context:
-Assistant..."
-2026-02-06 21:07:20,039 [INFO] chatbot.llm.client: [chat_completion] POST https://quasarmarket.coforge.com/qag/llmrouter-api/v2/chat/completions | model=gpt-5-2
-2026-02-06 21:07:27,711 [INFO] chatbot.llm.client: [chat_completion] Response status=200 | 7671ms
-2026-02-06 21:07:27,714 [INFO] chatbot.llm.client: [chat_completion] OK 7675ms | response_chars=1167
-2026-02-06 21:07:27,716 [INFO] chatbot.sql.pipeline_v1: [generate_sql] LLM responded in 7677ms | sql="SELECT
-  b.BaseCD,
-  b.BaseName,
-  bd.ProcessingDate,
-  rc.EmployeeID,
-  rc.FirstName,
-  rc.LastName,
-  rc.BaseDateID,
-  rc.ASGSequence,
-  s.SequenceN"
-2026-02-06 21:07:27,718 [INFO] chatbot.sql.pipeline_v1: [pipeline] Execute attempt 1/3
-2026-02-06 21:07:27,719 [INFO] chatbot.sql.pipeline_v1: [execute_sql] Executing: SELECT
-  b.BaseCD,
-  b.BaseName,
-  bd.ProcessingDate,
-  rc.EmployeeID,
-  rc.FirstName,
-  rc.LastName,
-  rc.BaseDateID,
-  rc.ASGSequence,
-  s.SequenceNumber,
-  lq.LegalityPhaseID,
-  lq.IsLegal,
-  lq.Is
-2026-02-06 21:07:27,731 [INFO] chatbot.sql.pipeline_v1: [execute_sql] OK 12ms | 0 rows, 19 columns
-2026-02-06 21:07:27,732 [INFO] chatbot.sql.pipeline_v1: [pipeline] SQL executed OK | 0 rows
-2026-02-06 21:07:27,733 [INFO] chatbot.sql.pipeline_v1: [pipeline] Zero rows returned, skipping summarization
-2026-02-06 21:07:27,735 [INFO] chatbot.sql.pipeline_v1: [pipeline] DONE success | attempts=1 | 10790ms | 0 rows
-2026-02-06 21:07:27,736 [INFO] chatbot.api.chat: V1 response: intent=DATA has_sql=True has_results=True suggestions=0 time=14879ms
-2026-02-06 21:07:27,790 [INFO] chatbot: POST /api/chat/message -> 200 (14935ms)
-INFO:     127.0.0.1:58001 - "POST /api/chat/message?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhZG1pbiIsInVzZXJfaWQiOjEsInJvbGUiOiJhZG1pbiIsImV4cCI6MTc3MDM5NTQ4OH0.YDDscSGNrcr0ZnU-7dkB3HCkAHMYvEAvOp4gy8eucAg HTTP/1.1" 200 OK
-2026-02-06 21:07:29,340 [INFO] chatbot: GET /api/chat/conversations -> 200 (6ms)
-INFO:     127.0.0.1:58480 - "GET /api/chat/conversations?limit=10&token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhZG1pbiIsInVzZXJfaWQiOjEsInJvbGUiOiJhZG1pbiIsImV4cCI6MTc3MDM5NTQ4OH0.YDDscSGNrcr0ZnU-7dkB3HCkAHMYvEAvOp4gy8eucAg HTTP/1.1" 200 OK
+2026-02-06 21:17:28,917 [INFO] chatbot.llm.client: [chat_completion] POST https://quasarmarket.coforge.com/qag/llmrouter-api/v2/chat/completions | model=gpt-5-2
+2026-02-06 21:17:32,494 [INFO] chatbot.llm.client: [chat_completion] Response status=200 | 3577ms
+2026-02-06 21:17:32,503 [INFO] chatbot.llm.client: [chat_completion] OK 3585ms | response_chars=353
+2026-02-06 21:17:32,520 [INFO] chatbot.api.chat: V1 intent: DATA confidence=0.94
+2026-02-06 21:17:32,574 [INFO] chatbot.sql.pipeline_v1: [pipeline] START query="For LAX base and processing date 1/29/2026, why was employeed id 502370 not legal for any sequence" context_len=297
+2026-02-06 21:17:32,577 [INFO] chatbot.sql.pipeline_v1: [retrieve_schemas] query="For LAX base and processing date 1/29/2026, why was employeed id 502370 not lega" top_k=5 registry_dbs={'crew_roster'}
+2026-02-06 21:17:32,579 [INFO] chatbot.sql.pipeline_v1: [retrieve_schemas] Keyword match returned 9 schemas: ['crew_roster.reservescrewmember', 'fleet_maintenance.maintenance_staff', 'crew_roster.sequence', 'flight_operations.flight_legs', 'fleet_maintenance.spare_parts_inventory']
+2026-02-06 21:17:32,579 [WARNING] chatbot.sql.pipeline_v1: [retrieve_schemas] Registry filter removed 4 schemas (registry has: {'crew_roster'})
+2026-02-06 21:17:32,580 [INFO] chatbot.llm.client: [embedding] Single text, chars=98
+2026-02-06 21:17:32,581 [INFO] chatbot.llm.client: [embedding_batch] 1 texts, total_chars=98
+2026-02-06 21:17:32,582 [INFO] chatbot.llm.client: [embedding] POST https://quasarmarket.coforge.com/qag/llmrouter-api/v2/text/embeddings | model=text-embeddings
+2026-02-06 21:17:34,030 [INFO] chatbot.llm.client: [embedding] Response status=200 | 1447ms
+2026-02-06 21:17:34,033 [INFO] chatbot.llm.client: [embedding] OK 1451ms | 1 embeddings, dims=746
+2026-02-06 21:17:34,035 [INFO] chatbot.sql.pipeline_v1: [pipeline] Using 7 schemas: ['crew_roster.reservescrewmember', 'crew_roster.sequence', 'crew_roster.sequencepositiondetails', 'crew_roster.base', 'crew_roster.legalityqladetails']
+2026-02-06 21:17:34,043 [INFO] chatbot.sql.pipeline_v1: [generate_sql] Sending query to LLM with 7 schemas, prompt_len=9859
+2026-02-06 21:17:34,044 [INFO] chatbot.llm.client: [chat_completion] model=gpt-5-2 json_mode=False sys_prompt_chars=0 user_preview="You are a SQL expert for an American Airlines crew management database system.    
+Generate a SQLite SELECT query to answer ..."
+2026-02-06 21:17:34,047 [INFO] chatbot.llm.client: [chat_completion] POST https://quasarmarket.coforge.com/qag/llmrouter-api/v2/chat/completions | model=gpt-5-2
+2026-02-06 21:17:52,311 [INFO] chatbot.llm.client: [chat_completion] Response status=200 | 18264ms
+2026-02-06 21:17:52,313 [INFO] chatbot.llm.client: [chat_completion] OK 18266ms | response_chars=0
+2026-02-06 21:17:52,314 [INFO] chatbot.sql.pipeline_v1: [generate_sql] LLM responded in 18270ms | sql=""   
+2026-02-06 21:17:52,314 [WARNING] chatbot.sql.pipeline_v1: [pipeline] SQL validation failed: Only SELECT statements are allowed
+2026-02-06 21:17:52,315 [WARNING] chatbot.api.chat: V1 SQL pipeline failed: Generated invalid SQL: Only SELECT statements are allowed
+2026-02-06 21:17:52,316 [INFO] chatbot.api.chat: V1 response: intent=DATA has_sql=False has_results=False suggestions=0 time=23406ms
+2026-02-06 21:17:52,405 [INFO] chatbot: POST /api/chat/message -> 200 (23497ms)
+INFO:     127.0.0.1:54267 - "POST /api/chat/message?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhZG1pbiIsInVzZXJfaWQiOjEsInJvbGUiOiJhZG1pbiIsImV4cCI6MTc3MDM5NjM2N30.iTbHt1WzoxKohTvi4HXgvf-x_Ne6Ms3gDzFE5OhCbk0 HTTP/1.1" 200 OK
+2026-02-06 21:17:53,325 [INFO] chatbot: GET /api/chat/conversations -> 200 (4ms)
+INFO:     127.0.0.1:58158 - "GET /api/chat/conversations?limit=10&token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhZG1pbiIsInVzZXJfaWQiOjEsInJvbGUiOiJhZG1pbiIsImV4cCI6MTc3MDM5NjM2N30.iTbHt1WzoxKohTvi4HXgvf-x_Ne6Ms3gDzFE5OhCbk0 HTTP/1.1" 200 OK
