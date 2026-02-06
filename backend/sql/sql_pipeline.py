@@ -141,7 +141,10 @@ Columns:
         return "\n---\n".join(formatted)
 
     def generate_sql(self, query: str, schemas: List[Dict], context: str = "") -> str:
-        """Generate SQL from natural language query, optionally with conversation context."""
+        """Generate SQL from natural language query, optionally with conversation context.
+
+        Retries once if the LLM returns empty content (corporate API intermittent issue).
+        """
         schema_text = self.format_schemas_for_prompt(schemas)
 
         if context:
@@ -157,22 +160,32 @@ Columns:
             )
 
         logger.info(f"[generate_sql] Sending query to LLM with {len(schemas)} schemas, prompt_len={len(prompt)}")
-        step_start = time.time()
 
-        response = self.llm_client.chat_completion(
-            messages=[{"role": "user", "content": prompt}],
-            temperature=0.0,
-            max_tokens=1000
-        )
+        # Try up to 2 times (LLM sometimes returns empty response)
+        for attempt in range(2):
+            step_start = time.time()
+            response = self.llm_client.chat_completion(
+                messages=[{"role": "user", "content": prompt}],
+                temperature=0.0,
+                max_tokens=1000
+            )
+            step_ms = int((time.time() - step_start) * 1000)
 
-        step_ms = int((time.time() - step_start) * 1000)
+            # Clean up SQL
+            sql = response.strip()
+            sql = sql.replace("```sql", "").replace("```", "").strip()
 
-        # Clean up SQL
-        sql = response.strip()
-        sql = sql.replace("```sql", "").replace("```", "").strip()
+            if sql:
+                logger.info(f"[generate_sql] LLM responded in {step_ms}ms | sql=\"{sql[:150]}\"")
+                return sql
 
-        logger.info(f"[generate_sql] LLM responded in {step_ms}ms | sql=\"{sql[:150]}\"")
-        return sql
+            # Empty response — retry once
+            if attempt == 0:
+                logger.warning(f"[generate_sql] LLM returned empty SQL after {step_ms}ms, retrying...")
+            else:
+                logger.error(f"[generate_sql] LLM returned empty SQL on retry after {step_ms}ms")
+
+        return ""
 
     def validate_sql(self, sql: str) -> Tuple[bool, str]:
         """Validate SQL for safety."""
@@ -330,8 +343,13 @@ Columns:
         logger.info(f"[pipeline] Using {len(schemas)} schemas: {[s['db_name']+'.'+s['table_name'] for s in schemas[:5]]}")
         sql = self.generate_sql(query, schemas, context)
 
-        # Step 3: Validate
+        # Step 3: Validate (if fails and we had context, retry without context)
         is_valid, validation_msg = self.validate_sql(sql)
+        if not is_valid and context:
+            logger.warning(f"[pipeline] SQL validation failed with context: {validation_msg}, retrying without context")
+            sql = self.generate_sql(query, schemas, context="")
+            is_valid, validation_msg = self.validate_sql(sql)
+
         if not is_valid:
             logger.warning(f"[pipeline] SQL validation failed: {validation_msg}")
             return {
