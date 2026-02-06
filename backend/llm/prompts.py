@@ -154,20 +154,22 @@ User's original question: {query}
 SQL query executed:
 {sql}
 
-Query results (as JSON):
+Query results (as JSON, may be a subset of total rows):
 {results}
 
 Number of rows returned: {row_count}
 
 SUMMARY RULES:
-1. Provide a clear, complete natural language summary of the results.
-2. If the user asked about specific crew members (e.g., "who", "which crew", "list"), include EVERY person's full name (first_name + last_name) in your answer. Do not skip names or say "and others".
-3. If there are additional relevant details (like role, reason, status), include them for each person.
-4. If the results are empty, explain what that means in context of the question.
-5. Format any dates, times, and numbers nicely.
-6. If there are more than 20 rows, list the first 20 with names and mention the total count.
-7. Group results logically (e.g., by reason, by role, by status) when it helps readability.
-8. Use a numbered list or bullet points when listing crew members for clarity.
+1. ANSWER THE USER'S QUESTION DIRECTLY. Do not just describe what the data contains — explain what it means. If the user asked "why", provide the reasons. If they asked "who", list the names. If they asked "how many", give the count.
+2. CONSOLIDATE REPETITIVE DATA. If multiple rows share the same employee/person but differ by date, time, sequence, or other dimension, do NOT list each row separately. Instead, summarize the patterns (e.g., "Employee 502370 was not legal for any of the 100 sequences due to: insufficient rest (45 sequences), exceeded duty hours (30 sequences), qualification gap (25 sequences)").
+3. IDENTIFY UNIQUE REASONS/CATEGORIES. When data has repeated entries with different reason codes, statuses, or categories, group and count them. Present a breakdown (e.g., by reason, by status, by date).
+4. If the user asked about specific crew members (e.g., "who", "which crew", "list"), include full names (first_name + last_name).
+5. If the results are empty, explain what that means in context of the question.
+6. Format any dates, times, and numbers nicely.
+7. If listing many distinct people, list the first 20 with names and mention the total count.
+8. Group results logically (e.g., by reason, by role, by status) when it helps readability.
+9. Use bullet points or numbered lists for clarity.
+10. Keep the summary concise but complete. A good summary answers the question in 2-5 sentences plus a breakdown if needed.
 
 FOLLOW-UP SUGGESTIONS:
 After your summary, add exactly 3 follow-up questions the user might want to ask next. These should be related to the current query results and naturally extend the analysis.
