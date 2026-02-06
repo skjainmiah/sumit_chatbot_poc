@@ -346,6 +346,7 @@ Columns:
 
         # Step 4: Execute with retry loop
         last_error = ""
+        used_context_retry = False
         for attempt in range(self.max_retries):
             logger.info(f"[pipeline] Execute attempt {attempt + 1}/{self.max_retries}")
             success, results, error = self.execute_sql(sql, schemas)
@@ -353,6 +354,21 @@ Columns:
             if success:
                 # Generate summary with follow-up suggestions
                 logger.info(f"[pipeline] SQL executed OK | {results['row_count']} rows")
+
+                if results["row_count"] == 0 and context and not used_context_retry:
+                    # Zero rows with context — retry WITHOUT context as safety net
+                    # Context may have caused the LLM to generate wrong JOINs
+                    logger.info("[pipeline] Zero rows with context, retrying without context")
+                    used_context_retry = True
+                    sql = self.generate_sql(query, schemas, context="")
+                    is_valid, validation_msg = self.validate_sql(sql)
+                    if is_valid:
+                        success2, results2, error2 = self.execute_sql(sql, schemas)
+                        if success2 and results2["row_count"] > 0:
+                            logger.info(f"[pipeline] Context-free retry returned {results2['row_count']} rows")
+                            results = results2
+                        else:
+                            logger.info("[pipeline] Context-free retry also returned 0 rows, using original")
 
                 if results["row_count"] == 0:
                     # No data found — skip LLM summarization, return clear message
