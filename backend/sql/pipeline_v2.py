@@ -450,22 +450,34 @@ class SQLPipelineV2:
 
     def _summarize_results(self, question: str, sql: str, results: Dict) -> tuple:
         """Generate natural language summary of results. Returns (summary, suggestions)."""
-        rows_for_summary = results["rows"][:50]
-        logger.info(f"[summarize] Summarizing {results['row_count']} rows for question")
+        # Limit rows and truncate long values to avoid exceeding LLM context window
+        max_rows = 25
+        rows_for_summary = results["rows"][:max_rows]
+        truncated_rows = []
+        for row in rows_for_summary:
+            truncated_row = {}
+            for k, v in row.items():
+                sv = str(v) if v is not None else ""
+                truncated_row[k] = sv[:200] if len(sv) > 200 else v
+            truncated_rows.append(truncated_row)
+
+        logger.info(f"[summarize] Summarizing {results['row_count']} rows for question (sending {len(truncated_rows)} to LLM)")
 
         summary_prompt = SQL_RESULT_SUMMARY_PROMPT.format(
             query=question,
             sql=sql,
-            results=json.dumps(rows_for_summary, indent=2, default=str),
+            results=json.dumps(truncated_rows, default=str),
             row_count=results["row_count"]
         )
+
+        logger.info(f"[summarize] Prompt length: {len(summary_prompt)} chars")
 
         step_start = time.time()
         try:
             response = self.llm.chat_completion(
                 messages=[{"role": "user", "content": summary_prompt}],
                 temperature=0.3,
-                max_tokens=1500
+                max_tokens=2000
             )
         except Exception as e:
             step_ms = int((time.time() - step_start) * 1000)

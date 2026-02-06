@@ -274,17 +274,31 @@ Columns:
 
     def summarize_results(self, query: str, sql: str, results: Dict) -> tuple:
         """Generate a natural language summary with follow-up suggestions. Returns (summary, suggestions)."""
+        # Limit rows sent to LLM to avoid exceeding context window
+        # Also truncate long cell values to keep prompt size manageable
+        max_rows = 25
+        rows_for_summary = results["rows"][:max_rows]
+        truncated_rows = []
+        for row in rows_for_summary:
+            truncated_row = {}
+            for k, v in row.items():
+                sv = str(v) if v is not None else ""
+                truncated_row[k] = sv[:200] if len(sv) > 200 else v
+            truncated_rows.append(truncated_row)
+
         prompt = SQL_RESULT_SUMMARY_PROMPT.format(
             query=query,
             sql=sql,
-            results=json.dumps(results["rows"][:50], default=str),
+            results=json.dumps(truncated_rows, default=str),
             row_count=results["row_count"]
         )
+
+        logger.info(f"[summarize] Prompt length: {len(prompt)} chars, rows sent: {len(truncated_rows)}/{results['row_count']}")
 
         response = self.llm_client.chat_completion(
             messages=[{"role": "user", "content": prompt}],
             temperature=0.3,
-            max_tokens=1500
+            max_tokens=2000
         )
 
         return self._parse_suggestions(response)
