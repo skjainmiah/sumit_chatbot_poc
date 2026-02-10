@@ -1205,6 +1205,11 @@ def seed_database_registry():
     ]
 
     for db in mock_databases:
+        # Only register mock databases whose files actually exist
+        if not os.path.exists(db["db_path"]):
+            # Remove stale entry if it exists
+            c.execute("DELETE FROM database_registry WHERE db_name = ? AND source_type = 'mock'", (db["db_name"],))
+            continue
         c.execute("""
             INSERT OR REPLACE INTO database_registry
             (db_name, db_path, display_name, description, source_type, is_visible, is_system, table_count)
