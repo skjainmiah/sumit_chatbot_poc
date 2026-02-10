@@ -159,52 +159,53 @@ def render_db_explorer():
 
     # ===== BROWSE TABLES TAB =====
     with tab_detail:
-        col1, col2 = st.columns([1, 2])
-
         db_names = list(DATABASES.keys())
 
-        with col1:
-            selected_db = st.selectbox(
-                "Select Database",
-                db_names,
-                format_func=lambda x: DATABASES[x].get("display_name", x.replace("_", " ").title())
-            )
+        if not db_names:
+            st.info("No databases available. Upload a database first.")
+        else:
+            col1, col2 = st.columns([1, 2])
 
-        db_info = DATABASES[selected_db]
-        if not os.path.exists(db_info["path"]):
-            st.error(f"Database not found: {db_info['path']}")
-            st.info("Run: python scripts/run_all_setup.py")
-            return
+            with col1:
+                selected_db = st.selectbox(
+                    "Select Database",
+                    db_names,
+                    format_func=lambda x: DATABASES[x].get("display_name", x.replace("_", " ").title())
+                )
 
-        tables = get_table_list(db_info["path"])
-        if not tables:
-            st.warning("No tables found in this database")
-            return
+            db_info = DATABASES[selected_db]
+            if not os.path.exists(db_info["path"]):
+                st.error(f"Database not found: {db_info['path']}")
+                st.info("Upload a database to get started.")
+            else:
+                tables = get_table_list(db_info["path"])
+                if not tables:
+                    st.warning("No tables found in this database")
+                else:
+                    table_names = [t["table"] for t in tables]
 
-        table_names = [t["table"] for t in tables]
+                    with col2:
+                        selected_table = st.selectbox("Select Table", table_names)
 
-        with col2:
-            selected_table = st.selectbox("Select Table", table_names)
+                    if selected_table:
+                        # Schema
+                        st.subheader(f"Schema: {selected_db}.{selected_table}")
+                        schema = get_table_schema(db_info["path"], selected_table)
+                        st.dataframe(pd.DataFrame(schema), width="stretch", hide_index=True)
 
-        if selected_table:
-            # Schema
-            st.subheader(f"Schema: {selected_db}.{selected_table}")
-            schema = get_table_schema(db_info["path"], selected_table)
-            st.dataframe(pd.DataFrame(schema), width="stretch", hide_index=True)
+                        # DDL
+                        with st.expander("📄 CREATE TABLE Statement"):
+                            ddl = get_create_statement(db_info["path"], selected_table)
+                            st.code(ddl, language="sql")
 
-            # DDL
-            with st.expander("📄 CREATE TABLE Statement"):
-                ddl = get_create_statement(db_info["path"], selected_table)
-                st.code(ddl, language="sql")
+                        # Data preview
+                        st.subheader("📋 Data Preview")
+                        row_limit = st.slider("Rows to show", 5, 200, 25, key="row_limit")
+                        df = get_table_data(db_info["path"], selected_table, row_limit)
+                        st.dataframe(df, width="stretch", hide_index=True)
 
-            # Data preview
-            st.subheader("📋 Data Preview")
-            row_limit = st.slider("Rows to show", 5, 200, 25, key="row_limit")
-            df = get_table_data(db_info["path"], selected_table, row_limit)
-            st.dataframe(df, width="stretch", hide_index=True)
-
-            row_count = next(t["rows"] for t in tables if t["table"] == selected_table)
-            st.caption(f"Showing {len(df)} of {row_count} total rows")
+                        row_count = next(t["rows"] for t in tables if t["table"] == selected_table)
+                        st.caption(f"Showing {len(df)} of {row_count} total rows")
 
     # ===== SCHEMA METADATA TAB =====
     with tab_schema_meta:
