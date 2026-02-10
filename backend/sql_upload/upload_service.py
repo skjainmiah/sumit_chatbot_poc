@@ -652,6 +652,13 @@ class UploadService:
         conn = sqlite3.connect(settings.app_db_path)
         cursor = conn.cursor()
 
+        # Ensure column_descriptions column exists (migration for older databases)
+        try:
+            cursor.execute("ALTER TABLE schema_metadata ADD COLUMN column_descriptions TEXT")
+            conn.commit()
+        except sqlite3.OperationalError:
+            pass  # Column already exists
+
         for db_info in databases:
             db_name = db_info["db_name"]
             db_path = db_info["db_path"]
@@ -719,6 +726,10 @@ class UploadService:
                     col_desc_json = self._generate_column_descriptions(
                         db_name, table_name, col_details, sample_str
                     )
+                    if col_desc_json:
+                        logger.info(f"Generated column descriptions for {db_name}.{table_name}")
+                    else:
+                        logger.warning(f"No column descriptions generated for {db_name}.{table_name}")
 
                     # Insert into schema_metadata
                     cursor.execute("""
