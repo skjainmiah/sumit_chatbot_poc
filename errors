@@ -1,8 +1,27 @@
-python -c "from backend.db.setup_databases import setup_app_db, seed_database_registry; setup_app_db(); seed_database_registry()"                                          
-  
-  Then delete the mock db files:
+PS C:\Users\Shaik.Jainmaih\Chat_v1_v2\sumit_chatbot_poc> streamlit run .\frontend\app.py
 
-  del data\databases\crew_management.db
-  del data\databases\flight_operations.db
-  del data\databases\hr_payroll.db
-  del data\databases\compliance_training.db
+  You can now view your Streamlit app in your browser.
+
+  Local URL: http://localhost:8501
+  Network URL: http://192.168.0.28:8501
+
+2026-02-10 21:28:01.918 Uncaught app execution
+Traceback (most recent call last):
+  File "C:\Users\Shaik.Jainmaih\AppData\Local\Programs\Python\Python313\Lib\site-packages\streamlit\runtime\scriptrunner\exec_code.py", line 128, in exec_func_with_error_handling
+    result = func()
+  File "C:\Users\Shaik.Jainmaih\AppData\Local\Programs\Python\Python313\Lib\site-packages\streamlit\runtime\scriptrunner\script_runner.py", line 669, in code_to_exec
+    exec(code, module.__dict__)  # noqa: S102
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Shaik.Jainmaih\Chat_v1_v2\sumit_chatbot_poc\frontend\app.py", line 95, in <module>        
+    main()
+    ~~~~^^
+  File "C:\Users\Shaik.Jainmaih\Chat_v1_v2\sumit_chatbot_poc\frontend\app.py", line 88, in main
+    render_db_explorer()
+    ~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\Shaik.Jainmaih\Chat_v1_v2\sumit_chatbot_poc\frontend\views\db_explorer.py", line 173, in render_db_explorer
+    db_info = DATABASES[selected_db]
+              ~~~~~~~~~^^^^^^^^^^^^^
+KeyError: None
+
+
+
