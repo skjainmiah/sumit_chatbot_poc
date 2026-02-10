@@ -1,16 +1,1 @@
-PS C:\Users\Shaik.Jainmaih\Chat_v1_v2\sumit_chatbot_poc> git pull
-remote: Enumerating objects: 20, done.
-remote: Counting objects: 100% (20/20), done.
-remote: Compressing objects: 100% (3/3), done.
-remote: Total 20 (delta 17), reused 20 (delta 17), pack-reused 0 (from 0)
-Unpacking objects: 100% (20/20), 6.42 KiB | 28.00 KiB/s, done.
-From https://github.com/skjainmiah/sumit_chatbot_poc
-   d6d0a72..1a2280b  main       -> origin/main
-Updating d6d0a72..1a2280b
-error: Your local changes to the following files would be overwritten by merge:
-        data/databases/app.db
-        data/faiss_indexes/schema_metadata.index
-        data/faiss_indexes/schema_metadata.meta
-Please commit your changes or stash them before you merge.
-Aborting
-PS C:\Users\Shaik.Jainmaih\Chat_v1_v2\sumit_chatbot_poc> 
+git checkout -- data/databases/app.db data/faiss_indexes/schema_metadata.index data/faiss_indexes/schema_metadata.meta && git pull
