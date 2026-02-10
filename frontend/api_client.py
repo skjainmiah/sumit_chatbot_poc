@@ -258,3 +258,15 @@ class APIClient:
     def get_database_info(self, db_name: str) -> Dict[str, Any]:
         """Get information about a specific database."""
         return self._make_request("GET", f"/database/{db_name}/info")
+
+    def get_column_descriptions(self, db_name: str) -> Dict[str, Any]:
+        """Get column descriptions for all tables in a database."""
+        return self._make_request("GET", f"/database/{db_name}/column-descriptions")
+
+    def update_column_descriptions(self, db_name: str, descriptions: Dict) -> Dict[str, Any]:
+        """Update column descriptions for a database."""
+        return self._make_request(
+            "PUT",
+            f"/database/{db_name}/column-descriptions",
+            json={"descriptions": descriptions}
+        )

@@ -264,3 +264,24 @@ Respond in JSON:
   "title": "suggested chart title",
   "reasoning": "brief explanation"
 }}"""
+
+# ============================================================
+# COLUMN DESCRIPTION GENERATION
+# ============================================================
+COLUMN_DESCRIPTION_PROMPT = """You are a database analyst. Given a table's column names, types, and sample data, generate a brief human-readable description for each column.
+
+Database: {db_name}
+Table: {table_name}
+
+Columns and types:
+{columns}
+
+Sample data (up to 3 rows):
+{sample_data}
+
+For each column, infer its meaning from the column name, data type, and sample values.
+If the column name is cryptic or abbreviated, do your best to guess what it represents.
+If you truly cannot determine the meaning, use "Unknown - please describe manually".
+
+Respond with ONLY a JSON object mapping each column name to its description. No markdown, no explanation.
+Example: {{"emp_id": "Employee unique identifier", "lglru5485": "Legal rules code for crew scheduling"}}"""

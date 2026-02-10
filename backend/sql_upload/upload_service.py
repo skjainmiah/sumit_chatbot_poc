@@ -17,7 +17,7 @@ from backend.sql_upload.mssql_parser import MssqlDumpParser
 from backend.sql_upload.dialect_detector import SqlDialect, detect_sql_dialect
 from backend.sql_upload.db_creator import DatabaseCreator, CreationResult
 from backend.db.registry import get_database_registry
-from backend.llm.prompts import SCHEMA_DESCRIPTION_PROMPT
+from backend.llm.prompts import SCHEMA_DESCRIPTION_PROMPT, COLUMN_DESCRIPTION_PROMPT
 
 logger = logging.getLogger("chatbot.upload_service")
 
@@ -453,9 +453,14 @@ class UploadService:
         app_conn = sqlite3.connect(settings.app_db_path)
         app_cursor = app_conn.cursor()
 
-        # Ensure column exists (for databases created before migration)
+        # Ensure columns exist (for databases created before migration)
         try:
             app_cursor.execute("ALTER TABLE schema_metadata ADD COLUMN detected_foreign_keys TEXT")
+            app_conn.commit()
+        except sqlite3.OperationalError:
+            pass  # Column already exists
+        try:
+            app_cursor.execute("ALTER TABLE schema_metadata ADD COLUMN column_descriptions TEXT")
             app_conn.commit()
         except sqlite3.OperationalError:
             pass  # Column already exists
@@ -605,6 +610,43 @@ class UploadService:
             logger.warning(f"LLM description generation failed for {db_name}.{table_name}: {e}")
             return None
 
+    def _generate_column_descriptions(self, db_name: str, table_name: str,
+                                        col_details: str, sample_str: str) -> Optional[str]:
+        """Generate human-readable column descriptions using LLM. Returns JSON string."""
+        try:
+            from backend.llm.client import get_llm_client
+            client = get_llm_client()
+
+            prompt = COLUMN_DESCRIPTION_PROMPT.format(
+                db_name=db_name,
+                table_name=table_name,
+                columns=col_details,
+                sample_data=sample_str
+            )
+
+            response = client.chat_completion(
+                messages=[{"role": "user", "content": prompt}],
+                temperature=0.3,
+                max_tokens=1000,
+                use_fast_model=True
+            )
+
+            if not response:
+                return None
+
+            # Parse and validate JSON
+            text = response.strip()
+            # Strip markdown code fences if present
+            if text.startswith("```"):
+                text = text.split("\n", 1)[-1].rsplit("```", 1)[0].strip()
+            descriptions = json.loads(text)
+            if isinstance(descriptions, dict):
+                return json.dumps(descriptions)
+            return None
+        except Exception as e:
+            logger.warning(f"Column description generation failed for {db_name}.{table_name}: {e}")
+            return None
+
     def _populate_schema_for_databases(self, databases: List[Dict]) -> None:
         """Populate schema metadata for specified databases with LLM descriptions."""
         conn = sqlite3.connect(settings.app_db_path)
@@ -673,12 +715,17 @@ class UploadService:
                                 f"Columns: {col_details[:200]}. "
                                 f"Sample values suggest this table stores {heuristic}.")
 
+                    # Generate column-level descriptions via LLM
+                    col_desc_json = self._generate_column_descriptions(
+                        db_name, table_name, col_details, sample_str
+                    )
+
                     # Insert into schema_metadata
                     cursor.execute("""
                         INSERT OR REPLACE INTO schema_metadata
-                        (db_name, table_name, column_details, row_count, sample_values, ddl_statement, llm_description)
-                        VALUES (?, ?, ?, ?, ?, ?, ?)
-                    """, (db_name, table_name, col_details, row_count, sample_str, ddl, desc))
+                        (db_name, table_name, column_details, row_count, sample_values, ddl_statement, llm_description, column_descriptions)
+                        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                    """, (db_name, table_name, col_details, row_count, sample_str, ddl, desc, col_desc_json))
 
                 db_conn.close()
 

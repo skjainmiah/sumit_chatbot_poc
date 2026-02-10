@@ -1092,7 +1092,7 @@ def setup_app_db():
         metadata_id INTEGER PRIMARY KEY AUTOINCREMENT, db_name TEXT NOT NULL,
         table_name TEXT NOT NULL, column_details TEXT NOT NULL, row_count INTEGER,
         sample_values TEXT, ddl_statement TEXT NOT NULL, llm_description TEXT NOT NULL,
-        detected_foreign_keys TEXT,
+        detected_foreign_keys TEXT, column_descriptions TEXT,
         last_crawled_at TEXT DEFAULT CURRENT_TIMESTAMP, UNIQUE(db_name, table_name))""")
 
     c.execute("""CREATE TABLE IF NOT EXISTS document_chunks (

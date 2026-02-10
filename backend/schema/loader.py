@@ -120,7 +120,7 @@ class SchemaLoader:
             cursor.execute(f"""
                 SELECT db_name, table_name, column_details, row_count,
                        sample_values, ddl_statement, llm_description,
-                       detected_foreign_keys
+                       detected_foreign_keys, column_descriptions
                 FROM schema_metadata
                 WHERE db_name IN ({placeholders})
             """, tuple(missing_dbs.keys()))
@@ -151,6 +151,14 @@ class SchemaLoader:
                     except (json.JSONDecodeError, KeyError):
                         pass
 
+                # Parse column descriptions JSON if available
+                col_descriptions = {}
+                if row["column_descriptions"]:
+                    try:
+                        col_descriptions = json.loads(row["column_descriptions"])
+                    except (json.JSONDecodeError, TypeError):
+                        pass
+
                 # Parse columns from column_details (format: "col1 (TYPE), col2 (TYPE)")
                 columns = []
                 if row["column_details"]:
@@ -159,14 +167,17 @@ class SchemaLoader:
                         if len(parts) >= 2:
                             col_name = parts[0].strip()
                             col_type = parts[1].rstrip(")")
-                            columns.append({
+                            col_dict = {
                                 "name": col_name,
                                 "data_type": col_type,
                                 "is_primary_key": False,
                                 "is_nullable": True,
                                 "is_foreign_key": col_name in fk_columns,
                                 "foreign_key_ref": fk_ref_map.get(col_name, ""),
-                            })
+                            }
+                            if col_name in col_descriptions:
+                                col_dict["description"] = col_descriptions[col_name]
+                            columns.append(col_dict)
 
                 # Build foreign_keys list for table-level relationships
                 table_fks = []

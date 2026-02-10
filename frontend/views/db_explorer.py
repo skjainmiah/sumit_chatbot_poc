@@ -116,7 +116,7 @@ def render_db_explorer():
     DATABASES = get_databases()
 
     # --- Overview Tab and Detail Tab ---
-    tab_overview, tab_detail, tab_schema_meta = st.tabs(["📊 Overview", "🔍 Browse Tables", "📋 Schema Metadata"])
+    tab_overview, tab_detail, tab_schema_meta, tab_col_desc = st.tabs(["📊 Overview", "🔍 Browse Tables", "📋 Schema Metadata", "🏷️ Column Descriptions"])
 
     # ===== OVERVIEW TAB =====
     with tab_overview:
@@ -243,3 +243,157 @@ def render_db_explorer():
         else:
             st.error("App database not found. Run setup first:")
             st.code("python scripts/run_all_setup.py", language="bash")
+
+    # ===== COLUMN DESCRIPTIONS TAB =====
+    with tab_col_desc:
+        st.subheader("Column Descriptions")
+        st.caption("Review and edit LLM-generated column descriptions. These help the chatbot understand cryptic column names.")
+
+        db_names_cd = list(DATABASES.keys())
+        if not db_names_cd:
+            st.warning("No databases available")
+        else:
+            selected_db_cd = st.selectbox(
+                "Select Database",
+                db_names_cd,
+                format_func=lambda x: DATABASES[x].get("display_name", x.replace("_", " ").title()),
+                key="cd_db_select"
+            )
+
+            # Load column descriptions from schema_metadata
+            col_desc_data = _load_column_descriptions(selected_db_cd)
+
+            if not col_desc_data:
+                st.info("No schema metadata found for this database. Upload a database first or run setup.")
+            else:
+                table_names_cd = list(col_desc_data.keys())
+                selected_table_cd = st.selectbox(
+                    "Select Table",
+                    table_names_cd,
+                    key="cd_table_select"
+                )
+
+                if selected_table_cd and selected_table_cd in col_desc_data:
+                    table_info = col_desc_data[selected_table_cd]
+                    columns = table_info["columns"]
+                    descriptions = table_info["descriptions"]
+
+                    # Build editable dataframe
+                    rows = []
+                    for col in columns:
+                        col_name = col["name"]
+                        desc = descriptions.get(col_name, "")
+                        is_unknown = desc.lower().startswith("unknown") if desc else True
+                        rows.append({
+                            "Column": col_name,
+                            "Type": col["type"],
+                            "Description": desc,
+                        })
+
+                    if rows:
+                        df = pd.DataFrame(rows)
+
+                        st.markdown("Edit descriptions below. Rows marked with **Unknown** need attention.")
+
+                        edited_df = st.data_editor(
+                            df,
+                            column_config={
+                                "Column": st.column_config.TextColumn("Column", disabled=True),
+                                "Type": st.column_config.TextColumn("Type", disabled=True),
+                                "Description": st.column_config.TextColumn("Description", width="large"),
+                            },
+                            hide_index=True,
+                            use_container_width=True,
+                            key=f"cd_editor_{selected_db_cd}_{selected_table_cd}"
+                        )
+
+                        # Highlight unknowns
+                        unknown_count = sum(
+                            1 for _, row in edited_df.iterrows()
+                            if not row["Description"] or str(row["Description"]).lower().startswith("unknown")
+                        )
+                        if unknown_count > 0:
+                            st.warning(f"{unknown_count} column(s) need descriptions")
+
+                        if st.button("💾 Save Descriptions", key="cd_save_btn"):
+                            _save_column_descriptions(selected_db_cd, selected_table_cd, edited_df)
+
+
+def _load_column_descriptions(db_name: str) -> dict:
+    """Load column descriptions from schema_metadata for a database."""
+    import json
+    try:
+        conn = sqlite3.connect(settings.app_db_path)
+        conn.row_factory = sqlite3.Row
+        c = conn.cursor()
+
+        c.execute("""
+            SELECT table_name, column_details, column_descriptions
+            FROM schema_metadata
+            WHERE db_name = ?
+        """, (db_name,))
+
+        result = {}
+        for row in c.fetchall():
+            table_name = row["table_name"]
+            columns = []
+            if row["column_details"]:
+                for col_str in row["column_details"].split(", "):
+                    parts = col_str.split(" (")
+                    if len(parts) >= 2:
+                        columns.append({
+                            "name": parts[0].strip(),
+                            "type": parts[1].rstrip(")")
+                        })
+
+            descriptions = {}
+            if row["column_descriptions"]:
+                try:
+                    descriptions = json.loads(row["column_descriptions"])
+                except (json.JSONDecodeError, TypeError):
+                    pass
+
+            result[table_name] = {
+                "columns": columns,
+                "descriptions": descriptions
+            }
+
+        conn.close()
+        return result
+    except Exception as e:
+        st.error(f"Error loading column descriptions: {e}")
+        return {}
+
+
+def _save_column_descriptions(db_name: str, table_name: str, edited_df):
+    """Save edited column descriptions back to schema_metadata."""
+    import json
+    try:
+        # Build descriptions dict from edited dataframe
+        descriptions = {}
+        for _, row in edited_df.iterrows():
+            if row["Description"]:
+                descriptions[row["Column"]] = str(row["Description"])
+
+        desc_json = json.dumps(descriptions)
+
+        conn = sqlite3.connect(settings.app_db_path)
+        cursor = conn.cursor()
+        cursor.execute("""
+            UPDATE schema_metadata
+            SET column_descriptions = ?
+            WHERE db_name = ? AND table_name = ?
+        """, (desc_json, db_name, table_name))
+        conn.commit()
+        conn.close()
+
+        # Refresh schema caches
+        try:
+            from backend.sql_upload.upload_service import refresh_all_schema
+            refresh_all_schema()
+        except Exception as e:
+            st.warning(f"Descriptions saved but cache refresh failed: {e}")
+
+        st.success(f"Descriptions saved for {db_name}.{table_name}. Schema refreshed!")
+    except Exception as e:
+        st.error(f"Failed to save descriptions: {e}")

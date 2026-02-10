@@ -144,17 +144,26 @@ def _load_schema_cache() -> Dict[str, Dict]:
         cursor = conn.cursor()
 
         cursor.execute("""
-            SELECT db_name, table_name, column_details, row_count, ddl_statement, llm_description
+            SELECT db_name, table_name, column_details, row_count, ddl_statement, llm_description, column_descriptions
             FROM schema_metadata
         """)
 
         for row in cursor.fetchall():
             full_name = f"{row['db_name']}.{row['table_name']}"
+            # Parse column descriptions if available
+            col_descriptions = {}
+            if row['column_descriptions']:
+                try:
+                    import json
+                    col_descriptions = json.loads(row['column_descriptions'])
+                except (json.JSONDecodeError, TypeError):
+                    pass
             _schema_cache[full_name] = {
                 "db_name": row['db_name'],
                 "table_name": row['table_name'],
                 "description": row['llm_description'],
                 "columns": _parse_columns(row['column_details'], row['ddl_statement']),
+                "column_descriptions": col_descriptions,
                 "ddl": row['ddl_statement'],
                 "row_count": row['row_count']
             }
@@ -236,6 +245,14 @@ def _match_uploaded_schemas(query_lower: str, cache: Dict[str, Dict]) -> set:
         # Match against LLM-generated description
         if any(w in description for w in query_words if len(w) > 2):
             matched.add(full_name)
+            continue
+
+        # Match against column descriptions
+        col_descriptions = schema.get("column_descriptions", {})
+        if col_descriptions:
+            all_desc_text = " ".join(str(v).lower() for v in col_descriptions.values())
+            if any(w in all_desc_text for w in query_words if len(w) > 2):
+                matched.add(full_name)
 
     return matched
 

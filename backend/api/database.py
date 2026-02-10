@@ -3,10 +3,13 @@ from fastapi import APIRouter, HTTPException, UploadFile, File, Depends, Query, 
 from pydantic import BaseModel
 from typing import Optional, List, Dict, Any
 import os
+import json
+import sqlite3
 
 from backend.db.registry import get_database_registry
 from backend.sql_upload.upload_service import UploadService, refresh_all_schema, remove_schema_for_database
 from backend.api.auth import get_current_user, require_admin
+from backend.config import settings
 
 
 router = APIRouter()
@@ -339,3 +342,104 @@ async def get_database_info(
         uploaded_by=db_info.get("uploaded_by"),
         created_at=db_info.get("created_at")
     )
+
+
+class ColumnDescriptionsRequest(BaseModel):
+    descriptions: Dict[str, Dict[str, str]]  # {table_name: {col_name: description}}
+
+
+@router.get("/{db_name}/column-descriptions")
+async def get_column_descriptions(
+    db_name: str,
+    current_user: dict = Depends(get_current_user)
+):
+    """Get column descriptions for all tables in a database."""
+    registry = get_database_registry()
+    db_info = registry.get_database_info(db_name)
+    if not db_info:
+        raise HTTPException(status_code=404, detail=f"Database '{db_name}' not found")
+
+    try:
+        conn = sqlite3.connect(settings.app_db_path)
+        conn.row_factory = sqlite3.Row
+        cursor = conn.cursor()
+
+        cursor.execute("""
+            SELECT table_name, column_details, column_descriptions
+            FROM schema_metadata
+            WHERE db_name = ?
+        """, (db_name,))
+
+        result = {}
+        for row in cursor.fetchall():
+            table_name = row["table_name"]
+            # Parse column details for type info
+            columns = []
+            if row["column_details"]:
+                for col_str in row["column_details"].split(", "):
+                    parts = col_str.split(" (")
+                    if len(parts) >= 2:
+                        columns.append({
+                            "name": parts[0].strip(),
+                            "type": parts[1].rstrip(")")
+                        })
+
+            # Parse existing descriptions
+            descriptions = {}
+            if row["column_descriptions"]:
+                try:
+                    descriptions = json.loads(row["column_descriptions"])
+                except (json.JSONDecodeError, TypeError):
+                    pass
+
+            result[table_name] = {
+                "columns": columns,
+                "descriptions": descriptions
+            }
+
+        conn.close()
+        return {"db_name": db_name, "tables": result}
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to fetch column descriptions: {str(e)}")
+
+
+@router.put("/{db_name}/column-descriptions")
+async def update_column_descriptions(
+    db_name: str,
+    request: ColumnDescriptionsRequest,
+    current_user: dict = Depends(require_admin)
+):
+    """Update column descriptions for a database and refresh schema caches."""
+    registry = get_database_registry()
+    db_info = registry.get_database_info(db_name)
+    if not db_info:
+        raise HTTPException(status_code=404, detail=f"Database '{db_name}' not found")
+
+    try:
+        conn = sqlite3.connect(settings.app_db_path)
+        cursor = conn.cursor()
+
+        for table_name, col_descs in request.descriptions.items():
+            desc_json = json.dumps(col_descs)
+            cursor.execute("""
+                UPDATE schema_metadata
+                SET column_descriptions = ?
+                WHERE db_name = ? AND table_name = ?
+            """, (desc_json, db_name, table_name))
+
+        conn.commit()
+        conn.close()
+
+        # Refresh all schema caches
+        refresh_all_schema()
+
+        return {
+            "success": True,
+            "db_name": db_name,
+            "tables_updated": len(request.descriptions),
+            "message": "Column descriptions updated and schema refreshed"
+        }
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to update column descriptions: {str(e)}")
