@@ -1,2 +1,8 @@
-python -c "import httpx; print(httpx.post('http://localhost:8000/api/auth/register',                                                                                       
-  json={'username':'admin','email':'admin@test.com','password':'admin123','full_name':'Admin'}).json())"
+python -c "from backend.db.setup_databases import setup_app_db, seed_database_registry; setup_app_db(); seed_database_registry()"                                          
+  
+  Then delete the mock db files:
+
+  del data\databases\crew_management.db
+  del data\databases\flight_operations.db
+  del data\databases\hr_payroll.db
+  del data\databases\compliance_training.db
