@@ -1,1 +1,17 @@
-git checkout -- data/databases/app.db data/faiss_indexes/schema_metadata.index data/faiss_indexes/schema_metadata.meta && git pull
+PS C:\Users\Shaik.Jainmaih\Chat_v1_v2\sumit_chatbot_poc> git stash && git pull
+At line:1 char:11
++ git stash && git pull
++           ~~
+The token '&&' is not a valid statement separator in this version.
+    + CategoryInfo          : ParserError: (:) [], ParentContainsErrorRecordException
+    + FullyQualifiedErrorId : InvalidEndOfLine
+ 
+PS C:\Users\Shaik.Jainmaih\Chat_v1_v2\sumit_chatbot_poc> git checkout -- data/databases/app.db data/faiss_indexes/schema_metadata.index data/faiss_indexes/schema_metadata.meta && git pull
+At line:1 char:120
++ ... ema_metadata.index data/faiss_indexes/schema_metadata.meta && git pul ...
++                                                                ~~
+The token '&&' is not a valid statement separator in this version.
+    + CategoryInfo          : ParserError: (:) [], ParentContainsErrorRecordException
+    + FullyQualifiedErrorId : InvalidEndOfLine
+
+PS C:\Users\Shaik.Jainmaih\Chat_v1_v2\sumit_chatbot_poc>
