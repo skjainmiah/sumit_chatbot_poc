@@ -1,2 +1,2 @@
-python -c "import httpx; print(httpx.post('http://localhost:8000/auth/register',
+python -c "import httpx; print(httpx.post('http://localhost:8000/api/auth/register',                                                                                       
   json={'username':'admin','email':'admin@test.com','password':'admin123','full_name':'Admin'}).json())"
