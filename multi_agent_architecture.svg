@@ -1,0 +1,170 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 900" font-family="Segoe UI, Arial, sans-serif">
+  <defs>
+    <filter id="shadow" x="-5%" y="-5%" width="115%" height="115%">
+      <feDropShadow dx="2" dy="2" stdDeviation="3" flood-opacity="0.15"/>
+    </filter>
+    <linearGradient id="orchGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#7C3AED;stop-opacity:1"/>
+      <stop offset="100%" style="stop-color:#5B21B6;stop-opacity:1"/>
+    </linearGradient>
+    <linearGradient id="agentGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#4F46E5;stop-opacity:1"/>
+      <stop offset="100%" style="stop-color:#3730A3;stop-opacity:1"/>
+    </linearGradient>
+    <linearGradient id="a2aGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#EC4899;stop-opacity:1"/>
+      <stop offset="100%" style="stop-color:#DB2777;stop-opacity:1"/>
+    </linearGradient>
+    <linearGradient id="mcpGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#059669;stop-opacity:1"/>
+      <stop offset="100%" style="stop-color:#047857;stop-opacity:1"/>
+    </linearGradient>
+    <linearGradient id="toolGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#F59E0B;stop-opacity:1"/>
+      <stop offset="100%" style="stop-color:#D97706;stop-opacity:1"/>
+    </linearGradient>
+    <linearGradient id="userGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#6366F1;stop-opacity:1"/>
+      <stop offset="100%" style="stop-color:#4F46E5;stop-opacity:1"/>
+    </linearGradient>
+    <marker id="arrowGray" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#94A3B8"/></marker>
+    <marker id="arrowPink" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#EC4899"/></marker>
+    <marker id="arrowPinkR" markerWidth="10" markerHeight="7" refX="0" refY="3.5" orient="auto"><polygon points="10 0, 0 3.5, 10 7" fill="#EC4899"/></marker>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1200" height="900" rx="16" fill="#F8FAFC"/>
+
+  <!-- Title -->
+  <text x="600" y="42" text-anchor="middle" font-size="26" font-weight="700" fill="#1E293B">Multi-Agent Architecture</text>
+  <text x="600" y="68" text-anchor="middle" font-size="14" fill="#64748B">Orchestrator delegates tasks to specialized agents connected via A2A, each agent uses MCP for tools</text>
+
+  <!-- User Box -->
+  <rect x="490" y="85" width="220" height="60" rx="12" fill="url(#userGrad)" filter="url(#shadow)"/>
+  <text x="600" y="113" text-anchor="middle" font-size="16" font-weight="600" fill="white">User / Application</text>
+  <text x="600" y="132" text-anchor="middle" font-size="11" fill="#C7D2FE">Chat UI / API Client</text>
+
+  <!-- Arrow: User -> Orchestrator -->
+  <line x1="600" y1="145" x2="600" y2="185" stroke="#94A3B8" stroke-width="2.5" marker-end="url(#arrowGray)"/>
+
+  <!-- Orchestrator Agent -->
+  <rect x="390" y="190" width="420" height="100" rx="14" fill="url(#orchGrad)" filter="url(#shadow)"/>
+  <text x="600" y="225" text-anchor="middle" font-size="20" font-weight="700" fill="white">Orchestrator Agent</text>
+  <text x="600" y="248" text-anchor="middle" font-size="12" fill="#DDD6FE">Decomposes tasks, routes to specialists, aggregates results</text>
+  <text x="600" y="268" text-anchor="middle" font-size="11" fill="#C4B5FD">Planning | Delegation | Coordination | Final Response</text>
+
+  <!-- A2A Protocol Bar -->
+  <rect x="100" y="315" width="1000" height="40" rx="10" fill="url(#a2aGrad)" filter="url(#shadow)"/>
+  <text x="600" y="341" text-anchor="middle" font-size="16" font-weight="700" fill="white">A2A Protocol (Agent-to-Agent Communication)</text>
+
+  <!-- Arrows from Orchestrator to A2A -->
+  <line x1="500" y1="290" x2="300" y2="315" stroke="#EC4899" stroke-width="2" marker-end="url(#arrowPink)"/>
+  <line x1="550" y1="290" x2="500" y2="315" stroke="#EC4899" stroke-width="2" marker-end="url(#arrowPink)"/>
+  <line x1="650" y1="290" x2="700" y2="315" stroke="#EC4899" stroke-width="2" marker-end="url(#arrowPink)"/>
+  <line x1="700" y1="290" x2="900" y2="315" stroke="#EC4899" stroke-width="2" marker-end="url(#arrowPink)"/>
+
+  <!-- Arrows from A2A to Agents -->
+  <line x1="200" y1="355" x2="200" y2="395" stroke="#EC4899" stroke-width="2" marker-end="url(#arrowPink)"/>
+  <line x1="460" y1="355" x2="460" y2="395" stroke="#EC4899" stroke-width="2" marker-end="url(#arrowPink)"/>
+  <line x1="740" y1="355" x2="740" y2="395" stroke="#EC4899" stroke-width="2" marker-end="url(#arrowPink)"/>
+  <line x1="1000" y1="355" x2="1000" y2="395" stroke="#EC4899" stroke-width="2" marker-end="url(#arrowPink)"/>
+
+  <!-- Agent 1: SQL Agent -->
+  <rect x="100" y="400" width="200" height="100" rx="12" fill="url(#agentGrad)" filter="url(#shadow)"/>
+  <text x="200" y="432" text-anchor="middle" font-size="15" font-weight="700" fill="white">SQL Agent</text>
+  <text x="200" y="455" text-anchor="middle" font-size="11" fill="#C7D2FE">Query generation</text>
+  <text x="200" y="472" text-anchor="middle" font-size="11" fill="#C7D2FE">Schema understanding</text>
+  <text x="200" y="489" text-anchor="middle" font-size="10" fill="#A5B4FC">Specialist LLM</text>
+
+  <!-- Agent 2: Research Agent -->
+  <rect x="360" y="400" width="200" height="100" rx="12" fill="url(#agentGrad)" filter="url(#shadow)"/>
+  <text x="460" y="432" text-anchor="middle" font-size="15" font-weight="700" fill="white">Research Agent</text>
+  <text x="460" y="455" text-anchor="middle" font-size="11" fill="#C7D2FE">Web search &amp; retrieval</text>
+  <text x="460" y="472" text-anchor="middle" font-size="11" fill="#C7D2FE">RAG pipeline</text>
+  <text x="460" y="489" text-anchor="middle" font-size="10" fill="#A5B4FC">Specialist LLM</text>
+
+  <!-- Agent 3: Analytics Agent -->
+  <rect x="640" y="400" width="200" height="100" rx="12" fill="url(#agentGrad)" filter="url(#shadow)"/>
+  <text x="740" y="432" text-anchor="middle" font-size="15" font-weight="700" fill="white">Analytics Agent</text>
+  <text x="740" y="455" text-anchor="middle" font-size="11" fill="#C7D2FE">Data analysis</text>
+  <text x="740" y="472" text-anchor="middle" font-size="11" fill="#C7D2FE">Visualization</text>
+  <text x="740" y="489" text-anchor="middle" font-size="10" fill="#A5B4FC">Specialist LLM</text>
+
+  <!-- Agent 4: Action Agent -->
+  <rect x="900" y="400" width="200" height="100" rx="12" fill="url(#agentGrad)" filter="url(#shadow)"/>
+  <text x="1000" y="432" text-anchor="middle" font-size="15" font-weight="700" fill="white">Action Agent</text>
+  <text x="1000" y="455" text-anchor="middle" font-size="11" fill="#C7D2FE">API calls &amp; writes</text>
+  <text x="1000" y="472" text-anchor="middle" font-size="11" fill="#C7D2FE">Workflow execution</text>
+  <text x="1000" y="489" text-anchor="middle" font-size="10" fill="#A5B4FC">Specialist LLM</text>
+
+  <!-- Horizontal A2A links between agents -->
+  <line x1="300" y1="450" x2="360" y2="450" stroke="#EC4899" stroke-width="1.5" stroke-dasharray="5,3"/>
+  <line x1="560" y1="450" x2="640" y2="450" stroke="#EC4899" stroke-width="1.5" stroke-dasharray="5,3"/>
+  <line x1="840" y1="450" x2="900" y2="450" stroke="#EC4899" stroke-width="1.5" stroke-dasharray="5,3"/>
+  <text x="330" y="443" text-anchor="middle" font-size="8" fill="#EC4899">A2A</text>
+  <text x="600" y="443" text-anchor="middle" font-size="8" fill="#EC4899">A2A</text>
+  <text x="870" y="443" text-anchor="middle" font-size="8" fill="#EC4899">A2A</text>
+
+  <!-- MCP Layer -->
+  <line x1="200" y1="500" x2="200" y2="540" stroke="#94A3B8" stroke-width="2" marker-end="url(#arrowGray)"/>
+  <line x1="460" y1="500" x2="460" y2="540" stroke="#94A3B8" stroke-width="2" marker-end="url(#arrowGray)"/>
+  <line x1="740" y1="500" x2="740" y2="540" stroke="#94A3B8" stroke-width="2" marker-end="url(#arrowGray)"/>
+  <line x1="1000" y1="500" x2="1000" y2="540" stroke="#94A3B8" stroke-width="2" marker-end="url(#arrowGray)"/>
+
+  <!-- MCP Boxes for each agent -->
+  <rect x="120" y="545" width="160" height="40" rx="8" fill="url(#mcpGrad)" filter="url(#shadow)"/>
+  <text x="200" y="570" text-anchor="middle" font-size="12" font-weight="600" fill="white">MCP Layer</text>
+
+  <rect x="380" y="545" width="160" height="40" rx="8" fill="url(#mcpGrad)" filter="url(#shadow)"/>
+  <text x="460" y="570" text-anchor="middle" font-size="12" font-weight="600" fill="white">MCP Layer</text>
+
+  <rect x="660" y="545" width="160" height="40" rx="8" fill="url(#mcpGrad)" filter="url(#shadow)"/>
+  <text x="740" y="570" text-anchor="middle" font-size="12" font-weight="600" fill="white">MCP Layer</text>
+
+  <rect x="920" y="545" width="160" height="40" rx="8" fill="url(#mcpGrad)" filter="url(#shadow)"/>
+  <text x="1000" y="570" text-anchor="middle" font-size="12" font-weight="600" fill="white">MCP Layer</text>
+
+  <!-- Tool connections -->
+  <line x1="200" y1="585" x2="200" y2="620" stroke="#94A3B8" stroke-width="1.5" marker-end="url(#arrowGray)"/>
+  <line x1="460" y1="585" x2="460" y2="620" stroke="#94A3B8" stroke-width="1.5" marker-end="url(#arrowGray)"/>
+  <line x1="740" y1="585" x2="740" y2="620" stroke="#94A3B8" stroke-width="1.5" marker-end="url(#arrowGray)"/>
+  <line x1="1000" y1="585" x2="1000" y2="620" stroke="#94A3B8" stroke-width="1.5" marker-end="url(#arrowGray)"/>
+
+  <!-- Tool Boxes -->
+  <rect x="125" y="625" width="150" height="55" rx="8" fill="url(#toolGrad)" filter="url(#shadow)"/>
+  <text x="200" y="650" text-anchor="middle" font-size="12" font-weight="600" fill="white">PostgreSQL</text>
+  <text x="200" y="668" text-anchor="middle" font-size="10" fill="#FEF3C7">MSSQL / DB Tools</text>
+
+  <rect x="385" y="625" width="150" height="55" rx="8" fill="url(#toolGrad)" filter="url(#shadow)"/>
+  <text x="460" y="650" text-anchor="middle" font-size="12" font-weight="600" fill="white">Web / Docs</text>
+  <text x="460" y="668" text-anchor="middle" font-size="10" fill="#FEF3C7">Search / Vector DB</text>
+
+  <rect x="665" y="625" width="150" height="55" rx="8" fill="url(#toolGrad)" filter="url(#shadow)"/>
+  <text x="740" y="650" text-anchor="middle" font-size="12" font-weight="600" fill="white">Charts / BI</text>
+  <text x="740" y="668" text-anchor="middle" font-size="10" fill="#FEF3C7">Python / Notebooks</text>
+
+  <rect x="925" y="625" width="150" height="55" rx="8" fill="url(#toolGrad)" filter="url(#shadow)"/>
+  <text x="1000" y="650" text-anchor="middle" font-size="12" font-weight="600" fill="white">External APIs</text>
+  <text x="1000" y="668" text-anchor="middle" font-size="10" fill="#FEF3C7">REST / gRPC</text>
+
+  <!-- Legend -->
+  <rect x="60" y="710" width="1080" height="170" rx="10" fill="#EEF2FF" stroke="#C7D2FE" stroke-width="1"/>
+
+  <!-- Legend Title -->
+  <text x="80" y="738" font-size="14" font-weight="700" fill="#3730A3">PROTOCOL ROLES:</text>
+
+  <!-- MCP Legend -->
+  <rect x="80" y="750" width="16" height="16" rx="3" fill="#059669"/>
+  <text x="105" y="763" font-size="12" font-weight="600" fill="#047857">MCP (Model Context Protocol)</text>
+  <text x="105" y="780" font-size="11" fill="#4338CA">Connects each agent to its tools (DB, APIs, files). Each tool is an MCP Server.</text>
+  <text x="105" y="795" font-size="11" fill="#4338CA">Used in BOTH single-agent and multi-agent architectures. Standardizes how agents access external resources.</text>
+
+  <!-- A2A Legend -->
+  <rect x="80" y="810" width="16" height="16" rx="3" fill="#EC4899"/>
+  <text x="105" y="823" font-size="12" font-weight="600" fill="#DB2777">A2A (Agent-to-Agent Protocol)</text>
+  <text x="105" y="840" font-size="11" fill="#4338CA">Enables agents to discover, communicate, and delegate tasks to each other.</text>
+  <text x="105" y="855" font-size="11" fill="#4338CA">Used ONLY in multi-agent architectures. Handles task cards, status updates, and artifact exchange between agents.</text>
+
+  <!-- Key difference -->
+  <text x="80" y="872" font-size="11" font-weight="600" fill="#5B21B6">MCP = Agent-to-Tool communication | A2A = Agent-to-Agent communication | Together they enable scalable AI systems</text>
+</svg>

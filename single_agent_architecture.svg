@@ -1,0 +1,105 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1100 750" font-family="Segoe UI, Arial, sans-serif">
+  <defs>
+    <filter id="shadow" x="-5%" y="-5%" width="115%" height="115%">
+      <feDropShadow dx="2" dy="2" stdDeviation="3" flood-opacity="0.15"/>
+    </filter>
+    <linearGradient id="agentGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#4F46E5;stop-opacity:1"/>
+      <stop offset="100%" style="stop-color:#3730A3;stop-opacity:1"/>
+    </linearGradient>
+    <linearGradient id="mcpGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#059669;stop-opacity:1"/>
+      <stop offset="100%" style="stop-color:#047857;stop-opacity:1"/>
+    </linearGradient>
+    <linearGradient id="toolGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#F59E0B;stop-opacity:1"/>
+      <stop offset="100%" style="stop-color:#D97706;stop-opacity:1"/>
+    </linearGradient>
+    <linearGradient id="userGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#6366F1;stop-opacity:1"/>
+      <stop offset="100%" style="stop-color:#4F46E5;stop-opacity:1"/>
+    </linearGradient>
+    <linearGradient id="llmGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#8B5CF6;stop-opacity:1"/>
+      <stop offset="100%" style="stop-color:#7C3AED;stop-opacity:1"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1100" height="750" rx="16" fill="#F8FAFC"/>
+
+  <!-- Title -->
+  <text x="550" y="45" text-anchor="middle" font-size="26" font-weight="700" fill="#1E293B">Single Agent Architecture</text>
+  <text x="550" y="72" text-anchor="middle" font-size="14" fill="#64748B">One LLM Agent handles all tasks with MCP-connected tools</text>
+
+  <!-- User Box -->
+  <rect x="440" y="95" width="220" height="70" rx="12" fill="url(#userGrad)" filter="url(#shadow)"/>
+  <text x="550" y="127" text-anchor="middle" font-size="16" font-weight="600" fill="white">User / Application</text>
+  <text x="550" y="148" text-anchor="middle" font-size="12" fill="#C7D2FE">Chat UI / API Client</text>
+
+  <!-- Arrow: User -> Agent -->
+  <line x1="550" y1="165" x2="550" y2="205" stroke="#94A3B8" stroke-width="2.5" marker-end="url(#arrowGray)"/>
+  <defs><marker id="arrowGray" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#94A3B8"/></marker></defs>
+  <text x="565" y="190" font-size="10" fill="#64748B">Query</text>
+
+  <!-- Single Agent Box (large) -->
+  <rect x="300" y="210" width="500" height="160" rx="14" fill="url(#agentGrad)" filter="url(#shadow)"/>
+  <text x="550" y="245" text-anchor="middle" font-size="20" font-weight="700" fill="white">Single LLM Agent</text>
+  <text x="550" y="270" text-anchor="middle" font-size="13" fill="#C7D2FE">(Reasoning + Planning + Execution)</text>
+
+  <!-- Inner components of agent -->
+  <rect x="325" y="285" width="130" height="55" rx="8" fill="rgba(255,255,255,0.15)" stroke="rgba(255,255,255,0.3)" stroke-width="1"/>
+  <text x="390" y="308" text-anchor="middle" font-size="12" font-weight="600" fill="white">Prompt</text>
+  <text x="390" y="325" text-anchor="middle" font-size="10" fill="#C7D2FE">System Instructions</text>
+
+  <rect x="485" y="285" width="130" height="55" rx="8" fill="rgba(255,255,255,0.15)" stroke="rgba(255,255,255,0.3)" stroke-width="1"/>
+  <text x="550" y="308" text-anchor="middle" font-size="12" font-weight="600" fill="white">Memory</text>
+  <text x="550" y="325" text-anchor="middle" font-size="10" fill="#C7D2FE">Context Window</text>
+
+  <rect x="645" y="285" width="130" height="55" rx="8" fill="rgba(255,255,255,0.15)" stroke="rgba(255,255,255,0.3)" stroke-width="1"/>
+  <text x="710" y="308" text-anchor="middle" font-size="12" font-weight="600" fill="white">Tool Calls</text>
+  <text x="710" y="325" text-anchor="middle" font-size="10" fill="#C7D2FE">Function Calling</text>
+
+  <!-- Arrow: Agent -> MCP Layer -->
+  <line x1="550" y1="370" x2="550" y2="415" stroke="#94A3B8" stroke-width="2.5" marker-end="url(#arrowGray)"/>
+
+  <!-- MCP Protocol Layer -->
+  <rect x="250" y="420" width="600" height="60" rx="12" fill="url(#mcpGrad)" filter="url(#shadow)"/>
+  <text x="550" y="448" text-anchor="middle" font-size="17" font-weight="700" fill="white">MCP Layer (Model Context Protocol)</text>
+  <text x="550" y="468" text-anchor="middle" font-size="11" fill="#A7F3D0">Standardized tool connectivity &amp; data access</text>
+
+  <!-- Arrows to tools -->
+  <line x1="330" y1="480" x2="180" y2="535" stroke="#94A3B8" stroke-width="2" marker-end="url(#arrowGray)"/>
+  <line x1="460" y1="480" x2="400" y2="535" stroke="#94A3B8" stroke-width="2" marker-end="url(#arrowGray)"/>
+  <line x1="640" y1="480" x2="700" y2="535" stroke="#94A3B8" stroke-width="2" marker-end="url(#arrowGray)"/>
+  <line x1="770" y1="480" x2="920" y2="535" stroke="#94A3B8" stroke-width="2" marker-end="url(#arrowGray)"/>
+
+  <!-- Tool Boxes -->
+  <rect x="95" y="540" width="170" height="75" rx="10" fill="url(#toolGrad)" filter="url(#shadow)"/>
+  <text x="180" y="570" text-anchor="middle" font-size="14" font-weight="600" fill="white">Database</text>
+  <text x="180" y="590" text-anchor="middle" font-size="11" fill="#FEF3C7">PostgreSQL / MSSQL</text>
+  <text x="180" y="605" text-anchor="middle" font-size="10" fill="#FEF3C7">MCP Server</text>
+
+  <rect x="315" y="540" width="170" height="75" rx="10" fill="url(#toolGrad)" filter="url(#shadow)"/>
+  <text x="400" y="570" text-anchor="middle" font-size="14" font-weight="600" fill="white">APIs</text>
+  <text x="400" y="590" text-anchor="middle" font-size="11" fill="#FEF3C7">REST / GraphQL</text>
+  <text x="400" y="605" text-anchor="middle" font-size="10" fill="#FEF3C7">MCP Server</text>
+
+  <rect x="615" y="540" width="170" height="75" rx="10" fill="url(#toolGrad)" filter="url(#shadow)"/>
+  <text x="700" y="570" text-anchor="middle" font-size="14" font-weight="600" fill="white">File System</text>
+  <text x="700" y="590" text-anchor="middle" font-size="11" fill="#FEF3C7">Documents / Logs</text>
+  <text x="700" y="605" text-anchor="middle" font-size="10" fill="#FEF3C7">MCP Server</text>
+
+  <rect x="835" y="540" width="170" height="75" rx="10" fill="url(#toolGrad)" filter="url(#shadow)"/>
+  <text x="920" y="570" text-anchor="middle" font-size="14" font-weight="600" fill="white">Web Search</text>
+  <text x="920" y="590" text-anchor="middle" font-size="11" fill="#FEF3C7">Brave / Google</text>
+  <text x="920" y="605" text-anchor="middle" font-size="10" fill="#FEF3C7">MCP Server</text>
+
+  <!-- Legend Box -->
+  <rect x="60" y="650" width="980" height="80" rx="10" fill="#EEF2FF" stroke="#C7D2FE" stroke-width="1"/>
+  <text x="80" y="675" font-size="13" font-weight="700" fill="#3730A3">KEY CHARACTERISTICS:</text>
+  <text x="80" y="698" font-size="12" fill="#4338CA">- Single LLM handles all reasoning, planning, and tool execution in a loop</text>
+  <text x="80" y="716" font-size="12" fill="#4338CA">- MCP provides standardized connectors to external tools and data sources (each tool = 1 MCP Server)</text>
+  <text x="620" y="698" font-size="12" fill="#4338CA">- Best for: focused tasks, simple workflows, chatbots, Q&amp;A</text>
+  <text x="620" y="716" font-size="12" fill="#4338CA">- No A2A needed (only one agent exists)</text>
+</svg>
