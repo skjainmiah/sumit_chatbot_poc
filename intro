@@ -1,0 +1,90 @@
+Slide 1 — Context: “Why Coding Agents Now”
+
+Goal: Align everyone on why this matters, what value it brings, and why governance is needed.
+
+Say (20–30 sec):
+
+“Coding agents are quickly becoming the default developer workflow — they help engineers read, write, refactor, and review faster.”
+
+“They remove repetitive SDLC work: scaffolding/boilerplate, tests, docs, and faster code understanding.”
+
+“But if we don’t manage them, we get new problems: token-cost spikes, inconsistent patterns, and security/compliance risk.”
+
+“So in Coforge AI LAB, we’re building a governed framework to get safe productivity gains — work in progress.”
+
+(Point to the SDLC graphic) “This is where agents help across the SDLC — and you can click to zoom.”
+
+One-liner to close the slide:
+“Agents are powerful — the question is how to make them enterprise-safe and repeatable.”
+
+Slide 2 — “The Problem with Generic AI Coding Agents”
+
+Goal: Create the “why not just use tools as-is?” tension.
+
+Say (20–30 sec):
+
+“Off-the-shelf agents are great for individuals, but enterprise teams hit predictable limits.”
+
+“They often pull too much context (whole repos) → higher token costs.”
+
+“They don’t naturally know our org standards → inconsistent code and rework.”
+
+“Design-to-code stays manual → UI delivery stays slow.”
+
+“And teams repeat prompts over and over → wasted effort.”
+
+One-liner to close the slide:
+“We’re not replacing agents — we’re wrapping them with intelligence, standards, and automation.”
+
+(If needed, name-check ecosystem quickly: “Whether it’s Microsoft Copilot, OpenAI Codex, or Anthropic Claude Code — the enterprise gap is the same.” Use once and move on.)
+Mentioned orgs: Microsoft, OpenAI, Anthropic.
+
+Slide 3 — “Three-Layer Intelligence Architecture”
+
+Goal: Explain the solution simply: governance + design automation + smart context orchestration.
+
+Say (30–45 sec):
+
+“Our approach has three layers — each solves a specific enterprise pain.”
+
+“Governance & Standards: templates inject our coding standards and security rules into every interaction, so outputs are consistent.”
+
+“Design-to-Code Intelligence: a Figma → code pipeline to speed UI handoff and reduce manual translation.”
+
+“MCP Tool Orchestration: connect the agent to tools like GitHub and project systems so it fetches only relevant context — not the whole repo.”
+
+“Net: faster delivery with governance. And we’re being careful: this is work in progress, not inflated ROI claims.”
+
+One-liner to close the slide:
+“This is ‘enterprise AI coding’ — predictable, governed, and scalable.”
+
+10-second wrap (after slide 3)
+
+“If you remember one thing: agents alone boost individuals; our framework boosts teams safely at enterprise scale.”
+
+If you want, I can also give you a 90-second version (ultra-short) and a 3-minute version (with 1–2 examples) so you can adapt to different audiences.
+
+Sources
+how should I introduce my self as Lead ANalyst artificial intellegence
+
+Here are a few crisp ways to introduce yourself as Lead Analyst – Artificial Intelligence (pick based on audience). I’ll keep them short, confident, and “AI LAB” aligned.
+
+Option 1 (clean + professional, 10 seconds)
+
+“Hi everyone, I’m [Your Name], Lead Analyst – Artificial Intelligence at Coforge AI LAB. I work on applied AI initiatives, especially building enterprise-ready AI solutions that improve delivery and governance.”
+
+Option 2 (more specific to your topic, 10–12 seconds)
+
+“Hi, I’m [Your Name], Lead Analyst – Artificial Intelligence in Coforge AI LAB. I focus on practical AI for software engineering—how we can use coding agents safely, consistently, and at enterprise scale.”
+
+Option 3 (leadership-friendly, outcome framing, 12–15 seconds)
+
+“Hello, I’m [Your Name], Lead Analyst – AI at Coforge AI LAB. My role is to translate AI capabilities into enterprise impact—productivity, quality, and governance—without adding risk.”
+
+Option 4 (more technical, for dev teams, 10–12 seconds)
+
+“Hey, I’m [Your Name], Lead Analyst – AI with Coforge AI LAB. I build and evaluate agentic workflows—templates, tool orchestration, and design-to-code automation—to make AI-assisted development reliable.”
+
+Option 5 (very short, 5–7 seconds)
+
+“Hi, I’m [Your Name], Lead Analyst – Artificial Intelligence at Coforge AI LAB.”
