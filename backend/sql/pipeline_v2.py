@@ -13,7 +13,7 @@ from enum import Enum
 
 from backend.config import settings
 from backend.llm.client import get_llm_client
-from backend.llm.prompts import SQL_CORRECTION_PROMPT, SQL_RESULT_SUMMARY_PROMPT
+from backend.llm.prompts import SQL_CORRECTION_PROMPT, SQL_RESULT_SUMMARY_PROMPT, SQL_RESULT_STATS_SUMMARY_PROMPT
 from backend.schema.loader import get_schema_loader
 from backend.db.session import get_multi_db_connection
 
@@ -448,11 +448,28 @@ class SQLPipelineV2:
         clean_summary = "\n".join(summary_lines).rstrip()
         return clean_summary, suggestions[:3]
 
+    # Threshold: if results exceed this, use stats-based summarization
+    LARGE_RESULT_THRESHOLD = 50
+
     def _summarize_results(self, question: str, sql: str, results: Dict) -> tuple:
-        """Generate natural language summary of results. Returns (summary, suggestions)."""
-        # Limit rows and truncate long values to avoid exceeding LLM context window
+        """Generate natural language summary of results. Returns (summary, suggestions).
+
+        For small results (<50 rows): sends actual rows to LLM (accurate for small sets).
+        For large results (>=50 rows): computes stats from ALL rows server-side,
+        sends only stats to LLM (accurate for large sets, no data leakage).
+        """
+        row_count = results["row_count"]
+        all_rows = results["rows"]
+
+        if row_count >= self.LARGE_RESULT_THRESHOLD:
+            return self._summarize_with_stats(question, sql, all_rows, row_count)
+        else:
+            return self._summarize_with_rows(question, sql, all_rows, row_count)
+
+    def _summarize_with_rows(self, question: str, sql: str, rows: List, row_count: int) -> tuple:
+        """Summarize small result sets by sending actual rows to LLM."""
         max_rows = 25
-        rows_for_summary = results["rows"][:max_rows]
+        rows_for_summary = rows[:max_rows]
         truncated_rows = []
         for row in rows_for_summary:
             truncated_row = {}
@@ -461,21 +478,145 @@ class SQLPipelineV2:
                 truncated_row[k] = sv[:200] if len(sv) > 200 else v
             truncated_rows.append(truncated_row)
 
-        logger.info(f"[summarize] Summarizing {results['row_count']} rows for question (sending {len(truncated_rows)} to LLM)")
+        logger.info(f"[summarize] Small result set ({row_count} rows) — sending {len(truncated_rows)} rows to LLM")
 
         summary_prompt = SQL_RESULT_SUMMARY_PROMPT.format(
             query=question,
             sql=sql,
             results=json.dumps(truncated_rows, default=str),
-            row_count=results["row_count"]
+            row_count=row_count
         )
 
-        logger.info(f"[summarize] Prompt length: {len(summary_prompt)} chars")
+        return self._call_llm_for_summary(summary_prompt, "rows")
+
+    def _summarize_with_stats(self, question: str, sql: str, rows: List, row_count: int) -> tuple:
+        """Summarize large result sets using pre-computed statistics from ALL rows.
+
+        No raw data rows are sent to the LLM — only aggregated statistics.
+        """
+        logger.info(f"[summarize] Large result set ({row_count} rows) — computing stats from ALL rows")
+
+        column_stats, value_distributions = self._compute_result_stats(rows)
+
+        # Include a small sample (5 rows) only for context on data format
+        sample_rows = rows[:5]
+        truncated_sample = []
+        for row in sample_rows:
+            truncated_row = {}
+            for k, v in row.items():
+                sv = str(v) if v is not None else ""
+                truncated_row[k] = sv[:100] if len(sv) > 100 else v
+            truncated_sample.append(truncated_row)
+
+        sample_note = (
+            f"Sample rows (5 of {row_count}, for format reference only — use the statistics above for your analysis):\n"
+            f"{json.dumps(truncated_sample, default=str)}"
+        )
+
+        summary_prompt = SQL_RESULT_STATS_SUMMARY_PROMPT.format(
+            query=question,
+            sql=sql,
+            row_count=row_count,
+            column_stats=column_stats,
+            value_distributions=value_distributions,
+            sample_note=sample_note
+        )
+
+        return self._call_llm_for_summary(summary_prompt, "stats")
+
+    def _compute_result_stats(self, rows: List[Dict]) -> Tuple[str, str]:
+        """Compute comprehensive statistics from ALL result rows.
+
+        Returns (column_stats_text, value_distributions_text) for the LLM prompt.
+        """
+        if not rows:
+            return "No data", "No data"
+
+        columns = list(rows[0].keys())
+        stats_lines = []
+        distribution_lines = []
+
+        for col in columns:
+            values = [row.get(col) for row in rows]
+            non_null = [v for v in values if v is not None and str(v).strip() != ""]
+            null_count = len(values) - len(non_null)
+
+            # Determine column type
+            numeric_values = []
+            for v in non_null:
+                try:
+                    numeric_values.append(float(v))
+                except (ValueError, TypeError):
+                    pass
+
+            is_numeric = len(numeric_values) > len(non_null) * 0.8  # 80%+ numeric = numeric column
+
+            if is_numeric and numeric_values:
+                # Numeric column stats
+                avg_val = sum(numeric_values) / len(numeric_values)
+                min_val = min(numeric_values)
+                max_val = max(numeric_values)
+                # Format nicely
+                if all(v == int(v) for v in numeric_values):
+                    stats_lines.append(
+                        f"  {col}: numeric | count={len(non_null)} | "
+                        f"min={int(min_val):,} | max={int(max_val):,} | avg={avg_val:,.1f}"
+                        f"{f' | {null_count} nulls' if null_count else ''}"
+                    )
+                else:
+                    stats_lines.append(
+                        f"  {col}: numeric | count={len(non_null)} | "
+                        f"min={min_val:,.2f} | max={max_val:,.2f} | avg={avg_val:,.2f}"
+                        f"{f' | {null_count} nulls' if null_count else ''}"
+                    )
+            else:
+                # Text/categorical column stats
+                distinct_count = len(set(str(v) for v in non_null))
+                stats_lines.append(
+                    f"  {col}: text | count={len(non_null)} | distinct={distinct_count}"
+                    f"{f' | {null_count} nulls' if null_count else ''}"
+                )
+
+            # Value distribution for categorical columns (or numeric with few distinct values)
+            str_values = [str(v) for v in non_null]
+            distinct_vals = set(str_values)
+
+            if 1 < len(distinct_vals) <= 50:
+                # Show distribution — count each value, sorted by frequency
+                from collections import Counter
+                counts = Counter(str_values)
+                top_items = counts.most_common(15)
+                total = len(str_values)
+
+                dist_parts = []
+                for val, count in top_items:
+                    pct = (count / total) * 100
+                    display_val = val[:60] + "..." if len(val) > 60 else val
+                    dist_parts.append(f"    {display_val}: {count:,} ({pct:.1f}%)")
+
+                remaining = len(distinct_vals) - len(top_items)
+                header = f"  {col} (top {len(top_items)}" + (f", +{remaining} others):" if remaining > 0 else "):")
+                distribution_lines.append(header)
+                distribution_lines.extend(dist_parts)
+            elif len(distinct_vals) == 1:
+                distribution_lines.append(f"  {col}: all values = \"{list(distinct_vals)[0]}\"")
+
+        column_stats_text = "\n".join(stats_lines) if stats_lines else "No column stats available"
+        distributions_text = "\n".join(distribution_lines) if distribution_lines else "No categorical distributions (all columns are high-cardinality)"
+
+        logger.info(f"[summarize] Stats computed: {len(columns)} columns, "
+                     f"{len(stats_lines)} stat lines, {len(distribution_lines)} distribution lines")
+
+        return column_stats_text, distributions_text
+
+    def _call_llm_for_summary(self, prompt: str, mode: str) -> tuple:
+        """Call LLM with a summarization prompt. Returns (summary, suggestions)."""
+        logger.info(f"[summarize] Prompt length: {len(prompt)} chars (mode={mode})")
 
         step_start = time.time()
         try:
             response = self.llm.chat_completion(
-                messages=[{"role": "user", "content": summary_prompt}],
+                messages=[{"role": "user", "content": prompt}],
                 temperature=0.3,
                 max_tokens=2000
             )
@@ -486,7 +627,7 @@ class SQLPipelineV2:
 
         step_ms = int((time.time() - step_start) * 1000)
         summary, suggestions = self._parse_suggestions(response)
-        logger.info(f"[summarize] OK {step_ms}ms | summary_chars={len(summary)} | suggestions={len(suggestions)}")
+        logger.info(f"[summarize] OK {step_ms}ms (mode={mode}) | summary_chars={len(summary)} | suggestions={len(suggestions)}")
         return summary, suggestions
 
     def _summarize_no_results(self, question: str, sql: str) -> tuple:
