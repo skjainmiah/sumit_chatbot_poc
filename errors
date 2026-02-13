@@ -1,27 +1,138 @@
-PS C:\Users\Shaik.Jainmaih\Chat_v1_v2\sumit_chatbot_poc> streamlit run .\frontend\app.py
+PS C:\Users\Shaik.Jainmaih\Chat_v1_v2\sumit_chatbot_poc> python -m uvicorn backend.main:app --reload
+INFO:     Will watch for changes in these directories: ['C:\\Users\\Shaik.Jainmaih\\Chat_v1_v2\\sumit_chatbot_poc']
+INFO:     Uvicorn running on http://127.0.0.1:8000 (Press CTRL+C to quit)
+INFO:     Started reloader process [34504] using WatchFiles
+INFO:     Started server process [17128]
+INFO:     Waiting for application startup.
+2026-02-13 18:59:18,965 [INFO] chatbot: Starting Crew Chatbot API...
+2026-02-13 18:59:18,965 [INFO] chatbot: LLM Model: gpt-5-2
+2026-02-13 18:59:18,965 [INFO] chatbot: Mode: SQLite (v1 API)
+2026-02-13 18:59:18,965 [INFO] chatbot: Database Dir: C:\Users\Shaik.Jainmaih\Chat_v1_v2\sumit_chatbot_poc\data\databases
+[OK] database_registry seeded with mock databases (DB_DIR=C:\Users\Shaik.Jainmaih\Chat_v1_v2\sumit_chatbot_poc\data\databases)
+2026-02-13 18:59:18,968 [INFO] chatbot: Database registry paths verified
+INFO:     Application startup complete.
+2026-02-13 18:59:33,418 [INFO] chatbot: POST /api/auth/login -> 200 (357ms)
+INFO:     127.0.0.1:52409 - "POST /api/auth/login HTTP/1.1" 200 OK
+2026-02-13 18:59:35,328 [INFO] chatbot: GET /api/auth/visitor-name -> 200 (1ms)
+INFO:     127.0.0.1:54816 - "GET /api/auth/visitor-name?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhZG1pbiIsInVzZXJfaWQiOjEsInJvbGUiOiJhZG1pbiIsImV4cCI6MTc3MDk5Mjk3M30.vLUMH5m0kxRvUsoLEAhAnkAaREBIHkaxViXPTKTr5es HTTP/1.1" 200 OK
+2026-02-13 18:59:35,870 [INFO] chatbot: GET /api/chat/conversations -> 200 (2ms)
+INFO:     127.0.0.1:54817 - "GET /api/chat/conversations?limit=10&token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhZG1pbiIsInVzZXJfaWQiOjEsInJvbGUiOiJhZG1pbiIsImV4cCI6MTc3MDk5Mjk3M30.vLUMH5m0kxRvUsoLEAhAnkAaREBIHkaxViXPTKTr5es HTTP/1.1" 200 OK
+2026-02-13 18:59:47,159 [INFO] chatbot.api.chat: V1 request: conv=6 query="For what LegalityContextsID is Is Employee 80234 legal for sequence 19872 and  sequence position 01  ?"
+LLM Client: Chat API at https://quasarmarket.coforge.com/qag/llmrouter-api/v2/chat/completions
+LLM Client: Embedding API at https://quasarmarket.coforge.com/qag/llmrouter-api/v2/text/embeddings
+LLM Client: Chat fallback at https://quasarmarket.coforge.com/qag/llmrouter-api/v3/chat/completions        
+LLM Client: Embedding fallback at https://quasarmarket.coforge.com/qag/llmrouter-api/v3/text/embeddings    
+  SSL verification: disabled
+2026-02-13 18:59:47,174 [INFO] chatbot.llm.client: [chat_completion] model=gpt-5-2 json_mode=True sys_prompt_chars=0 user_preview="You are an intent classifier for an American Airlines crew management chatbot.     
 
-  You can now view your Streamlit app in your browser.
+Classify the user's query into exactly o..."
+2026-02-13 18:59:47,175 [INFO] chatbot.llm.client: [chat_completion] POST https://quasarmarket.coforge.com/qag/llmrouter-api/v2/chat/completions | model=gpt-5-2
+2026-02-13 18:59:53,633 [INFO] chatbot.llm.client: [chat_completion] Response status=200 | 6457ms
+2026-02-13 18:59:53,636 [INFO] chatbot.llm.client: [chat_completion] OK 6460ms | response_chars=406
+2026-02-13 18:59:53,637 [INFO] chatbot.api.chat: V1 intent: DATA confidence=0.95
+2026-02-13 18:59:53,710 [INFO] chatbot.sql.pipeline_v1: [pipeline] START query="For what LegalityContextsID is Is Employee 80234 legal for sequence 19872 and  sequence position 01  ?" context_len=0
+2026-02-13 18:59:53,715 [INFO] chatbot.sql.pipeline_v1: [retrieve_schemas] query="For what LegalityContextsID is Is Employee 80234 legal for sequence 19872 and  s" top_k=5 registry_dbs={'combineddatalax'}
+2026-02-13 18:59:53,720 [INFO] chatbot.sql.schema_cache: Schema cache loaded: 1 tables from C:\Users\Shaik.Jainmaih\Chat_v1_v2\sumit_chatbot_poc\data\databases\app.db
+2026-02-13 18:59:53,721 [INFO] chatbot.sql.schema_cache: Schema cache databases: {'combineddatalax'}       
+2026-02-13 18:59:53,722 [INFO] chatbot.sql.pipeline_v1: [retrieve_schemas] Keyword match returned 1 schemas: ['combineddatalax.sheet1']
+Loaded FAISS index 'schema_metadata' with 1 items
+2026-02-13 18:59:53,728 [INFO] chatbot.llm.client: [embedding] Single text, chars=102
+2026-02-13 18:59:53,729 [INFO] chatbot.llm.client: [embedding_batch] 1 texts, total_chars=102
+2026-02-13 18:59:53,730 [INFO] chatbot.llm.client: [embedding] POST https://quasarmarket.coforge.com/qag/llmrouter-api/v2/text/embeddings | model=text-embeddings
+2026-02-13 18:59:55,170 [INFO] chatbot.llm.client: [embedding] Response status=200 | 1440ms
+2026-02-13 18:59:55,173 [INFO] chatbot.llm.client: [embedding] OK 1443ms | 1 embeddings, dims=746
+2026-02-13 18:59:55,175 [INFO] chatbot.sql.pipeline_v1: [pipeline] Using 1 schemas: ['combineddatalax.sheet1']
+2026-02-13 18:59:55,184 [INFO] chatbot.sql.pipeline_v1: [generate_sql] Sending query to LLM with 1 schemas, prompt_len=6525
+2026-02-13 18:59:55,184 [INFO] chatbot.llm.client: [chat_completion] model=gpt-5-2 json_mode=False sys_prompt_chars=0 user_preview="You are a SQL expert for an American Airlines crew management database system.    
+Generate a SQLite SELECT query to answer ..."
+2026-02-13 18:59:55,185 [INFO] chatbot.llm.client: [chat_completion] POST https://quasarmarket.coforge.com/qag/llmrouter-api/v2/chat/completions | model=gpt-5-2
+2026-02-13 18:59:59,353 [INFO] chatbot.llm.client: [chat_completion] Response status=200 | 4167ms
+2026-02-13 18:59:59,356 [INFO] chatbot.llm.client: [chat_completion] OK 4170ms | response_chars=622
+2026-02-13 18:59:59,356 [INFO] chatbot.sql.pipeline_v1: [generate_sql] LLM responded in 4172ms | sql="SELECT
+  combineddatalax.sheet1.EmployeeID AS employee_id,
+  combineddatalax.sheet1.SequenceID AS sequence_id,
+  combineddatalax.sheet1.SequencePositi"
+2026-02-13 18:59:59,358 [INFO] chatbot.sql.pipeline_v1: [pipeline] Execute attempt 1/3
+2026-02-13 18:59:59,359 [INFO] chatbot.sql.pipeline_v1: [execute_sql] Executing: SELECT
+  combineddatalax.sheet1.EmployeeID AS employee_id,
+  combineddatalax.sheet1.SequenceID AS sequence_id,
+  combineddatalax.sheet1.SequencePosition AS sequence_position,
+  combineddatalax.sheet1.
+2026-02-13 18:59:59,397 [INFO] chatbot.sql.pipeline_v1: [execute_sql] OK 37ms | 0 rows, 7 columns
+2026-02-13 18:59:59,399 [INFO] chatbot.sql.pipeline_v1: [pipeline] SQL executed OK | 0 rows
+2026-02-13 18:59:59,399 [INFO] chatbot.sql.pipeline_v1: [pipeline] Zero rows returned, skipping summarization
+2026-02-13 18:59:59,400 [INFO] chatbot.sql.pipeline_v1: [pipeline] DONE success | attempts=1 | 5690ms | 0 rows
+2026-02-13 18:59:59,401 [INFO] chatbot.api.chat: V1 response: intent=DATA has_sql=True has_results=True suggestions=0 time=12267ms
+2026-02-13 18:59:59,522 [INFO] chatbot: POST /api/chat/message -> 200 (12389ms)
+INFO:     127.0.0.1:63051 - "POST /api/chat/message?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJh2026-02-13 18:59:59,399 [INFO] chatbot.sql.pipeline_v1: [pipeline] SQL executed OK | 0 rows
+2026-02-13 18:59:59,399 [INFO] chatbot.sql.pipeline_v1: [pipeline] Zero rows returned, skipping summarization
+2026-02-13 18:59:59,400 [INFO] chatbot.sql.pipeline_v1: [pipeline] DONE success | attempts=1 | 5690ms | 0 rows
+2026-02-13 18:59:59,401 [INFO] chatbot.api.chat: V1 response: intent=DATA has_sql=True has_results=True suggestions=0 time=12267ms
+2026-02-13 18:59:59,522 [INFO] chatbot: POST /api/chat/message -> 200 (12389ms)
+INFO:     127.0.0.1:63051 - "POST /api/chat/message?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhows
+2026-02-13 18:59:59,401 [INFO] chatbot.api.chat: V1 response: intent=DATA has_sql=True has_results=True suggestions=0 time=12267ms
+2026-02-13 18:59:59,522 [INFO] chatbot: POST /api/chat/message -> 200 (12389ms)
+INFO:     127.0.0.1:63051 - "POST /api/chat/message?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhgestions=0 time=12267ms
+2026-02-13 18:59:59,522 [INFO] chatbot: POST /api/chat/message -> 200 (12389ms)
+INFO:     127.0.0.1:63051 - "POST /api/chat/message?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJh2026-02-13 18:59:59,522 [INFO] chatbot: POST /api/chat/message -> 200 (12389ms)
+INFO:     127.0.0.1:63051 - "POST /api/chat/message?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhINFO:     127.0.0.1:63051 - "POST /api/chat/message?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhZG1pbiIsInVzZXJfaWQiOjEsInJvbGUiOiJhZG1pbiIsImV4cCI6MTc3MDk5Mjk3M30.vLUMH5m0kxRvUsoLEAhAnkAaREBIHkaxViXPTKTr5es HTTP/1.1" 200 OK
+2026-02-13 19:00:00,514 [INFO] chatbot: GET /api/chat/conversations -> 200 (4ms)
+INFO:     127.0.0.1:52077 - "GET /api/chat/conversations?limit=10&token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhZG1pbiIsInVzZXJfaWQiOjEsInJvbGUiOiJhZG1pbiIsImV4cCI6MTc3MDk5Mjk3M30.vLUMH5m0kxRvUsoLEAhAnkAaREBIHkaxViXPTKTr5es HTTP/1.1" 200 OK
 
-  Local URL: http://localhost:8501
-  Network URL: http://192.168.0.28:8501
-
-2026-02-10 21:28:01.918 Uncaught app execution
-Traceback (most recent call last):
-  File "C:\Users\Shaik.Jainmaih\AppData\Local\Programs\Python\Python313\Lib\site-packages\streamlit\runtime\scriptrunner\exec_code.py", line 128, in exec_func_with_error_handling
-    result = func()
-  File "C:\Users\Shaik.Jainmaih\AppData\Local\Programs\Python\Python313\Lib\site-packages\streamlit\runtime\scriptrunner\script_runner.py", line 669, in code_to_exec
-    exec(code, module.__dict__)  # noqa: S102
-    ~~~~^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\Shaik.Jainmaih\Chat_v1_v2\sumit_chatbot_poc\frontend\app.py", line 95, in <module>        
-    main()
-    ~~~~^^
-  File "C:\Users\Shaik.Jainmaih\Chat_v1_v2\sumit_chatbot_poc\frontend\app.py", line 88, in main
-    render_db_explorer()
-    ~~~~~~~~~~~~~~~~~~^^
-  File "C:\Users\Shaik.Jainmaih\Chat_v1_v2\sumit_chatbot_poc\frontend\views\db_explorer.py", line 173, in render_db_explorer
-    db_info = DATABASES[selected_db]
-              ~~~~~~~~~^^^^^^^^^^^^^
-KeyError: None
 
 
 
+
+
+
+
+2026-02-13 18:59:18,965 [INFO] chatbot: Starting Crew Chatbot API...
+2026-02-13 18:59:18,965 [INFO] chatbot: LLM Model: gpt-5-2
+2026-02-13 18:59:18,965 [INFO] chatbot: Mode: SQLite (v1 API)
+2026-02-13 18:59:18,965 [INFO] chatbot: Database Dir: C:\Users\Shaik.Jainmaih\Chat_v1_v2\sumit_chatbot_poc\data\databases
+2026-02-13 18:59:18,968 [INFO] chatbot: Database registry paths verified
+2026-02-13 18:59:33,418 [INFO] chatbot: POST /api/auth/login -> 200 (357ms)
+2026-02-13 18:59:35,328 [INFO] chatbot: GET /api/auth/visitor-name -> 200 (1ms)
+2026-02-13 18:59:35,870 [INFO] chatbot: GET /api/chat/conversations -> 200 (2ms)
+2026-02-13 18:59:47,159 [INFO] chatbot.api.chat: V1 request: conv=6 query="For what LegalityContextsID is Is Employee 80234 legal for sequence 19872 and  sequence position 01  ?"
+2026-02-13 18:59:47,174 [INFO] chatbot.llm.client: [chat_completion] model=gpt-5-2 json_mode=True sys_prompt_chars=0 user_preview="You are an intent classifier for an American Airlines crew management chatbot.
+
+Classify the user's query into exactly o..."
+2026-02-13 18:59:47,175 [INFO] chatbot.llm.client: [chat_completion] POST https://quasarmarket.coforge.com/qag/llmrouter-api/v2/chat/completions | model=gpt-5-2
+2026-02-13 18:59:53,633 [INFO] chatbot.llm.client: [chat_completion] Response status=200 | 6457ms
+2026-02-13 18:59:53,636 [INFO] chatbot.llm.client: [chat_completion] OK 6460ms | response_chars=406
+2026-02-13 18:59:53,637 [INFO] chatbot.api.chat: V1 intent: DATA confidence=0.95
+2026-02-13 18:59:53,710 [INFO] chatbot.sql.pipeline_v1: [pipeline] START query="For what LegalityContextsID is Is Employee 80234 legal for sequence 19872 and  sequence position 01  ?" context_len=0
+2026-02-13 18:59:53,715 [INFO] chatbot.sql.pipeline_v1: [retrieve_schemas] query="For what LegalityContextsID is Is Employee 80234 legal for sequence 19872 and  s" top_k=5 registry_dbs={'combineddatalax'}
+2026-02-13 18:59:53,720 [INFO] chatbot.sql.schema_cache: Schema cache loaded: 1 tables from C:\Users\Shaik.Jainmaih\Chat_v1_v2\sumit_chatbot_poc\data\databases\app.db
+2026-02-13 18:59:53,721 [INFO] chatbot.sql.schema_cache: Schema cache databases: {'combineddatalax'}
+2026-02-13 18:59:53,722 [INFO] chatbot.sql.pipeline_v1: [retrieve_schemas] Keyword match returned 1 schemas: ['combineddatalax.sheet1']
+2026-02-13 18:59:53,728 [INFO] chatbot.llm.client: [embedding] Single text, chars=102
+2026-02-13 18:59:53,729 [INFO] chatbot.llm.client: [embedding_batch] 1 texts, total_chars=102
+2026-02-13 18:59:53,730 [INFO] chatbot.llm.client: [embedding] POST https://quasarmarket.coforge.com/qag/llmrouter-api/v2/text/embeddings | model=text-embeddings
+2026-02-13 18:59:55,170 [INFO] chatbot.llm.client: [embedding] Response status=200 | 1440ms
+2026-02-13 18:59:55,173 [INFO] chatbot.llm.client: [embedding] OK 1443ms | 1 embeddings, dims=746
+2026-02-13 18:59:55,175 [INFO] chatbot.sql.pipeline_v1: [pipeline] Using 1 schemas: ['combineddatalax.sheet1']
+2026-02-13 18:59:55,184 [INFO] chatbot.sql.pipeline_v1: [generate_sql] Sending query to LLM with 1 schemas, prompt_len=6525
+2026-02-13 18:59:55,184 [INFO] chatbot.llm.client: [chat_completion] model=gpt-5-2 json_mode=False sys_prompt_chars=0 user_preview="You are a SQL expert for an American Airlines crew management database system.
+Generate a SQLite SELECT query to answer ..."
+2026-02-13 18:59:55,185 [INFO] chatbot.llm.client: [chat_completion] POST https://quasarmarket.coforge.com/qag/llmrouter-api/v2/chat/completions | model=gpt-5-2
+2026-02-13 18:59:59,353 [INFO] chatbot.llm.client: [chat_completion] Response status=200 | 4167ms
+2026-02-13 18:59:59,356 [INFO] chatbot.llm.client: [chat_completion] OK 4170ms | response_chars=622
+2026-02-13 18:59:59,356 [INFO] chatbot.sql.pipeline_v1: [generate_sql] LLM responded in 4172ms | sql="SELECT
+  combineddatalax.sheet1.EmployeeID AS employee_id,
+  combineddatalax.sheet1.SequenceID AS sequence_id,
+  combineddatalax.sheet1.SequencePositi"
+2026-02-13 18:59:59,358 [INFO] chatbot.sql.pipeline_v1: [pipeline] Execute attempt 1/3
+2026-02-13 18:59:59,359 [INFO] chatbot.sql.pipeline_v1: [execute_sql] Executing: SELECT
+  combineddatalax.sheet1.EmployeeID AS employee_id,
+  combineddatalax.sheet1.SequenceID AS sequence_id,
+  combineddatalax.sheet1.SequencePosition AS sequence_position,
+  combineddatalax.sheet1.
+2026-02-13 18:59:59,397 [INFO] chatbot.sql.pipeline_v1: [execute_sql] OK 37ms | 0 rows, 7 columns
+2026-02-13 18:59:59,399 [INFO] chatbot.sql.pipeline_v1: [pipeline] SQL executed OK | 0 rows
+2026-02-13 18:59:59,399 [INFO] chatbot.sql.pipeline_v1: [pipeline] Zero rows returned, skipping summarization
+2026-02-13 18:59:59,400 [INFO] chatbot.sql.pipeline_v1: [pipeline] DONE success | attempts=1 | 5690ms | 0 rows
+2026-02-13 18:59:59,401 [INFO] chatbot.api.chat: V1 response: intent=DATA has_sql=True has_results=True suggestions=0 time=12267ms
+2026-02-13 18:59:59,522 [INFO] chatbot: POST /api/chat/message -> 200 (12389ms)
+2026-02-13 19:00:00,514 [INFO] chatbot: GET /api/chat/conversations -> 200 (4ms)
