@@ -1,0 +1,198 @@
+2026-02-13 19:07:28,530 [INFO] chatbot: Starting Crew Chatbot API...
+2026-02-13 19:07:28,531 [INFO] chatbot: LLM Model: gpt-5-2
+2026-02-13 19:07:28,531 [INFO] chatbot: Mode: SQLite (v1 API)
+2026-02-13 19:07:28,531 [INFO] chatbot: Database Dir: C:\Users\Shaik.Jainmaih\Chat_v1_v2\sumit_chatbot_poc\data\databases
+2026-02-13 19:07:28,534 [INFO] chatbot: Database registry paths verified
+2026-02-13 19:07:55,157 [INFO] chatbot: POST /api/auth/login -> 200 (535ms)
+2026-02-13 19:07:58,682 [INFO] chatbot: GET /api/auth/visitor-name -> 200 (3ms)
+2026-02-13 19:07:59,377 [INFO] chatbot: GET /api/chat/conversations -> 200 (5ms)
+2026-02-13 19:08:14,288 [INFO] chatbot.api.chat: V1 request: conv=7 query="For what LegalityContextsID is Is Employee 80234 legal for sequence 19872 and  sequence position 01  ?"
+2026-02-13 19:08:14,292 [INFO] chatbot.pii.audit: [PII] === V1 REQUEST START (conv=7) ===
+2026-02-13 19:08:14,293 [INFO] chatbot.pii.audit: [PII] PII masking enabled: True
+2026-02-13 19:08:14,294 [INFO] chatbot.pii.audit: [PII] STEP 1 - User Input: "For what LegalityContextsID is Is Employee 80234 legal for sequence 19872 and  sequence position 01  ?"
+2026-02-13 19:08:14,307 [INFO] chatbot.pii.audit: [PII] STEP 2 - No PII detected in input
+2026-02-13 19:08:14,307 [INFO] chatbot.pii.audit: [PII] STEP 3 - Input to LLM (unchanged): "For what LegalityContextsID is Is Employee 80234 legal for sequence 19872 and  sequence position 01  ?"
+2026-02-13 19:08:14,309 [INFO] chatbot.llm.client: [chat_completion] model=gpt-5-2 json_mode=True sys_prompt_chars=0 user_preview="You are an intent classifier for an American Airlines crew management chatbot.
+
+Classify the user's query into exactly o..."
+2026-02-13 19:08:14,309 [INFO] chatbot.llm.client: [chat_completion] POST https://quasarmarket.coforge.com/qag/llmrouter-api/v2/chat/completions | model=gpt-5-2
+2026-02-13 19:08:18,133 [INFO] chatbot.llm.client: [chat_completion] Response status=200 | 3823ms
+2026-02-13 19:08:18,136 [INFO] chatbot.llm.client: [chat_completion] OK 3826ms | response_chars=357
+2026-02-13 19:08:18,137 [INFO] chatbot.api.chat: V1 intent: DATA confidence=0.93
+2026-02-13 19:08:18,251 [INFO] chatbot.sql.pipeline_v1: [pipeline] START query="For what LegalityContextsID is Is Employee 80234 legal for sequence 19872 and  sequence position 01  ?" context_len=0
+2026-02-13 19:08:18,255 [INFO] chatbot.sql.pipeline_v1: [retrieve_schemas] query="For what LegalityContextsID is Is Employee 80234 legal for sequence 19872 and  s" top_k=5 registry_dbs={'combineddatalax'}
+2026-02-13 19:08:18,259 [INFO] chatbot.sql.schema_cache: Schema cache loaded: 1 tables from C:\Users\Shaik.Jainmaih\Chat_v1_v2\sumit_chatbot_poc\data\databases\app.db
+2026-02-13 19:08:18,259 [INFO] chatbot.sql.schema_cache: Schema cache databases: {'combineddatalax'}
+2026-02-13 19:08:18,261 [INFO] chatbot.sql.pipeline_v1: [retrieve_schemas] Keyword match returned 1 schemas: ['combineddatalax.sheet1']
+2026-02-13 19:08:18,264 [INFO] chatbot.llm.client: [embedding] Single text, chars=102
+2026-02-13 19:08:18,265 [INFO] chatbot.llm.client: [embedding_batch] 1 texts, total_chars=102
+2026-02-13 19:08:18,265 [INFO] chatbot.llm.client: [embedding] POST https://quasarmarket.coforge.com/qag/llmrouter-api/v2/text/embeddings | model=text-embeddings
+2026-02-13 19:08:19,554 [INFO] chatbot.llm.client: [embedding] Response status=200 | 1288ms
+2026-02-13 19:08:19,558 [INFO] chatbot.llm.client: [embedding] OK 1292ms | 1 embeddings, dims=746
+2026-02-13 19:08:19,559 [INFO] chatbot.sql.pipeline_v1: [pipeline] Using 1 schemas: ['combineddatalax.sheet1']
+2026-02-13 19:08:19,560 [INFO] chatbot.sql.pipeline_v1: [generate_sql] Sending query to LLM with 1 schemas, prompt_len=6525
+2026-02-13 19:08:19,561 [INFO] chatbot.llm.client: [chat_completion] model=gpt-5-2 json_mode=False sys_prompt_chars=0 user_preview="You are a SQL expert for an American Airlines crew management database system.
+Generate a SQLite SELECT query to answer ..."
+2026-02-13 19:08:19,561 [INFO] chatbot.llm.client: [chat_completion] POST https://quasarmarket.coforge.com/qag/llmrouter-api/v2/chat/completions | model=gpt-5-2
+2026-02-13 19:08:23,649 [INFO] chatbot.llm.client: [chat_completion] Response status=200 | 4087ms
+2026-02-13 19:08:23,652 [INFO] chatbot.llm.client: [chat_completion] OK 4090ms | response_chars=453
+2026-02-13 19:08:23,652 [INFO] chatbot.sql.pipeline_v1: [generate_sql] LLM responded in 4091ms | sql="SELECT
+  c.LegalityContextsID AS legality_context_id,
+  c.IsLegal AS is_legal,
+  c.EmployeeID AS employee_id,
+  c.SequenceID AS sequence_id,
+  c.Seque"
+2026-02-13 19:08:23,654 [INFO] chatbot.sql.pipeline_v1: [pipeline] Execute attempt 1/3
+2026-02-13 19:08:23,655 [INFO] chatbot.sql.pipeline_v1: [execute_sql] Executing: SELECT
+  c.LegalityContextsID AS legality_context_id,
+  c.IsLegal AS is_legal,
+  c.EmployeeID AS employee_id,
+  c.SequenceID AS sequence_id,
+  c.SequencePosition AS sequence_position,
+  c.ProcessingDa
+2026-02-13 19:08:23,662 [ERROR] chatbot.sql.pipeline_v1: [execute_sql] SQLite error after 6ms: no such column: c.UpdateDate
+2026-02-13 19:08:23,662 [INFO] chatbot.sql.pipeline_v1: [pipeline] SQL failed, attempting correction (attempt 1)
+2026-02-13 19:08:23,663 [INFO] chatbot.sql.pipeline_v1: [correct_sql] Correcting failed SQL | error=no such column: c.UpdateDate
+2026-02-13 19:08:23,664 [INFO] chatbot.llm.client: [chat_completion] model=gpt-5-2 json_mode=False sys_prompt_chars=0 user_preview="The following SQL query failed. Please fix it.
+
+Original question: For what LegalityContextsID is Is Employee 80234 lega..."
+2026-02-13 19:08:23,665 [INFO] chatbot.llm.client: [chat_completion] POST https://quasarmarket.coforge.com/qag/llmrouter-api/v2/chat/completions | model=gpt-5-2
+2026-02-13 19:08:26,515 [INFO] chatbot.llm.client: [chat_completion] Response status=200 | 2849ms
+2026-02-13 19:08:26,519 [INFO] chatbot.llm.client: [chat_completion] OK 2854ms | response_chars=425
+2026-02-13 19:08:26,520 [INFO] chatbot.sql.pipeline_v1: [correct_sql] LLM corrected in 2856ms | new_sql="SELECT
+  c.LegalityContextsID AS legality_context_id,
+  c.IsLegal AS is_legal,
+  c.EmployeeID AS employee_id,
+  c.SequenceID AS sequence_id,
+  c.Seque"
+2026-02-13 19:08:26,522 [INFO] chatbot.sql.pipeline_v1: [pipeline] Execute attempt 2/3
+2026-02-13 19:08:26,523 [INFO] chatbot.sql.pipeline_v1: [execute_sql] Executing: SELECT
+  c.LegalityContextsID AS legality_context_id,
+  c.IsLegal AS is_legal,
+  c.EmployeeID AS employee_id,
+  c.SequenceID AS sequence_id,
+  c.SequencePosition AS sequence_position,
+  c.ProcessingDa
+2026-02-13 19:08:26,558 [INFO] chatbot.sql.pipeline_v1: [execute_sql] OK 35ms | 0 rows, 8 columns
+2026-02-13 19:08:26,559 [INFO] chatbot.sql.pipeline_v1: [pipeline] SQL executed OK | 0 rows
+2026-02-13 19:08:26,559 [INFO] chatbot.sql.pipeline_v1: [pipeline] Zero rows returned, generating natural language response
+2026-02-13 19:08:26,560 [INFO] chatbot.sql.pipeline_v1: [summarize_no_results] Generating natural response for zero-row result
+2026-02-13 19:08:26,561 [INFO] chatbot.llm.client: [chat_completion] model=gpt-5-2 json_mode=False sys_prompt_chars=0 user_preview="The user asked: "For what LegalityContextsID is Is Employee 80234 legal for sequence 19872 and  sequence position 01  ?"..."
+2026-02-13 19:08:26,561 [INFO] chatbot.llm.client: [chat_completion] POST https://quasarmarket.coforge.com/qag/llmrouter-api/v2/chat/completions | model=gpt-5-2
+2026-02-13 19:08:37,388 [INFO] chatbot.llm.client: [chat_completion] Response status=200 | 10826ms
+2026-02-13 19:08:37,392 [INFO] chatbot.llm.client: [chat_completion] OK 10830ms | response_chars=1297
+2026-02-13 19:08:37,393 [INFO] chatbot.sql.pipeline_v1: [pipeline] DONE success | attempts=2 | 19141ms | 0 rows
+2026-02-13 19:08:37,394 [INFO] chatbot.pii.audit: [PII] STEP 4 - LLM Output (before unmask): "You were trying to find which **LegalityContextsID** shows whether **Employee 80234** is legal for **Sequence 19872** at **sequence position 01**. I checked for that exact combination, but nothing in the data matches those three values together.
+
+A few things could explain this:
+- **Sequence position formatting:** the data might store the position as `"01"` (text) rather than `1` (number), or with leading/trailing spaces.
+- **Different IDs or versions:** there may be a different SequenceID/Emplo"
+2026-02-13 19:08:37,395 [INFO] chatbot.pii.audit: [PII] STEP 5 - Final Response (no PII to unmask): "You were trying to find which **LegalityContextsID** shows whether **Employee 80234** is legal for **Sequence 19872** at **sequence position 01**. I checked for that exact combination, but nothing in the data matches those three values together.
+
+A few things could explain this:
+- **Sequence position formatting:** the data might store the position as `"01"` (text) rather than `1` (number), or with leading/trailing spaces.
+- **Different IDs or versions:** there may be a different SequenceID/Emplo"
+2026-02-13 19:08:37,396 [INFO] chatbot.pii.audit: [PII] === V1 REQUEST END (conv=7) ===
+2026-02-13 19:08:37,397 [INFO] chatbot.api.chat: V1 response: intent=DATA has_sql=True has_results=True suggestions=3 time=23176ms
+2026-02-13 19:08:37,526 [INFO] chatbot: POST /api/chat/message -> 200 (23308ms)
+2026-02-13 19:08:38,554 [INFO] chatbot: GET /api/chat/conversations -> 200 (6ms)
+2026-02-13 19:10:27,839 [INFO] chatbot: GET /api/admin/stats -> 200 (12ms)
+2026-02-13 19:10:28,587 [INFO] chatbot: GET /api/admin/users -> 200 (3ms)
+2026-02-13 19:10:29,350 [INFO] chatbot: GET /api/admin/feedback -> 200 (4ms)
+2026-02-13 19:10:30,175 [INFO] chatbot: GET /api/database/upload-history -> 200 (8ms)
+2026-02-13 19:10:30,965 [INFO] chatbot: GET /api/database/list -> 200 (5ms)
+2026-02-13 19:10:31,797 [INFO] chatbot: GET /api/database/settings/pii -> 200 (8ms)
+2026-02-13 19:12:12,550 [INFO] chatbot: GET /api/chat/conversations -> 200 (5ms)
+2026-02-13 19:12:18,772 [INFO] chatbot.api.chat: V1 request: conv=7 query="how many crew do we have?"
+2026-02-13 19:12:18,778 [INFO] chatbot.pii.audit: [PII] === V1 REQUEST START (conv=7) ===
+2026-02-13 19:12:18,778 [INFO] chatbot.pii.audit: [PII] PII masking enabled: True
+2026-02-13 19:12:18,779 [INFO] chatbot.pii.audit: [PII] STEP 1 - User Input: "how many crew do we have?"
+2026-02-13 19:12:18,791 [INFO] chatbot.pii.audit: [PII] STEP 2 - No PII detected in input
+2026-02-13 19:12:18,792 [INFO] chatbot.pii.audit: [PII] STEP 3 - Input to LLM (unchanged): "how many crew do we have?"
+2026-02-13 19:12:18,794 [INFO] chatbot.api.chat: V1 intent: DATA confidence=0.95
+2026-02-13 19:12:18,882 [INFO] chatbot.sql.pipeline_v1: [pipeline] START query="how many crew do we have?" context_len=200
+2026-02-13 19:12:18,885 [INFO] chatbot.sql.pipeline_v1: [retrieve_schemas] query="how many crew do we have?" top_k=5 registry_dbs={'combineddatalax'}
+2026-02-13 19:12:18,886 [INFO] chatbot.sql.pipeline_v1: [retrieve_schemas] Keyword match returned 1 schemas: ['combineddatalax.sheet1']
+2026-02-13 19:12:18,887 [INFO] chatbot.llm.client: [embedding] Single text, chars=25
+2026-02-13 19:12:18,888 [INFO] chatbot.llm.client: [embedding_batch] 1 texts, total_chars=25
+2026-02-13 19:12:18,889 [INFO] chatbot.llm.client: [embedding] POST https://quasarmarket.coforge.com/qag/llmrouter-api/v2/text/embeddings | model=text-embeddings
+2026-02-13 19:12:20,654 [INFO] chatbot.llm.client: [embedding] Response status=200 | 1765ms
+2026-02-13 19:12:20,658 [INFO] chatbot.llm.client: [embedding] OK 1769ms | 1 embeddings, dims=746
+2026-02-13 19:12:20,660 [INFO] chatbot.sql.pipeline_v1: [pipeline] Using 1 schemas: ['combineddatalax.sheet1']
+2026-02-13 19:12:20,661 [INFO] chatbot.sql.pipeline_v1: [generate_sql] Sending query to LLM with 1 schemas, prompt_len=6938
+2026-02-13 19:12:20,662 [INFO] chatbot.llm.client: [chat_completion] model=gpt-5-2 json_mode=False sys_prompt_chars=0 user_preview="You are a SQL expert for an American Airlines crew management database system.
+Generate a SQLite SELECT query to answer ..."
+2026-02-13 19:12:20,663 [INFO] chatbot.llm.client: [chat_completion] POST https://quasarmarket.coforge.com/qag/llmrouter-api/v2/chat/completions | model=gpt-5-2
+2026-02-13 19:12:27,207 [INFO] chatbot.llm.client: [chat_completion] Response status=200 | 6543ms
+2026-02-13 19:12:27,211 [INFO] chatbot.llm.client: [chat_completion] OK 6547ms | response_chars=126
+2026-02-13 19:12:27,211 [INFO] chatbot.sql.pipeline_v1: [generate_sql] LLM responded in 6549ms | sql="SELECT
+  COUNT(DISTINCT s.EmployeeID) AS crew_count
+FROM combineddatalax.sheet1 AS s
+WHERE s.EmployeeID IS NOT NULL
+LIMIT 100;"
+2026-02-13 19:12:27,212 [INFO] chatbot.sql.pipeline_v1: [pipeline] Execute attempt 1/3
+2026-02-13 19:12:27,212 [INFO] chatbot.sql.pipeline_v1: [execute_sql] Executing: SELECT
+  COUNT(DISTINCT s.EmployeeID) AS crew_count
+FROM combineddatalax.sheet1 AS s
+WHERE s.EmployeeID IS NOT NULL
+LIMIT 100;
+2026-02-13 19:12:27,261 [INFO] chatbot.sql.pipeline_v1: [execute_sql] OK 48ms | 1 rows, 1 columns
+2026-02-13 19:12:27,262 [INFO] chatbot.sql.pipeline_v1: [pipeline] SQL executed OK | 1 rows
+2026-02-13 19:12:27,263 [INFO] chatbot.sql.pipeline_v1: [summarize] Small result (1 rows), sending 1 rows to LLM
+2026-02-13 19:12:27,264 [INFO] chatbot.llm.client: [chat_completion] model=gpt-5-2 json_mode=False sys_prompt_chars=0 user_preview="You are a helpful assistant summarizing database query results for airline crew staff.
+
+User's original question: how ma..."
+2026-02-13 19:12:27,265 [INFO] chatbot.llm.client: [chat_completion] POST https://quasarmarket.coforge.com/qag/llmrouter-api/v2/chat/completions | model=gpt-5-2
+2026-02-13 19:12:30,708 [INFO] chatbot.llm.client: [chat_completion] Response status=200 | 3442ms
+2026-02-13 19:12:30,712 [INFO] chatbot.llm.client: [chat_completion] OK 3447ms | response_chars=348
+2026-02-13 19:12:30,713 [INFO] chatbot.sql.pipeline_v1: [pipeline] DONE success | attempts=1 | 11831ms | 1 rows
+2026-02-13 19:12:30,714 [INFO] chatbot.pii.audit: [PII] STEP 4 - LLM Output (before unmask): "You currently have **130 distinct crew members** in the dataset (counted by unique, non-null **EmployeeID**)."
+2026-02-13 19:12:30,714 [INFO] chatbot.pii.audit: [PII] STEP 5 - Final Response (no PII to unmask): "You currently have **130 distinct crew members** in the dataset (counted by unique, non-null **EmployeeID**)."
+2026-02-13 19:12:30,715 [INFO] chatbot.pii.audit: [PII] === V1 REQUEST END (conv=7) ===
+2026-02-13 19:12:30,716 [INFO] chatbot.api.chat: V1 response: intent=DATA has_sql=True has_results=True suggestions=3 time=11949ms
+2026-02-13 19:12:30,821 [INFO] chatbot: POST /api/chat/message -> 200 (12055ms)
+2026-02-13 19:12:31,902 [INFO] chatbot: GET /api/chat/conversations -> 200 (6ms)
+2026-02-13 19:13:16,162 [INFO] chatbot.api.chat: V1 request: conv=7 query="if you consider duplicates then how many rows we have?"
+2026-02-13 19:13:16,167 [INFO] chatbot.pii.audit: [PII] === V1 REQUEST START (conv=7) ===
+2026-02-13 19:13:16,168 [INFO] chatbot.pii.audit: [PII] PII masking enabled: True
+2026-02-13 19:13:16,169 [INFO] chatbot.pii.audit: [PII] STEP 1 - User Input: "if you consider duplicates then how many rows we have?"
+2026-02-13 19:13:16,180 [INFO] chatbot.pii.audit: [PII] STEP 2 - No PII detected in input
+2026-02-13 19:13:16,181 [INFO] chatbot.pii.audit: [PII] STEP 3 - Input to LLM (unchanged): "if you consider duplicates then how many rows we have?"
+2026-02-13 19:13:16,181 [INFO] chatbot.api.chat: V1 intent: DATA confidence=0.95
+2026-02-13 19:13:16,281 [INFO] chatbot.sql.pipeline_v1: [pipeline] START query="if you consider duplicates then how many rows we have?" context_len=324
+2026-02-13 19:13:16,285 [INFO] chatbot.sql.pipeline_v1: [retrieve_schemas] query="if you consider duplicates then how many rows we have?" top_k=5 registry_dbs={'combineddatalax'}
+2026-02-13 19:13:16,286 [INFO] chatbot.sql.pipeline_v1: [retrieve_schemas] Keyword match returned 1 schemas: ['combineddatalax.sheet1']
+2026-02-13 19:13:16,286 [INFO] chatbot.llm.client: [embedding] Single text, chars=54
+2026-02-13 19:13:16,287 [INFO] chatbot.llm.client: [embedding_batch] 1 texts, total_chars=54
+2026-02-13 19:13:16,288 [INFO] chatbot.llm.client: [embedding] POST https://quasarmarket.coforge.com/qag/llmrouter-api/v2/text/embeddings | model=text-embeddings
+2026-02-13 19:13:17,721 [INFO] chatbot.llm.client: [embedding] Response status=200 | 1432ms
+2026-02-13 19:13:17,725 [INFO] chatbot.llm.client: [embedding] OK 1436ms | 1 embeddings, dims=746
+2026-02-13 19:13:17,726 [INFO] chatbot.sql.pipeline_v1: [pipeline] Using 1 schemas: ['combineddatalax.sheet1']
+2026-02-13 19:13:17,727 [INFO] chatbot.sql.pipeline_v1: [generate_sql] Sending query to LLM with 1 schemas, prompt_len=7091
+2026-02-13 19:13:17,727 [INFO] chatbot.llm.client: [chat_completion] model=gpt-5-2 json_mode=False sys_prompt_chars=0 user_preview="You are a SQL expert for an American Airlines crew management database system.
+Generate a SQLite SELECT query to answer ..."
+2026-02-13 19:13:17,728 [INFO] chatbot.llm.client: [chat_completion] POST https://quasarmarket.coforge.com/qag/llmrouter-api/v2/chat/completions | model=gpt-5-2
+2026-02-13 19:13:20,065 [INFO] chatbot.llm.client: [chat_completion] Response status=200 | 2337ms
+2026-02-13 19:13:20,068 [INFO] chatbot.llm.client: [chat_completion] OK 2339ms | response_chars=79
+2026-02-13 19:13:20,069 [INFO] chatbot.sql.pipeline_v1: [generate_sql] LLM responded in 2341ms | sql="SELECT COUNT(*) AS total_rows_including_duplicates
+FROM combineddatalax.sheet1;"
+2026-02-13 19:13:20,069 [INFO] chatbot.sql.pipeline_v1: [pipeline] Execute attempt 1/3
+2026-02-13 19:13:20,070 [INFO] chatbot.sql.pipeline_v1: [execute_sql] Executing: SELECT COUNT(*) AS total_rows_including_duplicates
+FROM combineddatalax.sheet1;
+2026-02-13 19:13:20,104 [INFO] chatbot.sql.pipeline_v1: [execute_sql] OK 34ms | 1 rows, 1 columns
+2026-02-13 19:13:20,109 [INFO] chatbot.sql.pipeline_v1: [pipeline] SQL executed OK | 1 rows
+2026-02-13 19:13:20,111 [INFO] chatbot.sql.pipeline_v1: [summarize] Small result (1 rows), sending 1 rows to LLM
+2026-02-13 19:13:20,112 [INFO] chatbot.llm.client: [chat_completion] model=gpt-5-2 json_mode=False sys_prompt_chars=0 user_preview="You are a helpful assistant summarizing database query results for airline crew staff.
+
+User's original question: if you..."
+2026-02-13 19:13:20,113 [INFO] chatbot.llm.client: [chat_completion] POST https://quasarmarket.coforge.com/qag/llmrouter-api/v2/chat/completions | model=gpt-5-2
+2026-02-13 19:13:24,045 [INFO] chatbot.llm.client: [chat_completion] Response status=200 | 3932ms
+2026-02-13 19:13:24,048 [INFO] chatbot.llm.client: [chat_completion] OK 3935ms | response_chars=371
+2026-02-13 19:13:24,049 [INFO] chatbot.sql.pipeline_v1: [pipeline] DONE success | attempts=1 | 7767ms | 1 rows
+2026-02-13 19:13:24,050 [INFO] chatbot.pii.audit: [PII] STEP 4 - LLM Output (before unmask): "Including duplicates, the table `combineddatalax.sheet1` contains **18,588 rows**."
+2026-02-13 19:13:24,052 [INFO] chatbot.pii.audit: [PII] STEP 5 - Final Response (no PII to unmask): "Including duplicates, the table `combineddatalax.sheet1` contains **18,588 rows**."
+2026-02-13 19:13:24,056 [INFO] chatbot.pii.audit: [PII] === V1 REQUEST END (conv=7) ===
+2026-02-13 19:13:24,062 [INFO] chatbot.api.chat: V1 response: intent=DATA has_sql=True has_results=True suggestions=3 time=7905ms
+2026-02-13 19:13:24,194 [INFO] chatbot: POST /api/chat/message -> 200 (8039ms)
+2026-02-13 19:13:25,227 [INFO] chatbot: GET /api/chat/conversations -> 200 (4ms)
+2026-02-13 19:13:36,515 [INFO] chatbot: GET /api/chat/conversations -> 200 (4ms)
