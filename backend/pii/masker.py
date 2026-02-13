@@ -12,32 +12,32 @@ DEFAULT_PII_PATTERNS = {
     'EMAIL': {
         'pattern': r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b',
         'label': 'Email Addresses',
-        'enabled': True,
+        'enabled': False,
     },
     'PHONE': {
         'pattern': r'\b(?:\+1[-.]?)?\(?[0-9]{3}\)?[-.]?[0-9]{3}[-.]?[0-9]{4}\b',
         'label': 'Phone Numbers',
-        'enabled': True,
+        'enabled': False,
     },
     'SSN': {
         'pattern': r'\b\d{3}-\d{2}-\d{4}\b',
         'label': 'Social Security Numbers',
-        'enabled': True,
+        'enabled': False,
     },
     'PASSPORT': {
         'pattern': r'\b[A-Z]{1,2}[0-9]{6,9}\b',
         'label': 'Passport Numbers',
-        'enabled': True,
+        'enabled': False,
     },
     'CREDIT_CARD': {
         'pattern': r'\b(?:\d{4}[-\s]?){3}\d{4}\b',
         'label': 'Credit Card Numbers',
-        'enabled': True,
+        'enabled': False,
     },
     'EMPLOYEE_ID': {
         'pattern': r'\b[A-Z]{1,4}-\d{3,6}\b',
         'label': 'Employee IDs',
-        'enabled': True,
+        'enabled': False,
     },
 }
 
@@ -160,7 +160,7 @@ class PIIMasker:
 
         # Check if PII masking is enabled
         pii_settings = get_pii_settings()
-        if not pii_settings.get('enabled', True):
+        if not pii_settings.get('enabled', False):
             return text, {}
 
         active_patterns = self._get_active_patterns()

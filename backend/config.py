@@ -41,9 +41,9 @@ class Settings(BaseSettings):
     SQL_TIMEOUT_SECONDS: int = 10
     SCHEMA_TOP_K: int = 8
 
-    # PII Masking
-    PII_MASKING_ENABLED: bool = True
-    PII_LOG_ENABLED: bool = True  # Log PII masking details (user input, masked, unmasked)
+    # PII Masking (disabled by default - client enables via Admin Panel)
+    PII_MASKING_ENABLED: bool = False
+    PII_LOG_ENABLED: bool = False  # Log PII masking details (user input, masked, unmasked)
 
     # Admin defaults
     DEFAULT_ADMIN_USERNAME: str = "admin"
