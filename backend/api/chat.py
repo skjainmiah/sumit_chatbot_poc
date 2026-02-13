@@ -11,7 +11,7 @@ from backend.core.intent_router import classify_intent
 from backend.core.query_rewriter import rewrite_query, needs_rewriting
 from backend.core.conversation_manager import ConversationManager, get_user_conversations
 from backend.sql.sql_pipeline import SQLPipeline
-from backend.pii.masker import mask_pii, unmask_pii
+from backend.pii.masker import mask_pii, unmask_pii, get_pii_settings
 from backend.llm.client import get_llm_client
 from backend.llm.prompts import GENERAL_CHAT_PROMPT
 from backend.db.session import execute_write, execute_query, get_multi_db_connection
@@ -19,6 +19,7 @@ from backend.db.registry import get_database_registry
 from backend.config import settings
 
 logger = logging.getLogger("chatbot.api.chat")
+pii_logger = logging.getLogger("chatbot.pii.audit")
 
 router = APIRouter()
 
@@ -166,10 +167,26 @@ async def send_message(request: ChatRequest, token: str):
 
     logger.info(f"V1 request: conv={conv_id} query=\"{request.message[:120]}\"")
 
-    # PII masking
+    # PII masking with audit logging
+    pii_settings = get_pii_settings()
+    pii_log_enabled = pii_settings.get('log_enabled', True)
+
+    if pii_log_enabled:
+        pii_logger.info(f"[PII] === V1 REQUEST START (conv={conv_id}) ===")
+        pii_logger.info(f"[PII] PII masking enabled: {pii_settings.get('enabled', True)}")
+        pii_logger.info(f"[PII] STEP 1 - User Input: \"{request.message}\"")
+
     masked_query, pii_map = mask_pii(request.message)
     if pii_map:
         logger.info(f"V1 PII masked: {len(pii_map)} items")
+        if pii_log_enabled:
+            pii_logger.info(f"[PII] STEP 2 - PII Detected: {len(pii_map)} item(s) masked")
+            for token, original in pii_map.items():
+                pii_logger.info(f"[PII]   {token} ← \"{original}\"")
+            pii_logger.info(f"[PII] STEP 3 - Masked Input (sent to LLM): \"{masked_query}\"")
+    elif pii_log_enabled:
+        pii_logger.info(f"[PII] STEP 2 - No PII detected in input")
+        pii_logger.info(f"[PII] STEP 3 - Input to LLM (unchanged): \"{masked_query[:200]}\"")
 
     # Query rewriting for follow-ups
     processed_query = masked_query
@@ -302,9 +319,18 @@ async def send_message(request: ChatRequest, token: str):
                 use_fast_model=True
             )
 
-    # Unmask PII in response if needed
+    # Log LLM output and unmask PII in response
+    if pii_log_enabled:
+        pii_logger.info(f"[PII] STEP 4 - LLM Output (before unmask): \"{response_text[:500]}\"")
+
     if pii_map:
         response_text = unmask_pii(response_text, pii_map)
+        if pii_log_enabled:
+            pii_logger.info(f"[PII] STEP 5 - Final Response (after unmask): \"{response_text[:500]}\"")
+            pii_logger.info(f"[PII] === V1 REQUEST END (conv={conv_id}) ===")
+    elif pii_log_enabled:
+        pii_logger.info(f"[PII] STEP 5 - Final Response (no PII to unmask): \"{response_text[:500]}\"")
+        pii_logger.info(f"[PII] === V1 REQUEST END (conv={conv_id}) ===")
 
     elapsed_ms = int((time.time() - start_time) * 1000)
     logger.info(f"V1 response: intent={intent_result.intent} has_sql={sql_query is not None} "
