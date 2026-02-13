@@ -80,6 +80,10 @@ class SchemaLoader:
         # Merge uploaded database schemas from schema_metadata
         self._merge_uploaded_schemas()
 
+        # Apply column descriptions from schema_metadata to ALL databases
+        # (including those loaded from JSON that _merge_uploaded_schemas skips)
+        self._apply_column_descriptions()
+
         # Pre-generate text format for prompts
         self._schema_text = self._generate_prompt_schema()
 
@@ -220,6 +224,74 @@ class SchemaLoader:
 
         except Exception as e:
             print(f"Warning: Could not merge uploaded schemas: {e}")
+
+    def _apply_column_descriptions(self):
+        """Apply column descriptions from schema_metadata to ALL databases in schema_data.
+
+        This ensures that column descriptions edited via the UI are applied to
+        databases loaded from the JSON schema file (not just uploaded ones).
+        _merge_uploaded_schemas only handles databases NOT in the JSON file.
+        """
+        try:
+            from backend.config import settings
+
+            conn = sqlite3.connect(settings.app_db_path)
+            conn.row_factory = sqlite3.Row
+            cursor = conn.cursor()
+
+            cursor.execute("""
+                SELECT db_name, table_name, column_descriptions
+                FROM schema_metadata
+                WHERE column_descriptions IS NOT NULL AND column_descriptions != ''
+            """)
+
+            rows = cursor.fetchall()
+            conn.close()
+
+            if not rows:
+                return
+
+            # Build lookup: {db_name: {table_name: {col_name: description}}}
+            desc_lookup: Dict[str, Dict[str, Dict[str, str]]] = {}
+            for row in rows:
+                db_name = row["db_name"]
+                table_name = row["table_name"]
+                try:
+                    col_descs = json.loads(row["column_descriptions"])
+                    if col_descs:
+                        if db_name not in desc_lookup:
+                            desc_lookup[db_name] = {}
+                        desc_lookup[db_name][table_name] = col_descs
+                except (json.JSONDecodeError, TypeError):
+                    continue
+
+            if not desc_lookup:
+                return
+
+            # Apply descriptions to schema_data
+            applied_count = 0
+            for db in self._schema_data["databases"]:
+                db_name = db["name"]
+                if db_name not in desc_lookup:
+                    continue
+
+                for table in db["tables"]:
+                    table_name = table.get("name", table.get("full_name", ""))
+                    if table_name not in desc_lookup[db_name]:
+                        continue
+
+                    table_descs = desc_lookup[db_name][table_name]
+                    for col in table["columns"]:
+                        col_name = col.get("name", "")
+                        if col_name in table_descs and table_descs[col_name]:
+                            col["description"] = table_descs[col_name]
+                            applied_count += 1
+
+            if applied_count > 0:
+                print(f"Applied {applied_count} column description(s) from schema_metadata")
+
+        except Exception as e:
+            print(f"Warning: Could not apply column descriptions: {e}")
 
     def _generate_prompt_schema(self, all_dbs: Set[str] = None) -> str:
         """Generate optimized schema text for LLM prompts.

@@ -270,3 +270,17 @@ class APIClient:
             f"/database/{db_name}/column-descriptions",
             json={"descriptions": descriptions}
         )
+
+    # ---- PII Settings ----
+
+    def get_pii_settings(self) -> Dict[str, Any]:
+        """Get current PII masking settings."""
+        return self._make_request("GET", "/database/settings/pii")
+
+    def update_pii_settings(self, enabled: bool, log_enabled: bool, patterns: Dict[str, bool]) -> Dict[str, Any]:
+        """Update PII masking settings."""
+        return self._make_request(
+            "PUT",
+            "/database/settings/pii",
+            json={"enabled": enabled, "log_enabled": log_enabled, "patterns": patterns}
+        )

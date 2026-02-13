@@ -41,6 +41,10 @@ class Settings(BaseSettings):
     SQL_TIMEOUT_SECONDS: int = 10
     SCHEMA_TOP_K: int = 8
 
+    # PII Masking
+    PII_MASKING_ENABLED: bool = True
+    PII_LOG_ENABLED: bool = True  # Log PII masking details (user input, masked, unmasked)
+
     # Admin defaults
     DEFAULT_ADMIN_USERNAME: str = "admin"
     DEFAULT_ADMIN_PASSWORD: str = "admin123"

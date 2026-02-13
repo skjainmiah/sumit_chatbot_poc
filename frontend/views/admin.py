@@ -19,7 +19,7 @@ def render_admin():
     client = APIClient(st.session_state.token)
 
     # Tabs for different admin functions
-    tab1, tab2, tab3, tab4 = st.tabs(["Dashboard", "Users", "Feedback", "Databases"])
+    tab1, tab2, tab3, tab4, tab5 = st.tabs(["Dashboard", "Users", "Feedback", "Databases", "PII Masking"])
 
     with tab1:
         render_dashboard(client)
@@ -32,6 +32,9 @@ def render_admin():
 
     with tab4:
         render_database_management()
+
+    with tab5:
+        render_pii_settings(client)
 
 
 def render_dashboard(client: APIClient):
@@ -185,3 +188,81 @@ def render_feedback(client: APIClient):
                 st.text(fb.get("message_content"))
 
     st.caption(f"Total feedback items: {len(feedback_list)}")
+
+
+def render_pii_settings(client: APIClient):
+    """Render PII masking configuration UI."""
+    st.subheader("PII Masking Configuration")
+    st.caption("Control how sensitive information (emails, phone numbers, SSNs, etc.) is masked before being sent to the LLM.")
+
+    # Load current settings
+    result = client.get_pii_settings()
+
+    if isinstance(result, dict) and result.get("error"):
+        st.error(f"Failed to load PII settings: {result.get('detail', 'Unknown error')}")
+        return
+
+    # Main toggles
+    col1, col2 = st.columns(2)
+    with col1:
+        pii_enabled = st.toggle(
+            "Enable PII Masking",
+            value=result.get("enabled", True),
+            help="When enabled, sensitive data is replaced with tokens (e.g., [EMAIL_1]) before sending to the LLM",
+            key="pii_toggle_enabled"
+        )
+    with col2:
+        log_enabled = st.toggle(
+            "Enable PII Audit Logging",
+            value=result.get("log_enabled", True),
+            help="When enabled, detailed logs show user input, masked input, LLM output, and final response for PII verification",
+            key="pii_toggle_log"
+        )
+
+    st.divider()
+
+    # Pattern toggles
+    st.markdown("**Select PII types to mask:**")
+    patterns = result.get("patterns", {})
+
+    pattern_states = {}
+    cols = st.columns(3)
+    for i, (pii_type, info) in enumerate(patterns.items()):
+        with cols[i % 3]:
+            pattern_states[pii_type] = st.checkbox(
+                info.get('label', pii_type),
+                value=info.get('enabled', True),
+                key=f"pii_pattern_{pii_type}",
+                disabled=not pii_enabled
+            )
+
+    st.divider()
+
+    # Save button
+    if st.button("Save PII Settings", key="pii_save_btn", type="primary"):
+        save_result = client.update_pii_settings(
+            enabled=pii_enabled,
+            log_enabled=log_enabled,
+            patterns=pattern_states
+        )
+        if isinstance(save_result, dict) and save_result.get("success"):
+            st.success("PII settings saved successfully!")
+        else:
+            st.error(f"Failed to save: {save_result.get('detail', 'Unknown error')}")
+
+    # How it works section
+    st.divider()
+    with st.expander("How PII Masking Works", expanded=False):
+        st.markdown("""
+**Pipeline:**
+1. **User Input** - User sends a message (e.g., "Show data for john.doe@aa.com")
+2. **PII Detection** - Regex patterns detect sensitive data
+3. **Masking** - PII is replaced with tokens: `"Show data for [EMAIL_1]"`
+4. **LLM Processing** - The masked text is sent to the LLM (no real PII exposed)
+5. **LLM Response** - LLM responds using the tokens: `"Data for [EMAIL_1]: ..."`
+6. **Unmasking** - Tokens are restored: `"Data for john.doe@aa.com: ..."`
+7. **Final Response** - User sees the complete response with original values
+
+**Audit Logs** (when enabled) record each step so you can verify PII never reaches the LLM in plain text.
+Check the backend logs for entries tagged with `[PII]`.
+        """)

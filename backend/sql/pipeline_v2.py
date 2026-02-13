@@ -489,6 +489,36 @@ class SQLPipelineV2:
         logger.info(f"[summarize] OK {step_ms}ms | summary_chars={len(summary)} | suggestions={len(suggestions)}")
         return summary, suggestions
 
+    def _summarize_no_results(self, question: str, sql: str) -> tuple:
+        """Generate a natural language explanation when a query returns zero rows.
+        Returns (summary, suggestions)."""
+        no_results_prompt = (
+            f"The user asked: \"{question}\"\n\n"
+            f"The SQL query executed was:\n{sql}\n\n"
+            f"The query returned 0 rows (no matching data found).\n\n"
+            f"Please provide a helpful, natural language response that:\n"
+            f"1. Acknowledges what the user was looking for\n"
+            f"2. Explains in a friendly way that no matching data was found\n"
+            f"3. Suggests possible reasons (e.g., different naming conventions, date ranges, spelling variations)\n"
+            f"4. Offers helpful alternatives or suggestions to refine their search\n\n"
+            f"Do NOT say 'No records found' or use technical SQL language. "
+            f"Be conversational and helpful, as if you're a knowledgeable colleague.\n\n"
+            f"After your response, add exactly 3 follow-up suggestions the user might try, "
+            f"each on a separate line prefixed with 'SUGGESTION:'"
+        )
+
+        logger.info(f"[summarize_no_results] Generating natural response for zero-row result")
+        step_start = time.time()
+        response = self.llm.chat_completion(
+            messages=[{"role": "user", "content": no_results_prompt}],
+            temperature=0.4,
+            max_tokens=1000
+        )
+        step_ms = int((time.time() - step_start) * 1000)
+        summary, suggestions = self._parse_suggestions(response)
+        logger.info(f"[summarize_no_results] OK {step_ms}ms | summary_chars={len(summary)} | suggestions={len(suggestions)}")
+        return summary, suggestions
+
     def refresh_schema(self, reload_loader: bool = True):
         """Refresh the schema loader data (e.g. after upload).
 
@@ -599,10 +629,19 @@ class SQLPipelineV2:
                 suggestions = []
 
                 if results["row_count"] == 0:
-                    # No data found — skip LLM summarization, return clear message
-                    summary = ("No records were found matching your query. "
-                               "You may want to try different search criteria or check if the data exists in the database.")
-                    logger.info("[pipeline] Zero rows returned, skipping summarization")
+                    # No data found — use LLM to generate a natural, context-aware response
+                    logger.info("[pipeline] Zero rows returned, generating natural language response")
+                    try:
+                        summary, suggestions = self._summarize_no_results(question, sql)
+                        if not summary or not summary.strip():
+                            summary = (f"I looked through the database for your query but couldn't find any matching results. "
+                                       f"This could mean the data doesn't exist yet, or the search criteria might need adjusting. "
+                                       f"Could you try rephrasing or broadening your search?")
+                    except Exception as e:
+                        logger.warning(f"[pipeline] No-results summarization failed: {e}")
+                        summary = (f"I couldn't find any data matching your question. "
+                                   f"The specific criteria you mentioned may not have corresponding entries in the database. "
+                                   f"Try adjusting your search terms or ask me what data is available.")
                 else:
                     try:
                         summary, suggestions = self._summarize_results(question, sql, results)

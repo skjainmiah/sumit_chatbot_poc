@@ -316,7 +316,7 @@ def render_db_explorer():
                         if unknown_count > 0:
                             st.warning(f"{unknown_count} column(s) need descriptions")
 
-                        if st.button("💾 Save Descriptions", key="cd_save_btn"):
+                        if st.button("💾 Save Descriptions", key=f"cd_save_btn_{selected_db_cd}_{selected_table_cd}"):
                             _save_column_descriptions(selected_db_cd, selected_table_cd, edited_df)
 
 
@@ -370,11 +370,13 @@ def _save_column_descriptions(db_name: str, table_name: str, edited_df):
     """Save edited column descriptions back to schema_metadata."""
     import json
     try:
-        # Build descriptions dict from edited dataframe
+        # Build descriptions dict from edited dataframe - include ALL columns
+        # (even empty ones, to preserve the full column list)
         descriptions = {}
         for _, row in edited_df.iterrows():
-            if row["Description"]:
-                descriptions[row["Column"]] = str(row["Description"])
+            col_name = row["Column"]
+            desc = str(row["Description"]) if row["Description"] else ""
+            descriptions[col_name] = desc
 
         desc_json = json.dumps(descriptions)
 
@@ -388,12 +390,20 @@ def _save_column_descriptions(db_name: str, table_name: str, edited_df):
         conn.commit()
         conn.close()
 
-        # Refresh schema caches
+        # Refresh schema caches - reload the schema loader singleton
+        try:
+            from backend.schema.loader import get_schema_loader
+            loader = get_schema_loader()
+            loader.reload()
+        except Exception as e:
+            st.warning(f"Descriptions saved but schema reload failed: {e}")
+
+        # Also try the upload_service refresh for FAISS
         try:
             from backend.sql_upload.upload_service import refresh_all_schema
             refresh_all_schema()
-        except Exception as e:
-            st.warning(f"Descriptions saved but cache refresh failed: {e}")
+        except Exception:
+            pass  # Non-critical
 
         st.success(f"Descriptions saved for {db_name}.{table_name}. Schema refreshed!")
     except Exception as e:

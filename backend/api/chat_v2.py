@@ -11,10 +11,11 @@ from fastapi import APIRouter, HTTPException
 
 from backend.auth.jwt_handler import verify_token
 from backend.sql.pipeline_v2 import get_sql_pipeline
-from backend.pii.masker import mask_pii, unmask_pii
+from backend.pii.masker import mask_pii, unmask_pii, get_pii_settings
 from backend.llm.client import get_llm_client
 
 logger = logging.getLogger("chatbot.api.chat_v2")
+pii_logger = logging.getLogger("chatbot.pii.audit")
 
 
 router = APIRouter()
@@ -127,8 +128,27 @@ async def send_message(request: ChatRequest, token: str = None):
             processing_time_ms=int((time.time() - start_time) * 1000)
         )
 
-    # PII masking
+    # PII masking with comprehensive logging
+    pii_settings = get_pii_settings()
+    pii_enabled = pii_settings.get('enabled', True)
+    pii_log_enabled = pii_settings.get('log_enabled', True)
+
+    if pii_log_enabled:
+        pii_logger.info(f"[PII] === REQUEST START (conv={conv_id}) ===")
+        pii_logger.info(f"[PII] PII masking enabled: {pii_enabled}")
+        pii_logger.info(f"[PII] STEP 1 - User Input: \"{request.message}\"")
+
     masked_query, pii_map = mask_pii(request.message)
+
+    if pii_log_enabled:
+        if pii_map:
+            pii_logger.info(f"[PII] STEP 2 - PII Detected: {len(pii_map)} item(s) masked")
+            for token, original in pii_map.items():
+                pii_logger.info(f"[PII]   {token} ← \"{original}\"")
+            pii_logger.info(f"[PII] STEP 3 - Masked Input (sent to LLM): \"{masked_query}\"")
+        else:
+            pii_logger.info(f"[PII] STEP 2 - No PII detected in input")
+            pii_logger.info(f"[PII] STEP 3 - Input to LLM (unchanged): \"{masked_query[:200]}\"")
 
     # Get conversation context
     context = request.context or _get_conversation_context(conv_id)
@@ -169,9 +189,19 @@ async def send_message(request: ChatRequest, token: str = None):
         response_text = ("I wasn't able to find an answer for that. "
                          "Could you try rephrasing your question or providing more details?")
 
-    # Unmask PII in response
+    # Log LLM output and unmask PII in response
+    if pii_log_enabled:
+        pii_logger.info(f"[PII] STEP 4 - LLM Output (before unmask): \"{response_text[:500]}\"")
+
     if pii_map:
         response_text = unmask_pii(response_text, pii_map)
+        if pii_log_enabled:
+            pii_logger.info(f"[PII] STEP 5 - Final Response (after unmask): \"{response_text[:500]}\"")
+            pii_logger.info(f"[PII] === REQUEST END (conv={conv_id}) ===")
+    else:
+        if pii_log_enabled:
+            pii_logger.info(f"[PII] STEP 5 - Final Response (no PII to unmask): \"{response_text[:500]}\"")
+            pii_logger.info(f"[PII] === REQUEST END (conv={conv_id}) ===")
 
     # Save assistant response
     _save_message(conv_id, "assistant", response_text)

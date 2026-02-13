@@ -443,3 +443,57 @@ async def update_column_descriptions(
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to update column descriptions: {str(e)}")
+
+
+# ============================================================
+# PII Settings Endpoints
+# ============================================================
+
+class PIISettingsRequest(BaseModel):
+    enabled: bool
+    log_enabled: bool
+    patterns: Dict[str, bool]  # {pii_type: is_enabled}
+
+
+@router.get("/settings/pii")
+async def get_pii_settings_endpoint(
+    current_user: dict = Depends(get_current_user)
+):
+    """Get current PII masking settings."""
+    from backend.pii.masker import get_pii_settings, DEFAULT_PII_PATTERNS
+
+    pii_settings = get_pii_settings()
+    # Include labels for UI display
+    pattern_details = {}
+    for pii_type, info in DEFAULT_PII_PATTERNS.items():
+        pattern_details[pii_type] = {
+            'label': info['label'],
+            'enabled': pii_settings['patterns'].get(pii_type, info['enabled']),
+        }
+
+    return {
+        "enabled": pii_settings['enabled'],
+        "log_enabled": pii_settings['log_enabled'],
+        "patterns": pattern_details,
+    }
+
+
+@router.put("/settings/pii")
+async def update_pii_settings_endpoint(
+    request: PIISettingsRequest,
+    current_user: dict = Depends(require_admin)
+):
+    """Update PII masking settings (admin only)."""
+    from backend.pii.masker import save_pii_settings
+
+    try:
+        save_pii_settings(request.enabled, request.log_enabled, request.patterns)
+        return {
+            "success": True,
+            "message": "PII settings updated successfully",
+            "enabled": request.enabled,
+            "log_enabled": request.log_enabled,
+            "patterns": request.patterns,
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to save PII settings: {str(e)}")
