@@ -76,7 +76,7 @@ Available schemas and tables:
 RULES:
 1. Only generate SELECT statements - no INSERT, UPDATE, DELETE, DROP, etc.
 2. ALWAYS use db_name.table_name syntax (e.g. crew_management.crew_members, NOT just crew_members)
-3. Add LIMIT 100 unless the user asks for a specific count or all records
+3. Do NOT add LIMIT unless the user explicitly asks for a specific number of results (e.g., "top 10", "first 5"). Always return all matching rows so aggregations and summaries are accurate.
 4. Use meaningful column aliases for readability
 5. For date comparisons, use SQLite date functions: date(), datetime(), strftime()
 6. Use LIKE with % for partial text matching
@@ -133,7 +133,7 @@ Available schemas and tables:
 RULES:
 1. Only generate SELECT statements - no INSERT, UPDATE, DELETE, DROP, etc.
 2. ALWAYS use db_name.table_name syntax (e.g. crew_management.crew_members, NOT just crew_members)
-3. Add LIMIT 100 unless the user asks for a specific count or all records
+3. Do NOT add LIMIT unless the user explicitly asks for a specific number of results (e.g., "top 10", "first 5"). Always return all matching rows so aggregations and summaries are accurate.
 4. Use meaningful column aliases for readability
 5. For date comparisons, use SQLite date functions: date(), datetime(), strftime()
 6. Use LIKE with % for partial text matching

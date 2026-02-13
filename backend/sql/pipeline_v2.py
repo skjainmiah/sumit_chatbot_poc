@@ -60,7 +60,7 @@ CRITICAL RULES:
    Example: hr_payroll.employees (NOT just "employees")
    Note: Do NOT include schema name - use database_name.table_name format only.
 2. Only generate SELECT statements - NEVER INSERT, UPDATE, DELETE, DROP, ALTER, CREATE
-3. Add LIMIT 100 to queries unless user asks for count/sum/aggregate or specifically wants all records
+3. Do NOT add LIMIT unless the user explicitly asks for a specific number of results (e.g., "top 10", "first 5"). Always return all matching rows so aggregations and summaries are accurate.
 4. Use SQLite-compatible syntax:
    - Date functions: date(), datetime(), strftime(), date('now'), date('now', '-1 month')
    - Use COALESCE, CASE WHEN, GROUP BY, ORDER BY as normal
