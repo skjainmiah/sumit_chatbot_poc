@@ -506,6 +506,7 @@ Columns:
             if success:
                 # Generate summary with follow-up suggestions
                 logger.info(f"[pipeline] SQL executed OK | {results['row_count']} rows")
+                masked_results = None
 
                 if results["row_count"] == 0 and context and not used_context_retry:
                     # Zero rows with context — retry WITHOUT context as safety net
@@ -563,6 +564,7 @@ Columns:
                     "success": True,
                     "sql": sql,
                     "results": results,
+                    "masked_results": masked_results if results["row_count"] > 0 else None,
                     "summary": summary,
                     "suggestions": suggestions,
                     "schemas_used": [s["table_name"] for s in schemas],

@@ -12,6 +12,8 @@ from fastapi import APIRouter, HTTPException
 from backend.auth.jwt_handler import verify_token
 from backend.sql.pipeline_v2 import get_sql_pipeline
 from backend.pii.masker import mask_pii, unmask_pii, get_pii_settings
+from backend.pii.pipeline_logger import log_pii_trace
+from backend.pii.column_masker import get_column_mask_settings
 from backend.llm.client import get_llm_client
 
 logger = logging.getLogger("chatbot.api.chat_v2")
@@ -202,6 +204,23 @@ async def send_message(request: ChatRequest, token: str = None):
         if pii_log_enabled:
             pii_logger.info(f"[PII] STEP 5 - Final Response (no PII to unmask): \"{response_text[:500]}\"")
             pii_logger.info(f"[PII] === REQUEST END (conv={conv_id}) ===")
+
+    # Log full PII pipeline trace (dedicated log file)
+    try:
+        log_pii_trace(
+            conv_id=conv_id,
+            pii_settings=pii_settings,
+            column_mask_settings=get_column_mask_settings(),
+            user_prompt=request.message,
+            masked_prompt=masked_query,
+            pii_map=pii_map,
+            sql=result.get("sql"),
+            results=result.get("results"),
+            masked_results=result.get("masked_results"),
+            summary=response_text,
+        )
+    except Exception:
+        logger.debug("PII pipeline trace logging failed", exc_info=True)
 
     # Save assistant response
     _save_message(conv_id, "assistant", response_text)

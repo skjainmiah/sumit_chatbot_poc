@@ -779,6 +779,7 @@ class SQLPipelineV2:
             if success:
                 logger.info(f"[pipeline] SQL executed OK | {results['row_count']} rows")
                 suggestions = []
+                masked_results = None
 
                 if results["row_count"] == 0:
                     # No data found — use LLM to generate a natural, context-aware response
@@ -826,6 +827,7 @@ class SQLPipelineV2:
                     "intent": "data",
                     "sql": sql,
                     "results": results,
+                    "masked_results": masked_results if results["row_count"] > 0 else None,
                     "summary": summary,
                     "suggestions": suggestions,
                     "explanation": response_data.get("explanation", ""),

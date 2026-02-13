@@ -12,6 +12,8 @@ from backend.core.query_rewriter import rewrite_query, needs_rewriting
 from backend.core.conversation_manager import ConversationManager, get_user_conversations
 from backend.sql.sql_pipeline import SQLPipeline
 from backend.pii.masker import mask_pii, unmask_pii, get_pii_settings
+from backend.pii.pipeline_logger import log_pii_trace
+from backend.pii.column_masker import get_column_mask_settings
 from backend.llm.client import get_llm_client
 from backend.llm.prompts import GENERAL_CHAT_PROMPT
 from backend.db.session import execute_write, execute_query, get_multi_db_connection
@@ -336,6 +338,24 @@ async def send_message(request: ChatRequest, token: str):
     logger.info(f"V1 response: intent={intent_result.intent} has_sql={sql_query is not None} "
                 f"has_results={sql_results is not None} suggestions={len(suggestions) if suggestions else 0} "
                 f"time={elapsed_ms}ms")
+
+    # Log full PII pipeline trace (dedicated log file)
+    if intent_result.intent == "DATA" and sql_query and not sql_query.startswith("-- Meta"):
+        try:
+            log_pii_trace(
+                conv_id=str(conv_id),
+                pii_settings=pii_settings,
+                column_mask_settings=get_column_mask_settings(),
+                user_prompt=request.message,
+                masked_prompt=masked_query,
+                pii_map=pii_map,
+                sql=sql_query,
+                results=sql_results,
+                masked_results=result.get("masked_results"),
+                summary=response_text,
+            )
+        except Exception:
+            logger.debug("PII pipeline trace logging failed", exc_info=True)
 
     # Save assistant response
     assistant_msg_id = conv_manager.add_message(

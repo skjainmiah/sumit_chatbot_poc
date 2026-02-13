@@ -11,6 +11,7 @@ from contextlib import asynccontextmanager
 
 from backend.api.router import api_router
 from backend.config import settings
+from backend.pii.pipeline_logger import setup_pii_pipeline_logger
 
 # ============================================================
 # Logging setup
@@ -27,6 +28,9 @@ logging.basicConfig(
     ],
 )
 logger = logging.getLogger("chatbot")
+
+# Set up dedicated PII pipeline trace log
+setup_pii_pipeline_logger()
 
 # Import v2 API (PostgreSQL with full schema)
 try:
