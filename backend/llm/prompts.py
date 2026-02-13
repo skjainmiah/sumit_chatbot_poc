@@ -59,6 +59,16 @@ CRITICAL DATA VALUE REFERENCE:
 - crew_members.status values: 'Active', 'On Leave', 'Suspended', 'Inactive', 'Retired'
 - flights.flight_status values: 'Scheduled', 'Boarding', 'Departed', 'In Air', 'Landed', 'Arrived', 'Cancelled', 'Diverted', 'Delayed'
 - leave_records.leave_type values: 'Annual Leave', 'Sick Leave', 'Emergency Leave', 'Training Leave'
+- combineddatalax.sheet1.EmployeeID is INTEGER (range: 46496-774459, 130 distinct employees)
+- combineddatalax.sheet1.SequenceID is INTEGER with only 4 internal values: 801111, 801112, 801114, 801116
+- combineddatalax.sheet1.SequenceNumber is INTEGER — this is the human-readable sequence number that users refer to (e.g., 3715, 4201, etc.)
+- CRITICAL: When a user says "sequence 3715" or any sequence number NOT in the 800000+ range, ALWAYS use SequenceNumber (NOT SequenceID). SequenceID only has 4 internal values. Users almost always mean SequenceNumber.
+- combineddatalax.sheet1.SequencePosition is INTEGER (values: 1, 3, 4, 5)
+- combineddatalax.sheet1.LegalityContextsID is INTEGER (values: 1, 2, 3, 4, 9, 10)
+- combineddatalax.sheet1.IsLegal is INTEGER (0=Not Legal, 1=Legal)
+- combineddatalax.sheet1.LegalityPhaseID is INTEGER (values: 1, 3)
+- combineddatalax.sheet1.QLARuleName is TEXT (e.g., '24X7REST(IL)', 'TOUCHFD(NC)', 'DBLSTBY(IL)', 'RSTREQ(IL)', 'SpkrQualCheck')
+- combineddatalax.sheet1.BaseCD is TEXT (all values are 'LAX')
 
 Available schemas and tables:
 {schema_descriptions}
@@ -106,6 +116,16 @@ CRITICAL DATA VALUE REFERENCE:
 - crew_members.status values: 'Active', 'On Leave', 'Suspended', 'Inactive', 'Retired'
 - flights.flight_status values: 'Scheduled', 'Boarding', 'Departed', 'In Air', 'Landed', 'Arrived', 'Cancelled', 'Diverted', 'Delayed'
 - leave_records.leave_type values: 'Annual Leave', 'Sick Leave', 'Emergency Leave', 'Training Leave'
+- combineddatalax.sheet1.EmployeeID is INTEGER (range: 46496-774459, 130 distinct employees)
+- combineddatalax.sheet1.SequenceID is INTEGER with only 4 internal values: 801111, 801112, 801114, 801116
+- combineddatalax.sheet1.SequenceNumber is INTEGER — this is the human-readable sequence number that users refer to (e.g., 3715, 4201, etc.)
+- CRITICAL: When a user says "sequence 3715" or any sequence number NOT in the 800000+ range, ALWAYS use SequenceNumber (NOT SequenceID). SequenceID only has 4 internal values. Users almost always mean SequenceNumber.
+- combineddatalax.sheet1.SequencePosition is INTEGER (values: 1, 3, 4, 5)
+- combineddatalax.sheet1.LegalityContextsID is INTEGER (values: 1, 2, 3, 4, 9, 10)
+- combineddatalax.sheet1.IsLegal is INTEGER (0=Not Legal, 1=Legal)
+- combineddatalax.sheet1.LegalityPhaseID is INTEGER (values: 1, 3)
+- combineddatalax.sheet1.QLARuleName is TEXT (e.g., '24X7REST(IL)', 'TOUCHFD(NC)', 'DBLSTBY(IL)', 'RSTREQ(IL)', 'SpkrQualCheck')
+- combineddatalax.sheet1.BaseCD is TEXT (all values are 'LAX')
 
 Available schemas and tables:
 {schema_descriptions}

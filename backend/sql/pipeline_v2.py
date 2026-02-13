@@ -87,7 +87,8 @@ CRITICAL DATA VALUE REFERENCE:
 - combineddatalax.sheet1.LegalityPhaseID is INTEGER (values: 1, 3)
 - combineddatalax.sheet1.QLARuleName is TEXT (e.g., '24X7REST(IL)', 'TOUCHFD(NC)', 'DBLSTBY(IL)', 'RSTREQ(IL)', 'SpkrQualCheck')
 - combineddatalax.sheet1.BaseCD is TEXT (all values are 'LAX')
-- IMPORTANT: When a user asks about a "sequence" they may mean SequenceID or SequenceNumber. If the value is in the 800000+ range, use SequenceID. For smaller numbers, check both columns.
+- combineddatalax.sheet1.SequenceNumber is INTEGER — this is the human-readable sequence number that users refer to (e.g., 3715, 4201, etc.)
+- CRITICAL: When a user says "sequence 3715" or any sequence number NOT in the 800000+ range, ALWAYS use SequenceNumber (NOT SequenceID). SequenceID only has 4 internal values (801111-801116). Users almost always mean SequenceNumber.
 - crew_roster.roster_month is TEXT with full month names: 'January', 'February', 'March', 'April', 'May', 'June', etc.
 - crew_roster.roster_year is INTEGER: 2025
 - crew_roster.roster_status values: 'Awarded', 'Reserve', 'Standby', 'Not Awarded', 'Training', 'Leave', 'Mixed'
