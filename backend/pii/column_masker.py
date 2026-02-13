@@ -123,8 +123,8 @@ def parse_column_aliases(sql: str) -> Dict[str, str]:
     """
     aliases: Dict[str, str] = {}
     for part in _split_select_clause(sql):
-        # Match: something AS alias
-        m = re.match(r'(.+?)\s+[Aa][Ss]\s+["\[]?(\w+)["\]]?\s*$', part.strip())
+        # Match: something AS alias (DOTALL for multi-line expressions)
+        m = re.match(r'(.+?)\s+[Aa][Ss]\s+["\[]?(\w+)["\]]?\s*$', part.strip(), re.DOTALL)
         if m:
             source = m.group(1).strip()
             alias = m.group(2).strip()
@@ -185,7 +185,7 @@ def mask_query_results(results: Dict[str, Any], sql: str) -> Dict[str, Any]:
     select_parts = _split_select_clause(sql)
     col_expressions: Dict[str, str] = {}
     for part in select_parts:
-        m = re.match(r'(.+?)\s+[Aa][Ss]\s+["\[]?(\w+)["\]]?\s*$', part.strip())
+        m = re.match(r'(.+?)\s+[Aa][Ss]\s+["\[]?(\w+)["\]]?\s*$', part.strip(), re.DOTALL)
         if m:
             col_expressions[m.group(2).strip().lower()] = m.group(1).strip()
 
