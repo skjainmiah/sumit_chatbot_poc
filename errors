@@ -1,146 +1,6 @@
 
 ================================================================================
-PII PIPELINE TRACE | 2026-02-13 21:21:40 | conv=14
-================================================================================
-
---- SETTINGS ---
-Input PII Masking: OFF
-Column-Level Masking: OFF (no columns enabled)
-
---- STEP 1: USER PROMPT ---
-Original: "can you list all the employees who are legal for any sequence 3715 position 4 and also all the violations against them. give me just the list in tabular format of employee, sequence, sequence position and respective violations."
-After Input Masking: "can you list all the employees who are legal for any sequence 3715 position 4 and also all the violations against them. give me just the list in tabular format of employee, sequence, sequence position and respective violations." (no changes)
-
---- STEP 2: LLM GENERATED SQL ---
-SELECT
-  s.EmployeeID AS employee_id,
-  s.SequenceNumber AS sequence_number,
-  s.SequencePosition AS sequence_position,
-  COALESCE(v.violation_rules, 'None') AS violations
-FROM combineddatalax.sheet1 AS s
-LEFT JOIN (
-  SELECT
-    EmployeeID,
-    SequenceNumber,
-    SequencePosition,
-    GROUP_CONCAT(DISTINCT QLARuleName) AS violation_rules
-  FROM combineddatalax.sheet1
-  WHERE SequenceNumber = 3715
-    AND SequencePosition = 4
-    AND IsLegal = 0
-  GROUP BY
-    EmployeeID,
-    SequenceNumber,
-    SequencePosition
-) AS v
-  ON v.EmployeeID = s.EmployeeID
- AND v.SequenceNumber = s.SequenceNumber
- AND v.SequencePosition = s.SequencePosition
-WHERE s.SequenceNumber = 3715
-  AND s.SequencePosition = 4
-  AND s.IsLegal = 1
-GROUP BY
-  s.EmployeeID,
-  s.SequenceNumber,
-  s.SequencePosition,
-  v.violation_rules
-ORDER BY
-  s.EmployeeID;
-
---- STEP 3: SQL RESULTS (real data, 4 rows) ---
-  employee_id=192993 | sequence_number=3715 | sequence_position=4 | violations=No TouchLH
-  employee_id=447036 | sequence_number=3715 | sequence_position=4 | violations=No TouchLH
-  employee_id=475508 | sequence_number=3715 | sequence_position=4 | violations=No TouchLH
-  employee_id=594065 | sequence_number=3715 | sequence_position=4 | violations=No TouchLH,TOUCHFD(NC)
-
---- STEP 4: DATA SENT TO LLM (after column masking) ---
-  (no columns masked — data identical to Step 3)
-  employee_id=192993 | sequence_number=3715 | sequence_position=4 | violations=No TouchLH
-  employee_id=447036 | sequence_number=3715 | sequence_position=4 | violations=No TouchLH
-  employee_id=475508 | sequence_number=3715 | sequence_position=4 | violations=No TouchLH
-  employee_id=594065 | sequence_number=3715 | sequence_position=4 | violations=No TouchLH,TOUCHFD(NC)
-
---- STEP 5: LLM SUMMARY OUTPUT ---
-"| Employee | Sequence | Sequence Position | Respective Violations |
-|---:|---:|---:|---|
-| 192993 | 3715 | 4 | No TouchLH |
-| 447036 | 3715 | 4 | No TouchLH |
-| 475508 | 3715 | 4 | No TouchLH |
-| 594065 | 3715 | 4 | No TouchLH, TOUCHFD(NC) |"
-
-================================================================================
-
-================================================================================
-PII PIPELINE TRACE | 2026-02-13 21:22:36 | conv=14
-================================================================================
-
---- SETTINGS ---
-Input PII Masking: OFF
-Column-Level Masking: OFF (no columns enabled)
-
---- STEP 1: USER PROMPT ---
-Original: "I think employee name is missing"
-After Input Masking: "I think employee name is missing" (no changes)
-
---- STEP 2: LLM GENERATED SQL ---
-SELECT
-  s.EmployeeID AS employee_id,
-  TRIM(COALESCE(s.FirstName, '') || ' ' || COALESCE(s.LastName, '')) AS employee_name,
-  s.SequenceNumber AS sequence_number,
-  s.SequencePosition AS sequence_position,
-  GROUP_CONCAT(
-    DISTINCT CASE WHEN s.IsLegal = 0 THEN s.QLARuleName END
-  ) AS violations
-FROM combineddatalax.sheet1 AS s
-WHERE s.SequenceNumber = 3715
-  AND s.SequencePosition = 4
-  AND s.EmployeeID IN (
-    SELECT DISTINCT s2.EmployeeID
-    FROM combineddatalax.sheet1 AS s2
-    WHERE s2.SequenceNumber = 3715
-      AND s2.SequencePosition = 4
-      AND s2.IsLegal = 1
-  )
-GROUP BY
-  s.EmployeeID,
-  s.FirstName,
-  s.LastName,
-  s.SequenceNumber,
-  s.SequencePosition
-ORDER BY
-  employee_name,
-  employee_id;
-
---- STEP 3: SQL RESULTS (real data, 4 rows) ---
-  employee_id=594065 | employee_name=GRACIELA MORALES | sequence_number=3715 | sequence_position=4 | violations=No TouchLH,TOUCHFD(NC)
-  employee_id=475508 | employee_name=LUIS LOPEZ | sequence_number=3715 | sequence_position=4 | violations=No TouchLH
-  employee_id=447036 | employee_name=SANDRA LOPEZ | sequence_number=3715 | sequence_position=4 | violations=No TouchLH
-  employee_id=192993 | employee_name=TONYA VISSANI | sequence_number=3715 | sequence_position=4 | violations=No TouchLH
-
---- STEP 4: DATA SENT TO LLM (after column masking) ---
-  (no columns masked — data identical to Step 3)
-  employee_id=594065 | employee_name=GRACIELA MORALES | sequence_number=3715 | sequence_position=4 | violations=No TouchLH,TOUCHFD(NC)
-  employee_id=475508 | employee_name=LUIS LOPEZ | sequence_number=3715 | sequence_position=4 | violations=No TouchLH
-  employee_id=447036 | employee_name=SANDRA LOPEZ | sequence_number=3715 | sequence_position=4 | violations=No TouchLH
-  employee_id=192993 | employee_name=TONYA VISSANI | sequence_number=3715 | sequence_position=4 | violations=No TouchLH
-
---- STEP 5: LLM SUMMARY OUTPUT ---
-"Employee names are **not missing** in these results—the query builds `employee_name` from `FirstName + LastName`, and all 4 returned employees have names populated for **Sequence 3715, Position 4**.
-
-Crew returned (4):
-- **GRACIELA MORALES** (EmployeeID 594065) — violations: **No TouchLH**, **TOUCHFD(NC)**
-- **LUIS LOPEZ** (EmployeeID 475508) — violations: **No TouchLH**
-- **SANDRA LOPEZ** (EmployeeID 447036) — violations: **No TouchLH**
-- **TONYA VISSANI** (EmployeeID 192993) — violations: **No TouchLH**
-
-Violation breakdown (across these 4 people):
-- **No TouchLH**: 4 employees  
-- **TOUCHFD(NC)**: 1 employee (Graciela Morales)"
-
-================================================================================
-
-================================================================================
-PII PIPELINE TRACE | 2026-02-13 21:24:07 | conv=14
+PII PIPELINE TRACE | 2026-02-13 21:31:41 | conv=15
 ================================================================================
 
 --- SETTINGS ---
@@ -154,10 +14,12 @@ After Input Masking: "can you list all the employees who are legal for any seque
 
 --- STEP 2: LLM GENERATED SQL ---
 SELECT
-  printf('%s, %s', s.LastName, s.FirstName) AS Employee,
-  s.SequenceNumber AS Sequence,
-  s.SequencePosition AS "Sequence Position",
-  GROUP_CONCAT(DISTINCT v.QLARuleName) AS "Respective Violations"
+  (s.EmployeeID || ' - ' || COALESCE(s.FirstName,'') ||
+   CASE WHEN s.FirstName IS NOT NULL AND s.LastName IS NOT NULL THEN ' ' ELSE '' END ||
+   COALESCE(s.LastName,'')) AS employee,
+  s.SequenceNumber AS sequence,
+  s.SequencePosition AS sequence_position,
+  COALESCE(GROUP_CONCAT(DISTINCT v.QLARuleName), '') AS violations
 FROM combineddatalax.sheet1 AS s
 LEFT JOIN combineddatalax.sheet1 AS v
   ON v.EmployeeID = s.EmployeeID
@@ -169,33 +31,34 @@ WHERE s.SequenceNumber = 3715
   AND s.IsLegal = 1
 GROUP BY
   s.EmployeeID,
-  s.LastName,
   s.FirstName,
+  s.LastName,
   s.SequenceNumber,
   s.SequencePosition
 ORDER BY
   s.LastName,
-  s.FirstName;
+  s.FirstName,
+  s.EmployeeID;
 
 --- STEP 3: SQL RESULTS (real data, 4 rows) ---
-  Employee=LOPEZ, LUIS | Sequence=3715 | Sequence Position=4 | Respective Violations=No TouchLH
-  Employee=LOPEZ, SANDRA | Sequence=3715 | Sequence Position=4 | Respective Violations=No TouchLH
-  Employee=MORALES, GRACIELA | Sequence=3715 | Sequence Position=4 | Respective Violations=No TouchLH,TOUCHFD(NC)
-  Employee=VISSANI, TONYA | Sequence=3715 | Sequence Position=4 | Respective Violations=No TouchLH
+  employee=475508 - LUIS LOPEZ | sequence=3715 | sequence_position=4 | violations=No TouchLH
+  employee=447036 - SANDRA LOPEZ | sequence=3715 | sequence_position=4 | violations=No TouchLH
+  employee=594065 - GRACIELA MORALES | sequence=3715 | sequence_position=4 | violations=No TouchLH,TOUCHFD(NC)
+  employee=192993 - TONYA VISSANI | sequence=3715 | sequence_position=4 | violations=No TouchLH
 
 --- STEP 4: DATA SENT TO LLM (after column masking) ---
   (no columns masked — data identical to Step 3)
-  Employee=LOPEZ, LUIS | Sequence=3715 | Sequence Position=4 | Respective Violations=No TouchLH
-  Employee=LOPEZ, SANDRA | Sequence=3715 | Sequence Position=4 | Respective Violations=No TouchLH
-  Employee=MORALES, GRACIELA | Sequence=3715 | Sequence Position=4 | Respective Violations=No TouchLH,TOUCHFD(NC)
-  Employee=VISSANI, TONYA | Sequence=3715 | Sequence Position=4 | Respective Violations=No TouchLH
+  employee=475508 - LUIS LOPEZ | sequence=3715 | sequence_position=4 | violations=No TouchLH
+  employee=447036 - SANDRA LOPEZ | sequence=3715 | sequence_position=4 | violations=No TouchLH
+  employee=594065 - GRACIELA MORALES | sequence=3715 | sequence_position=4 | violations=No TouchLH,TOUCHFD(NC)
+  employee=192993 - TONYA VISSANI | sequence=3715 | sequence_position=4 | violations=No TouchLH
 
 --- STEP 5: LLM SUMMARY OUTPUT ---
-"| Employee | Sequence | Sequence Position | Respective Violations |
+"| Employee | Sequence | Sequence Position | Violations |
 |---|---:|---:|---|
-| LOPEZ, LUIS | 3715 | 4 | No TouchLH |
-| LOPEZ, SANDRA | 3715 | 4 | No TouchLH |
-| MORALES, GRACIELA | 3715 | 4 | No TouchLH, TOUCHFD(NC) |
-| VISSANI, TONYA | 3715 | 4 | No TouchLH |"
+| 475508 - LUIS LOPEZ | 3715 | 4 | No TouchLH |
+| 447036 - SANDRA LOPEZ | 3715 | 4 | No TouchLH |
+| 594065 - GRACIELA MORALES | 3715 | 4 | No TouchLH, TOUCHFD(NC) |
+| 192993 - TONYA VISSANI | 3715 | 4 | No TouchLH |"
 
 ================================================================================
