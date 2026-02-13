@@ -401,6 +401,11 @@ class SQLPipelineV2:
                 "rows": [dict(row) for row in rows],
                 "row_count": len(rows)
             }
+
+            # Apply column-level PII masking before LLM sees the data
+            from backend.pii.column_masker import mask_query_results
+            results = mask_query_results(results, sql)
+
             step_ms = int((time.time() - step_start) * 1000)
             logger.info(f"[execute_sql] OK {step_ms}ms | {len(rows)} rows, {len(columns)} columns")
             return True, results, ""

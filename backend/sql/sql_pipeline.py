@@ -230,9 +230,15 @@ Columns:
 
             conn.close()
 
+            query_results = {"columns": columns, "rows": results, "row_count": len(results)}
+
+            # Apply column-level PII masking before LLM sees the data
+            from backend.pii.column_masker import mask_query_results
+            query_results = mask_query_results(query_results, sql)
+
             step_ms = int((time.time() - step_start) * 1000)
             logger.info(f"[execute_sql] OK {step_ms}ms | {len(results)} rows, {len(columns)} columns")
-            return True, {"columns": columns, "rows": results, "row_count": len(results)}, ""
+            return True, query_results, ""
 
         except sqlite3.Error as e:
             step_ms = int((time.time() - step_start) * 1000)

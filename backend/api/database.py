@@ -449,6 +449,17 @@ async def update_column_descriptions(
 # PII Settings Endpoints
 # ============================================================
 
+class ColumnMaskConfig(BaseModel):
+    db_name: str
+    table_name: str
+    column_name: str
+    enabled: bool
+
+
+class ColumnMaskRequest(BaseModel):
+    masks: List[ColumnMaskConfig]
+
+
 class PIISettingsRequest(BaseModel):
     enabled: bool
     log_enabled: bool
@@ -497,3 +508,34 @@ async def update_pii_settings_endpoint(
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to save PII settings: {str(e)}")
+
+
+# ============================================================
+# Column-Level PII Masking Endpoints
+# ============================================================
+
+@router.get("/settings/pii/columns")
+async def get_column_mask_settings_endpoint(
+    current_user: dict = Depends(get_current_user)
+):
+    """Get all column-level PII mask settings."""
+    from backend.pii.column_masker import get_column_mask_settings
+    return {"masks": get_column_mask_settings()}
+
+
+@router.put("/settings/pii/columns")
+async def update_column_mask_settings(
+    request: ColumnMaskRequest,
+    current_user: dict = Depends(require_admin)
+):
+    """Update column-level PII mask settings (admin only)."""
+    from backend.pii.column_masker import save_column_masks
+    try:
+        save_column_masks([m.model_dump() for m in request.masks])
+        return {
+            "success": True,
+            "message": "Column mask settings updated successfully",
+            "count": len(request.masks),
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to save column masks: {str(e)}")

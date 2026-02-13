@@ -191,8 +191,20 @@ def render_feedback(client: APIClient):
 
 
 def render_pii_settings(client: APIClient):
-    """Render PII masking configuration UI."""
+    """Render PII masking configuration UI with sub-tabs."""
     st.subheader("PII Masking Configuration")
+
+    sub_tab1, sub_tab2 = st.tabs(["Input Pattern Masking", "Column-Level Masking"])
+
+    with sub_tab1:
+        render_input_pattern_masking(client)
+
+    with sub_tab2:
+        render_column_level_masking(client)
+
+
+def render_input_pattern_masking(client: APIClient):
+    """Render the existing input-pattern PII masking UI."""
     st.caption("Control how sensitive information (emails, phone numbers, SSNs, etc.) is masked before being sent to the LLM.")
 
     # Load current settings
@@ -265,4 +277,111 @@ def render_pii_settings(client: APIClient):
 
 **Audit Logs** (when enabled) record each step so you can verify PII never reaches the LLM in plain text.
 Check the backend logs for entries tagged with `[PII]`.
+        """)
+
+
+def render_column_level_masking(client: APIClient):
+    """Render column-level PII masking configuration UI."""
+    st.caption("Select specific database columns to mask in query results. Masked values show as [MASKED] to both users and the LLM.")
+
+    # Load databases for dropdown
+    db_result = client.list_databases()
+    if isinstance(db_result, dict) and db_result.get("error"):
+        st.error(f"Failed to load databases: {db_result.get('detail', 'Unknown error')}")
+        return
+
+    databases = db_result.get("databases", [])
+    if not databases:
+        st.info("No databases available.")
+        return
+
+    # Filter out system databases
+    db_names = [db["db_name"] for db in databases if not db.get("is_system")]
+    if not db_names:
+        st.info("No user databases available.")
+        return
+
+    # Load existing masks
+    masks_result = client.get_column_masks()
+    existing_masks = {}
+    if isinstance(masks_result, dict) and not masks_result.get("error"):
+        for m in masks_result.get("masks", []):
+            key = (m["db_name"], m["table_name"], m["column_name"])
+            existing_masks[key] = bool(m["enabled"])
+
+    # Database selector
+    selected_db = st.selectbox("Database", db_names, key="colmask_db")
+
+    if not selected_db:
+        return
+
+    # Load column info for selected database
+    col_result = client.get_column_descriptions(selected_db)
+    if isinstance(col_result, dict) and col_result.get("error"):
+        st.error(f"Failed to load schema: {col_result.get('detail', 'Unknown error')}")
+        return
+
+    tables = col_result.get("tables", {})
+    if not tables:
+        st.info(f"No tables found in '{selected_db}'.")
+        return
+
+    # Table selector
+    table_names = sorted(tables.keys())
+    selected_table = st.selectbox("Table", table_names, key="colmask_table")
+
+    if not selected_table:
+        return
+
+    # Column checkboxes
+    table_info = tables[selected_table]
+    columns = table_info.get("columns", [])
+    if not columns:
+        st.info(f"No columns found in '{selected_table}'.")
+        return
+
+    st.markdown(f"**Select columns to mask in `{selected_db}.{selected_table}`:**")
+
+    col_states = {}
+    cols_ui = st.columns(3)
+    for i, col_info in enumerate(columns):
+        col_name = col_info["name"]
+        col_type = col_info.get("type", "")
+        mask_key = (selected_db, selected_table, col_name)
+        is_masked = existing_masks.get(mask_key, False)
+        with cols_ui[i % 3]:
+            col_states[col_name] = st.checkbox(
+                f"{col_name} ({col_type})",
+                value=is_masked,
+                key=f"colmask_{selected_db}_{selected_table}_{col_name}"
+            )
+
+    st.divider()
+
+    if st.button("Save Column Masks", key="colmask_save_btn", type="primary"):
+        masks_to_save = [
+            {
+                "db_name": selected_db,
+                "table_name": selected_table,
+                "column_name": col_name,
+                "enabled": enabled,
+            }
+            for col_name, enabled in col_states.items()
+        ]
+        save_result = client.update_column_masks(masks_to_save)
+        if isinstance(save_result, dict) and save_result.get("success"):
+            st.success("Column mask settings saved!")
+        else:
+            st.error(f"Failed to save: {save_result.get('detail', 'Unknown error')}")
+
+    with st.expander("How Column-Level Masking Works", expanded=False):
+        st.markdown("""
+**Column-level masking** hides sensitive data in query **results**:
+
+1. Admin selects columns (e.g., `FirstName`, `SSN`) to mask
+2. When any query returns data from those columns, values are replaced with `[MASKED]`
+3. The LLM never sees the real values during summarization
+4. The user display also shows `[MASKED]`
+
+This is complementary to **Input Pattern Masking** which protects user input text.
         """)

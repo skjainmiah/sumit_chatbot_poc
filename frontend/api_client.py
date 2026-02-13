@@ -284,3 +284,17 @@ class APIClient:
             "/database/settings/pii",
             json={"enabled": enabled, "log_enabled": log_enabled, "patterns": patterns}
         )
+
+    # ---- Column-Level PII Masking ----
+
+    def get_column_masks(self) -> Dict[str, Any]:
+        """Get column-level PII mask settings."""
+        return self._make_request("GET", "/database/settings/pii/columns")
+
+    def update_column_masks(self, masks: list) -> Dict[str, Any]:
+        """Update column-level PII mask settings."""
+        return self._make_request(
+            "PUT",
+            "/database/settings/pii/columns",
+            json={"masks": masks}
+        )
