@@ -542,6 +542,15 @@ Columns:
                     import copy
                     from backend.pii.column_masker import mask_query_results
                     masked_results = mask_query_results(copy.deepcopy(results), sql)
+
+                    # Log masked vs original for PII audit
+                    masked_cols = [c for c in masked_results.get("columns", [])
+                                   if masked_results["rows"] and masked_results["rows"][0].get(c) == "[MASKED]"]
+                    if masked_cols:
+                        sample = masked_results["rows"][0] if masked_results["rows"] else {}
+                        logger.info(f"[PII column_mask] Columns masked for LLM: {masked_cols}")
+                        logger.info(f"[PII column_mask] Sample row sent to LLM: {sample}")
+
                     summary, suggestions = self.summarize_results(query, sql, masked_results)
                     # Guard against empty LLM summary
                     if not summary or not summary.strip():
