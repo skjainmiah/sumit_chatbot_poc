@@ -78,6 +78,16 @@ CRITICAL RULES:
 14. Do NOT invent or guess table names or column names. Only use tables and columns that appear in the schema provided below.
 
 CRITICAL DATA VALUE REFERENCE:
+- combineddatalax.sheet1.EmployeeID is INTEGER (range: 46496-774459, 130 distinct employees)
+- combineddatalax.sheet1.SequenceID is INTEGER with only 4 valid values: 801111, 801112, 801114, 801116
+- combineddatalax.sheet1.SequencePosition is INTEGER (values: 1, 3, 4, 5)
+- combineddatalax.sheet1.LegalityContextsID is INTEGER (values: 1, 2, 3, 4, 9, 10)
+- combineddatalax.sheet1.LegalityContextID is INTEGER (values: 1, 2, 3, 4, 9, 10)
+- combineddatalax.sheet1.IsLegal is INTEGER (0=Not Legal, 1=Legal)
+- combineddatalax.sheet1.LegalityPhaseID is INTEGER (values: 1, 3)
+- combineddatalax.sheet1.QLARuleName is TEXT (e.g., '24X7REST(IL)', 'TOUCHFD(NC)', 'DBLSTBY(IL)', 'RSTREQ(IL)', 'SpkrQualCheck')
+- combineddatalax.sheet1.BaseCD is TEXT (all values are 'LAX')
+- IMPORTANT: When a user asks about a "sequence" they may mean SequenceID or SequenceNumber. If the value is in the 800000+ range, use SequenceID. For smaller numbers, check both columns.
 - crew_roster.roster_month is TEXT with full month names: 'January', 'February', 'March', 'April', 'May', 'June', etc.
 - crew_roster.roster_year is INTEGER: 2025
 - crew_roster.roster_status values: 'Awarded', 'Reserve', 'Standby', 'Not Awarded', 'Training', 'Leave', 'Mixed'
