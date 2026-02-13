@@ -401,11 +401,6 @@ class SQLPipelineV2:
                 "rows": [dict(row) for row in rows],
                 "row_count": len(rows)
             }
-
-            # Apply column-level PII masking before LLM sees the data
-            from backend.pii.column_masker import mask_query_results
-            results = mask_query_results(results, sql)
-
             step_ms = int((time.time() - step_start) * 1000)
             logger.info(f"[execute_sql] OK {step_ms}ms | {len(rows)} rows, {len(columns)} columns")
             return True, results, ""
@@ -801,7 +796,11 @@ class SQLPipelineV2:
                                    f"Try adjusting your search terms or ask me what data is available.")
                 else:
                     try:
-                        summary, suggestions = self._summarize_results(question, sql, results)
+                        # Mask sensitive columns before LLM summarization (user still sees real data)
+                        import copy
+                        from backend.pii.column_masker import mask_query_results
+                        masked_results = mask_query_results(copy.deepcopy(results), sql)
+                        summary, suggestions = self._summarize_results(question, sql, masked_results)
                         # Guard against empty LLM summary
                         if not summary or not summary.strip():
                             summary = f"Query returned {results['row_count']} row(s)."

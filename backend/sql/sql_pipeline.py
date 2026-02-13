@@ -232,10 +232,6 @@ Columns:
 
             query_results = {"columns": columns, "rows": results, "row_count": len(results)}
 
-            # Apply column-level PII masking before LLM sees the data
-            from backend.pii.column_masker import mask_query_results
-            query_results = mask_query_results(query_results, sql)
-
             step_ms = int((time.time() - step_start) * 1000)
             logger.info(f"[execute_sql] OK {step_ms}ms | {len(results)} rows, {len(columns)} columns")
             return True, query_results, ""
@@ -542,7 +538,11 @@ Columns:
                                    "Try adjusting your search terms or ask me what data is available.")
                         suggestions = []
                 else:
-                    summary, suggestions = self.summarize_results(query, sql, results)
+                    # Mask sensitive columns before LLM summarization (user still sees real data)
+                    import copy
+                    from backend.pii.column_masker import mask_query_results
+                    masked_results = mask_query_results(copy.deepcopy(results), sql)
+                    summary, suggestions = self.summarize_results(query, sql, masked_results)
                     # Guard against empty LLM summary
                     if not summary or not summary.strip():
                         summary = f"Query returned {results['row_count']} row(s)."
