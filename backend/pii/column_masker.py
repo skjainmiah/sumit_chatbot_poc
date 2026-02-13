@@ -85,25 +85,13 @@ def get_column_mask_settings() -> List[Dict[str, Any]]:
     return [dict(r) for r in rows]
 
 
-def parse_column_aliases(sql: str) -> Dict[str, str]:
-    """Extract column aliases from a SQL SELECT clause.
-
-    Parses patterns like:
-      - col AS alias
-      - col as alias
-      - table.col AS alias
-
-    Returns:
-        Dict mapping lowercase alias -> lowercase source column name.
-    """
-    aliases: Dict[str, str] = {}
-    # Find the SELECT ... FROM portion
+def _split_select_clause(sql: str) -> List[str]:
+    """Split the SELECT clause into individual expressions (respecting parentheses)."""
     match = re.search(r'SELECT\s+(.*?)\s+FROM\s', sql, re.IGNORECASE | re.DOTALL)
     if not match:
-        return aliases
+        return []
 
     select_clause = match.group(1)
-    # Split on commas (but not commas inside parentheses)
     depth = 0
     parts: List[str] = []
     current: List[str] = []
@@ -119,8 +107,22 @@ def parse_column_aliases(sql: str) -> Dict[str, str]:
         current.append(ch)
     if current:
         parts.append(''.join(current).strip())
+    return parts
 
-    for part in parts:
+
+def parse_column_aliases(sql: str) -> Dict[str, str]:
+    """Extract column aliases from a SQL SELECT clause.
+
+    Parses patterns like:
+      - col AS alias
+      - col as alias
+      - table.col AS alias
+
+    Returns:
+        Dict mapping lowercase alias -> lowercase source column name.
+    """
+    aliases: Dict[str, str] = {}
+    for part in _split_select_clause(sql):
         # Match: something AS alias
         m = re.match(r'(.+?)\s+[Aa][Ss]\s+["\[]?(\w+)["\]]?\s*$', part.strip())
         if m:
@@ -134,6 +136,21 @@ def parse_column_aliases(sql: str) -> Dict[str, str]:
             aliases[alias.lower()] = source.lower()
 
     return aliases
+
+
+def _expr_references_masked_col(expr: str, masked_cols: Set[str]) -> bool:
+    """Check if a SQL expression references any masked column name.
+
+    Handles cases like:
+      printf('%s, %s', s.LastName, s.FirstName)
+      TRIM(COALESCE(s.FirstName, '') || ' ' || COALESCE(s.LastName, ''))
+    """
+    expr_lower = expr.lower()
+    for col in masked_cols:
+        # Match column name as a whole word (handles table.col and bare col)
+        if re.search(r'(?:^|\.|\W)' + re.escape(col) + r'(?:\W|$)', expr_lower):
+            return True
+    return False
 
 
 def mask_query_results(results: Dict[str, Any], sql: str) -> Dict[str, Any]:
@@ -164,13 +181,26 @@ def mask_query_results(results: Dict[str, Any], sql: str) -> Dict[str, Any]:
     # Parse aliases so "FirstName AS fn" still gets masked
     aliases = parse_column_aliases(sql)
 
+    # Build a map of result_column -> full SELECT expression for expression-level checks
+    select_parts = _split_select_clause(sql)
+    col_expressions: Dict[str, str] = {}
+    for part in select_parts:
+        m = re.match(r'(.+?)\s+[Aa][Ss]\s+["\[]?(\w+)["\]]?\s*$', part.strip())
+        if m:
+            col_expressions[m.group(2).strip().lower()] = m.group(1).strip()
+
     # Determine which result columns need masking
     columns_to_mask: Set[str] = set()
     for col in results.get("columns", []):
         col_lower = col.lower()
         if col_lower in all_masked:
+            # Direct match: result column name is a masked column
             columns_to_mask.add(col)
         elif aliases.get(col_lower) in all_masked:
+            # Simple alias match: "FirstName AS fn"
+            columns_to_mask.add(col)
+        elif col_lower in col_expressions and _expr_references_masked_col(col_expressions[col_lower], all_masked):
+            # Expression match: printf(..., s.LastName, s.FirstName) AS Employee
             columns_to_mask.add(col)
 
     if not columns_to_mask:
